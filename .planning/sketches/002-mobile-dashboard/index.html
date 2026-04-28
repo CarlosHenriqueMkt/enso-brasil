@@ -130,36 +130,55 @@
   .va .state-row.r-green  .meta .level { color: var(--green-ink); }
   .va .chev { padding: 0 14px; display: flex; align-items: center; color: var(--ink-3); }
 
-  /* ============ Variant B — generous card ============ */
-  .vb .card-list { padding: 12px; display: flex; flex-direction: column; gap: 10px; background: var(--bg); }
+  /* ============ Variant B — generous card (refined for life-safety) ============ */
+  .vb .card-list { padding: 14px 12px; display: flex; flex-direction: column; gap: 14px; background: var(--bg); }
   .vb .state-card {
     background: var(--surface);
     border: 1px solid var(--line);
     border-left: 4px solid var(--line-strong);
     border-radius: var(--r-3);
-    padding: 14px;
+    padding: 16px;
     cursor: pointer;
+    text-decoration: none;
+    color: inherit;
+    display: block;
   }
-  .vb .state-card.r-red    { border-left-color: var(--red-border);    }
+  .vb .state-card.r-red    { border-left-color: var(--red-border);    border-left-width: 5px; }
   .vb .state-card.r-orange { border-left-color: var(--orange-border); }
   .vb .state-card.r-yellow { border-left-color: var(--yellow-border); }
   .vb .state-card.r-green  { border-left-color: var(--green-border);  }
-  .vb .state-card .head { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; margin-bottom: 8px; }
-  .vb .state-card .name h3 { font-size: 16px; font-weight: 500; }
-  .vb .state-card .name .region { font-size: 11.5px; color: var(--ink-3); letter-spacing: 0.04em; text-transform: uppercase; margin-top: 1px; }
+
+  .vb .state-card .head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 10px; }
+  .vb .state-card .name h3 { font-size: 17px; font-weight: 500; line-height: 1.3; }
+  .vb .state-card .name .region { font-size: 11.5px; color: var(--ink-3); letter-spacing: 0.04em; text-transform: uppercase; margin-top: 2px; }
   .vb .state-card .badge {
     display: inline-flex; align-items: center; gap: 5px;
-    padding: 4px 9px; border-radius: var(--r-2); border: 1px solid var(--line);
-    font-size: 12px; font-weight: 500; flex: 0 0 auto;
+    padding: 5px 10px; border-radius: var(--r-2); border: 1px solid var(--line);
+    font-size: 12.5px; font-weight: 500; flex: 0 0 auto; white-space: nowrap;
   }
   .vb .state-card.r-red    .badge { background: var(--red-bg);    color: var(--red-ink);    border-color: var(--red-border);    }
   .vb .state-card.r-orange .badge { background: var(--orange-bg); color: var(--orange-ink); border-color: var(--orange-border); }
   .vb .state-card.r-yellow .badge { background: var(--yellow-bg); color: var(--yellow-ink); border-color: var(--yellow-border); }
   .vb .state-card.r-green  .badge { background: var(--green-bg);  color: var(--green-ink);  border-color: var(--green-border);  }
-  .vb .state-card .summary { font-size: 13.5px; color: var(--ink-1); line-height: 1.5; margin-bottom: 8px; }
-  .vb .state-card .chips { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 8px; }
+
+  /* Lead line — the one-sentence "what is happening" — boldest text */
+  .vb .state-card .lead {
+    font-size: 14.5px; color: var(--ink-1); line-height: 1.45;
+    font-weight: 500;
+    margin-bottom: 8px;
+  }
+  /* Facts list — affects, valid until — quickly scannable */
+  .vb .state-card .facts {
+    display: grid; grid-template-columns: auto 1fr; gap: 4px 10px;
+    font-size: 13px; color: var(--ink-2); line-height: 1.45;
+    margin-bottom: 10px;
+  }
+  .vb .state-card .facts dt { color: var(--ink-3); font-size: 11.5px; letter-spacing: 0.03em; text-transform: uppercase; padding-top: 2px; }
+  .vb .state-card .facts dd { margin: 0; color: var(--ink-1); }
+
+  .vb .state-card .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
   .vb .state-card .chip {
-    font-size: 11.5px; padding: 2px 7px;
+    font-size: 12px; padding: 3px 9px;
     border: 1px solid var(--line);
     border-radius: 999px;
     background: var(--surface-muted);
@@ -167,10 +186,34 @@
   }
   .vb .state-card .foot {
     display: flex; align-items: center; justify-content: space-between;
-    font-size: 11.5px; color: var(--ink-3);
-    border-top: 1px solid var(--line); padding-top: 8px;
+    font-size: 12px; color: var(--ink-3);
+    border-top: 1px solid var(--line); padding-top: 10px;
   }
   .vb .state-card .foot .ts .tnum { color: var(--ink-2); font-weight: 500; }
+  .vb .state-card .foot .arrow { color: var(--ink-2); font-size: 16px; line-height: 1; }
+
+  /* Emergency strip — only on red cards */
+  .vb .state-card .emerg {
+    margin-top: 10px;
+    background: var(--red-bg);
+    border: 1px solid var(--red-border);
+    border-radius: var(--r-2);
+    padding: 8px 12px;
+    font-size: 12.5px;
+    color: var(--red-ink);
+    line-height: 1.45;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .vb .state-card .emerg strong { font-weight: 500; }
+  .vb .state-card .emerg .num {
+    background: var(--surface);
+    color: var(--red-ink);
+    font-weight: 500;
+    border: 1px solid var(--red-border);
+    padding: 1px 7px;
+    border-radius: var(--r-2);
+    font-family: var(--mono);
+  }
 
   /* ============ Variant C — hybrid expandable ============ */
   .vc .accord-list { background: var(--surface); }
@@ -277,7 +320,7 @@
 
 <nav class="variants" role="tablist" aria-label="Variantes mobile">
   <button class="variant-tab active" data-tab="A" role="tab" aria-selected="true">Variant A — Dense list rows</button>
-  <button class="variant-tab" data-tab="B" role="tab" aria-selected="false">Variant B — Generous cards</button>
+  <button class="variant-tab winner" data-tab="B" role="tab" aria-selected="false">Variant B — Generous cards (refined)</button>
   <button class="variant-tab" data-tab="C" role="tab" aria-selected="false">Variant C — Expandable accordion</button>
 </nav>
 
@@ -429,7 +472,9 @@
       </div>
 
       <div class="card-list">
-        <a href="#" class="state-card r-red">
+
+        <!-- RED — Maranhão: life-safety detail -->
+        <a href="/estado/ma" class="state-card r-red">
           <div class="head">
             <div class="name">
               <h3>Maranhão</h3>
@@ -437,19 +482,29 @@
             </div>
             <span class="badge"><span aria-hidden="true">⛔</span> Perigo</span>
           </div>
-          <div class="summary">Grande Perigo: chuva extrema com acumulado superior a 100&nbsp;mm em 24&nbsp;h.</div>
+          <div class="lead">Chuva extrema com risco de inundação e deslizamento.</div>
+          <dl class="facts">
+            <dt>Afeta</dt><dd>Oeste e centro · São Luís, Imperatriz, bacia do Mearim</dd>
+            <dt>Válido</dt><dd>Até quarta-feira, 22h00 (≈ 31 h)</dd>
+            <dt>Fontes</dt><dd>INMET (Grande Perigo) · CEMADEN (2 alertas)</dd>
+          </dl>
           <div class="chips">
             <span class="chip">Chuva extrema</span>
             <span class="chip">Inundação</span>
             <span class="chip">Deslizamento</span>
           </div>
+          <div class="emerg" role="note">
+            <span aria-hidden="true">📞</span>
+            <span>Em emergência: <span class="num">199</span> Defesa Civil · <span class="num">193</span> Bombeiros</span>
+          </div>
           <div class="foot">
-            <span>3 alertas ativos</span>
-            <span class="ts">Atualizado há <span class="tnum">12 min</span></span>
+            <span>Atualizado há <span class="tnum">12 min</span></span>
+            <span class="arrow" aria-hidden="true">→</span>
           </div>
         </a>
 
-        <a href="#" class="state-card r-orange">
+        <!-- ORANGE — Bahia -->
+        <a href="/estado/ba" class="state-card r-orange">
           <div class="head">
             <div class="name">
               <h3>Bahia</h3>
@@ -457,18 +512,24 @@
             </div>
             <span class="badge"><span aria-hidden="true">⚠⚠</span> Alerta</span>
           </div>
-          <div class="summary">Chuva intensa e risco de deslizamento em encostas saturadas no sul do estado.</div>
+          <div class="lead">Chuva intensa, risco de deslizamento em encostas saturadas.</div>
+          <dl class="facts">
+            <dt>Afeta</dt><dd>Sul do estado · Ilhéus, Itabuna, vale do Jequitinhonha</dd>
+            <dt>Válido</dt><dd>Até hoje, 20h00 (≈ 5 h)</dd>
+            <dt>Fontes</dt><dd>INMET · CEMADEN</dd>
+          </dl>
           <div class="chips">
             <span class="chip">Chuva intensa</span>
             <span class="chip">Deslizamento</span>
           </div>
           <div class="foot">
-            <span>2 alertas</span>
-            <span class="ts">há <span class="tnum">23 min</span></span>
+            <span>2 alertas · há <span class="tnum">23 min</span></span>
+            <span class="arrow" aria-hidden="true">→</span>
           </div>
         </a>
 
-        <a href="#" class="state-card r-orange">
+        <!-- ORANGE — Minas Gerais -->
+        <a href="/estado/mg" class="state-card r-orange">
           <div class="head">
             <div class="name">
               <h3>Minas Gerais</h3>
@@ -476,17 +537,43 @@
             </div>
             <span class="badge"><span aria-hidden="true">⚠⚠</span> Alerta</span>
           </div>
-          <div class="summary">Chuva intensa na zona da mata e região metropolitana de Belo Horizonte.</div>
-          <div class="chips">
-            <span class="chip">Chuva intensa</span>
-          </div>
+          <div class="lead">Chuva intensa na zona da mata e RMBH.</div>
+          <dl class="facts">
+            <dt>Afeta</dt><dd>Belo Horizonte, Juiz de Fora, Governador Valadares</dd>
+            <dt>Válido</dt><dd>Até amanhã, 06h00</dd>
+            <dt>Fonte</dt><dd>INMET</dd>
+          </dl>
+          <div class="chips"><span class="chip">Chuva intensa</span></div>
           <div class="foot">
-            <span>1 alerta</span>
-            <span class="ts">há <span class="tnum">31 min</span></span>
+            <span>1 alerta · há <span class="tnum">31 min</span></span>
+            <span class="arrow" aria-hidden="true">→</span>
           </div>
         </a>
 
-        <a href="#" class="state-card r-yellow">
+        <!-- ORANGE — Pernambuco -->
+        <a href="/estado/pe" class="state-card r-orange">
+          <div class="head">
+            <div class="name">
+              <h3>Pernambuco</h3>
+              <div class="region">Nordeste · PE</div>
+            </div>
+            <span class="badge"><span aria-hidden="true">⚠⚠</span> Alerta</span>
+          </div>
+          <div class="lead">Chuva intensa no agreste e zona da mata.</div>
+          <dl class="facts">
+            <dt>Afeta</dt><dd>Recife, Caruaru, Garanhuns</dd>
+            <dt>Válido</dt><dd>Até hoje, 23h00</dd>
+            <dt>Fonte</dt><dd>INMET</dd>
+          </dl>
+          <div class="chips"><span class="chip">Chuva intensa</span></div>
+          <div class="foot">
+            <span>1 alerta · há <span class="tnum">44 min</span></span>
+            <span class="arrow" aria-hidden="true">→</span>
+          </div>
+        </a>
+
+        <!-- YELLOW — São Paulo -->
+        <a href="/estado/sp" class="state-card r-yellow">
           <div class="head">
             <div class="name">
               <h3>São Paulo</h3>
@@ -494,15 +581,21 @@
             </div>
             <span class="badge"><span aria-hidden="true">⚠</span> Atenção</span>
           </div>
-          <div class="summary">Onda de calor: temperatura 5°C acima da média no interior.</div>
+          <div class="lead">Onda de calor: temperatura 5°C acima da média.</div>
+          <dl class="facts">
+            <dt>Afeta</dt><dd>Interior · Ribeirão Preto, Bauru, Araçatuba</dd>
+            <dt>Válido</dt><dd>Até sexta-feira, 18h00 (3 dias)</dd>
+            <dt>Fonte</dt><dd>INMET</dd>
+          </dl>
           <div class="chips"><span class="chip">Onda de calor</span></div>
           <div class="foot">
-            <span>1 alerta</span>
-            <span class="ts">há <span class="tnum">1 h</span></span>
+            <span>1 alerta · há <span class="tnum">1 h</span></span>
+            <span class="arrow" aria-hidden="true">→</span>
           </div>
         </a>
 
-        <a href="#" class="state-card r-yellow">
+        <!-- YELLOW — Mato Grosso -->
+        <a href="/estado/mt" class="state-card r-yellow">
           <div class="head">
             <div class="name">
               <h3>Mato Grosso</h3>
@@ -510,15 +603,21 @@
             </div>
             <span class="badge"><span aria-hidden="true">⚠</span> Atenção</span>
           </div>
-          <div class="summary">Perigo potencial de queimada — baixa umidade e ventos secos.</div>
+          <div class="lead">Perigo potencial de queimada — baixa umidade.</div>
+          <dl class="facts">
+            <dt>Afeta</dt><dd>Norte do estado · Sinop, Alta Floresta</dd>
+            <dt>Válido</dt><dd>Até segunda-feira (5 dias)</dd>
+            <dt>Fonte</dt><dd>INMET · INPE Queimadas</dd>
+          </dl>
           <div class="chips"><span class="chip">Queimada</span></div>
           <div class="foot">
-            <span>1 alerta</span>
-            <span class="ts">há <span class="tnum">2 h</span></span>
+            <span>1 alerta · há <span class="tnum">2 h</span></span>
+            <span class="arrow" aria-hidden="true">→</span>
           </div>
         </a>
 
-        <a href="#" class="state-card r-green">
+        <!-- GREEN — Santa Catarina -->
+        <a href="/estado/sc" class="state-card r-green">
           <div class="head">
             <div class="name">
               <h3>Santa Catarina</h3>
@@ -526,10 +625,10 @@
             </div>
             <span class="badge"><span aria-hidden="true">✓</span> Sem alertas</span>
           </div>
-          <div class="summary">Verificado às 14:32. Nenhum alerta ativo no estado.</div>
+          <div class="lead">Nenhum alerta oficial ativo no estado.</div>
           <div class="foot">
-            <span class="muted">Última verificação</span>
-            <span class="ts">há <span class="tnum">8 min</span></span>
+            <span>Última verificação <span class="tnum">há 8 min</span> · CEMADEN ✓ INMET ✓</span>
+            <span class="arrow" aria-hidden="true">→</span>
           </div>
         </a>
 

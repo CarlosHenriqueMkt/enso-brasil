@@ -25,7 +25,7 @@
 | # | Name | Design Question | Winner | Tags |
 |---|------|----------------|--------|------|
 | 001 | dashboard-desktop-layout | Does 40/60 panel-on-left + map-on-right feel right at ≥1024px, or should the map breathe more? | **C — top legend + 50/50, map left** | layout, desktop, hierarchy |
-| 002 | mobile-dashboard | Mobile-first vertical card list ordered by severity — what density, hierarchy, and interaction model? | _pending_ | layout, mobile, cards |
+| 002 | mobile-dashboard | Mobile-first vertical card list ordered by severity — what density, hierarchy, and interaction model? | **B — generous cards (refined: Afeta + Válido + 199/193 inline em vermelho)** | layout, mobile, cards |
 | 003 | edge-states | How to show "Verde — sem alertas" without looking like a bug, and how to flag a stale source? | _planned_ | states, error, empty |
 
 ## Notes

@@ -2,7 +2,7 @@
 sketch: 002
 name: mobile-dashboard
 question: "Mobile-first vertical card list ordered by severity — what density, hierarchy, and interaction model serves the audience best on 3G?"
-winner: null
+winner: "B"
 tags: [layout, mobile, cards]
 ---
 
@@ -43,6 +43,28 @@ Each variant is shown inside a 390×780 phone frame. Tabs switch between A/B/C.
 - All three variants share the same data (1 red + 3 orange + 3 yellow + 2 green sample). Real deployment will render all 27.
 - Mini map at the bottom is a secondary visualization (per the brief: "Mapa pode aparecer abaixo como visualização secundária"). Use the same schematic representation as sketch 001.
 - Severity counts pill-bar at the top serves the same role as variant C's top legend in sketch 001 — at-a-glance national status.
+
+## Decision (winner: B — refined for life-safety)
+
+**Generous cards with critical facts upfront.** The card hierarchy was redesigned around the principle that this is life-safety information — sober but precise, never sensationalist. Every card now follows the same scan order:
+
+1. **Lead sentence** — one bold line stating what's happening
+2. **Facts list** (Afeta · Válido · Fontes) — quick-scan structured data answering *where, until when, who said so*
+3. **Hazard chips** — typed categories for filtering and at-a-glance pattern recognition
+4. **Emergency strip** — only on red cards: 199 / 193 numbers visible inline (no extra tap needed in a real emergency)
+5. **Footer** — timestamp + arrow to detail
+
+The four refinements vs the original B variant:
+- **"Afeta"** names actual cities/regions (not generic "interior do estado")
+- **"Válido até"** with relative time ("≈ 31 h") — alerts have time bounds and users need them
+- **Emergency phone strip** appears only on red cards — actionable, not decorative
+- **More breathing room** — 14px gap between cards, 16px padding, 5px stripe on red (visual weight matches severity)
+
+Anti-sensationalism guardrails enforced:
+- No animation, no pulse, no shake
+- Same typography weight (500) across all severities
+- Color reserved for risk; text and chrome stay neutral
+- Lead sentences describe events, not consequences ("chuva extrema com risco de inundação", not "PERIGO IMINENTE!!")
 
 ## Implementation hints
 
