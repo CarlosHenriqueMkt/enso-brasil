@@ -2,7 +2,7 @@
 sketch: 005
 name: tablet-viewport
 question: "How does the layout adapt at 640–1024 px (the gap zone between mobile and desktop)?"
-winner: null
+winner: "A"
 tags: [layout, responsive, breakpoint, tablet]
 ---
 

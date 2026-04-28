@@ -28,7 +28,7 @@
 | 002 | mobile-dashboard | Mobile-first vertical card list ordered by severity — what density, hierarchy, and interaction model? | **B — generous cards (refined: Afeta + Válido + 199/193 inline em vermelho)** | layout, mobile, cards |
 | 003 | edge-states | How to show "Verde — sem alertas" without looking like a bug, and how to flag a stale source? | **C — top banner global + cards lean** | states, error, empty |
 | 004 | state-detail-page | What does the `/estado/{uf}` deep-link page look like — the screen that receives WhatsApp shares? | **C — two-column desktop / linear mobile** | layout, page, deep-link |
-| 005 | tablet-viewport | How does the layout adapt at 640–1024 px (the gap zone between mobile and desktop)? | _planned_ | layout, responsive, breakpoint |
+| 005 | tablet-viewport | How does the layout adapt at 640–1024 px (the gap zone between mobile and desktop)? | **A — constrained mobile-up (max-width 560 px, scaled margins + type)** | layout, responsive, breakpoint |
 | 006 | search-filter-states | Search input + region chips interaction: empty, typing, no-results, active chip combinations | _planned_ | interaction, search, filter |
 | 007 | loading-skeleton | Cold-cache and 3G initial paint: skeleton vs SSR-instant vs prefetch shell | _planned_ | states, loading, perf |
 
