@@ -1,0 +1,483 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sketch 001 — Dashboard Desktop Layout · ENSO Brasil</title>
+<link rel="stylesheet" href="../themes/default.css">
+<style>
+  /* ---------- Sketch-specific layout ---------- */
+  .pane { min-height: calc(100vh - 60px); display: flex; flex-direction: column; }
+  .topbar {
+    display: flex; align-items: baseline; justify-content: space-between;
+    padding: 14px 32px; border-bottom: 1px solid var(--line); background: var(--surface);
+  }
+  .topbar h1 { font-size: 18px; font-weight: 500; letter-spacing: 0; }
+  .topbar h1 .sub { color: var(--ink-3); font-weight: 400; margin-left: 10px; font-size: 13px; }
+  .topbar .meta { color: var(--ink-3); font-size: 13px; }
+
+  .grid { display: grid; flex: 1; min-height: 0; }
+  .grid-40-60 { grid-template-columns: 40% 60%; }
+  .grid-35-65 { grid-template-columns: 35% 65%; }
+  .grid-50-50 { grid-template-columns: 50% 50%; }
+
+  .panel {
+    border-right: 1px solid var(--line);
+    padding: 28px 32px;
+    overflow-y: auto;
+    background: var(--surface);
+  }
+  .map-area {
+    padding: 20px 28px;
+    background: var(--bg);
+    display: flex; flex-direction: column; min-height: 0;
+  }
+  .legend { display: flex; gap: 8px; flex-wrap: wrap; padding-bottom: 14px; border-bottom: 1px solid var(--line); margin-bottom: 14px; }
+  .legend .risk-pill { font-size: 12px; padding: 3px 8px; }
+
+  /* State header */
+  .state-head { margin-bottom: 18px; }
+  .state-head .region { color: var(--ink-3); font-size: 13px; letter-spacing: 0.04em; text-transform: uppercase; }
+  .state-head h2 { font-size: 26px; font-weight: 500; margin-top: 4px; }
+  .state-head .uf { color: var(--ink-3); font-weight: 400; margin-left: 8px; font-size: 18px; }
+
+  /* Big status block */
+  .status {
+    display: flex; gap: 14px; align-items: flex-start;
+    padding: 16px;
+    border: 1px solid var(--line);
+    border-left-width: 4px;
+    border-radius: var(--r-3);
+    margin-bottom: 22px;
+  }
+  .status.s-red    { border-left-color: var(--red-border);    background: var(--red-bg); }
+  .status.s-orange { border-left-color: var(--orange-border); background: var(--orange-bg); }
+  .status.s-yellow { border-left-color: var(--yellow-border); background: var(--yellow-bg); }
+  .status.s-green  { border-left-color: var(--green-border);  background: var(--green-bg); }
+  .status .ico { font-size: 22px; line-height: 1; padding-top: 1px; }
+  .status .lbl { font-size: 13px; font-weight: 500; letter-spacing: 0.04em; text-transform: uppercase; }
+  .status h3 { font-size: 19px; font-weight: 500; margin-top: 2px; }
+  .status p  { margin: 6px 0 0; font-size: 14px; line-height: 1.5; color: var(--ink-1); }
+  .status.s-red    .lbl { color: var(--red-ink); }
+  .status.s-orange .lbl { color: var(--orange-ink); }
+  .status.s-yellow .lbl { color: var(--yellow-ink); }
+  .status.s-green  .lbl { color: var(--green-ink); }
+
+  /* Alerts list */
+  .section-h { font-size: 13px; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-3); margin: 8px 0 12px; }
+  .alerts { list-style: none; padding: 0; margin: 0 0 18px; display: flex; flex-direction: column; gap: 10px; }
+  .alert {
+    border: 1px solid var(--line);
+    border-radius: var(--r-3);
+    padding: 12px 14px;
+    background: var(--surface);
+  }
+  .alert .row { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 4px; }
+  .alert h4 { font-size: 14.5px; font-weight: 500; }
+  .alert p  { margin: 4px 0 8px; font-size: 13.5px; color: var(--ink-2); line-height: 1.45; }
+  .alert .meta { display: flex; align-items: center; justify-content: space-between; font-size: 12.5px; color: var(--ink-3); }
+  .alert .meta a { color: var(--ink-2); }
+
+  .footnote-link { display: inline-block; font-size: 13px; color: var(--ink-3); margin-top: 6px; }
+
+  /* Map SVG container */
+  .map-svg-wrap { flex: 1; display: flex; align-items: center; justify-content: center; min-height: 0; }
+  .map-svg { max-width: 100%; max-height: 100%; height: auto; }
+  .map-svg .country { fill: none; stroke: var(--line-strong); stroke-width: 0.5; }
+  .map-svg .state-tile { stroke: rgba(0,0,0,0.15); stroke-width: 0.4; cursor: pointer; transition: opacity 120ms; }
+  .map-svg .state-tile:hover { stroke: #000; stroke-width: 1; }
+  .map-svg .state-tile.selected { stroke: #000; stroke-width: 1.4; }
+  .map-svg .state-label { font-family: var(--font); font-size: 9px; font-weight: 500; pointer-events: none; }
+  .map-svg .green  { fill: var(--green-bg);  }
+  .map-svg .yellow { fill: var(--yellow-bg); }
+  .map-svg .orange { fill: var(--orange-bg); }
+  .map-svg .red    { fill: var(--red-bg);    }
+  .map-svg .gray   { fill: var(--gray-bg);   }
+  .map-svg .label-green  { fill: var(--green-ink); }
+  .map-svg .label-yellow { fill: var(--yellow-ink); }
+  .map-svg .label-orange { fill: var(--orange-ink); }
+  .map-svg .label-red    { fill: var(--red-ink); }
+  .map-svg .label-gray   { fill: var(--gray-ink); }
+
+  .map-caption { font-size: 12px; color: var(--ink-3); text-align: center; margin-top: 10px; }
+
+  /* Variant B sticky update band */
+  .update-band {
+    background: var(--surface-muted);
+    border-bottom: 1px solid var(--line);
+    padding: 10px 32px;
+    display: flex; gap: 18px; align-items: center;
+    font-size: 13px;
+  }
+  .update-band .pulse { width: 6px; height: 6px; border-radius: 50%; background: var(--green-border); display: inline-block; margin-right: 6px; }
+
+  /* Variant C top legend strip */
+  .top-legend {
+    background: var(--surface);
+    border-bottom: 1px solid var(--line);
+    padding: 12px 32px;
+    display: flex; gap: 12px; align-items: center; flex-wrap: wrap;
+  }
+  .top-legend .lbl-h { font-size: 12.5px; font-weight: 500; color: var(--ink-3); text-transform: uppercase; letter-spacing: 0.06em; margin-right: 8px; }
+
+  .panel-right { border-right: none; border-left: 1px solid var(--line); }
+</style>
+</head>
+<body>
+
+<a href="#main" class="skip">Pular para o conteúdo principal</a>
+
+<nav class="variants" role="tablist" aria-label="Variantes de layout">
+  <button class="variant-tab active" data-tab="A" role="tab" aria-selected="true">Variant A — 40 / 60 (per spec)</button>
+  <button class="variant-tab" data-tab="B" role="tab" aria-selected="false">Variant B — 35 / 65 + sticky band</button>
+  <button class="variant-tab" data-tab="C" role="tab" aria-selected="false">Variant C — top legend + 50 / 50 (map left)</button>
+</nav>
+
+<!-- ========================== VARIANT A — 40/60 (PER SPEC) ========================== -->
+<section class="variant-pane active" data-pane="A" id="main">
+  <div class="pane">
+    <header class="topbar">
+      <h1>ENSO Brasil <span class="sub">perigos climáticos por estado</span></h1>
+      <span class="meta">Atualizado às 14:32 · há 8 min</span>
+    </header>
+
+    <div class="grid grid-40-60">
+      <!-- LEFT: state info panel -->
+      <aside class="panel" aria-label="Detalhes do estado selecionado">
+        <div class="state-head">
+          <div class="region">Nordeste</div>
+          <h2>Maranhão <span class="uf">MA</span></h2>
+        </div>
+
+        <div class="status s-red" role="status" aria-live="polite">
+          <span class="ico" aria-hidden="true">⛔</span>
+          <div>
+            <div class="lbl">Perigo</div>
+            <h3>Grande Perigo: chuva extrema</h3>
+            <p>1 aviso de Grande Perigo emitido pelo INMET. Acumulado de chuva superior a 100&nbsp;mm em 24&nbsp;h previsto para o oeste do estado.</p>
+          </div>
+        </div>
+
+        <div class="section-h">Alertas ativos · 3</div>
+        <ul class="alerts">
+          <li class="alert">
+            <div class="row">
+              <h4>Chuvas intensas</h4>
+              <span class="risk-pill risk-red">Grande Perigo</span>
+            </div>
+            <p>Acumulado superior a 100&nbsp;mm em 24h, ventos de até 100&nbsp;km/h, descargas elétricas frequentes.</p>
+            <div class="meta">
+              <a href="#" rel="external">INMET · Aviso INMET-2026-04-1234</a>
+              <span>publicado há 12 min</span>
+            </div>
+          </li>
+          <li class="alert">
+            <div class="row">
+              <h4>Risco de inundação</h4>
+              <span class="risk-pill risk-orange">Alerta</span>
+            </div>
+            <p>Bacia do rio Mearim com risco de transbordamento; municípios ribeirinhos em atenção.</p>
+            <div class="meta">
+              <a href="#" rel="external">CEMADEN · MA-2026-04-0411</a>
+              <span>publicado há 27 min</span>
+            </div>
+          </li>
+          <li class="alert">
+            <div class="row">
+              <h4>Deslizamento</h4>
+              <span class="risk-pill risk-orange">Alerta</span>
+            </div>
+            <p>Encostas saturadas em São Luís e Imperatriz após acumulado de 80&nbsp;mm nas últimas 48&nbsp;h.</p>
+            <div class="meta">
+              <a href="#" rel="external">CEMADEN · MA-2026-04-0419</a>
+              <span>publicado há 1&nbsp;h</span>
+            </div>
+          </li>
+        </ul>
+
+        <a class="footnote-link" href="#methodology">Como calculamos o nível de risco? →</a>
+      </aside>
+
+      <!-- RIGHT: map -->
+      <section class="map-area" aria-label="Mapa do Brasil por nível de risco">
+        <div class="legend" role="region" aria-label="Legenda de cores">
+          <span class="risk-pill risk-green"><span class="ico" aria-hidden="true">✓</span> Sem alertas</span>
+          <span class="risk-pill risk-yellow"><span class="ico" aria-hidden="true">⚠</span> Atenção</span>
+          <span class="risk-pill risk-orange"><span class="ico" aria-hidden="true">⚠⚠</span> Alerta</span>
+          <span class="risk-pill risk-red"><span class="ico" aria-hidden="true">⛔</span> Perigo</span>
+          <span class="risk-pill risk-gray"><span class="ico" aria-hidden="true">?</span> Dados indisponíveis</span>
+        </div>
+        <div class="map-svg-wrap" id="mapA"></div>
+        <div class="map-caption">Toque ou clique em um estado para ver detalhes. Representação esquemática — produção usa TopoJSON do IBGE.</div>
+      </section>
+    </div>
+
+    <footer class="disclaimer">
+      Este site agrega informações de fontes oficiais para facilitar o acesso. Em caso de emergência, ligue
+      <strong>199</strong> (Defesa Civil) ou <strong>193</strong> (Bombeiros). O ENSO Brasil não substitui sistemas oficiais de alerta.
+    </footer>
+  </div>
+</section>
+
+<!-- ========================== VARIANT B — 35/65 + STICKY UPDATE BAND ========================== -->
+<section class="variant-pane" data-pane="B">
+  <div class="pane">
+    <header class="topbar">
+      <h1>ENSO Brasil <span class="sub">perigos climáticos por estado</span></h1>
+      <span class="meta">Brasília, terça-feira, 28 de abril de 2026</span>
+    </header>
+
+    <div class="update-band" role="status" aria-live="polite">
+      <span><span class="pulse" aria-hidden="true"></span><strong>Atualizado às 14:32</strong> · há 8 min</span>
+      <span class="muted">CEMADEN ✓ &nbsp;·&nbsp; INMET ✓ &nbsp;·&nbsp; INPE Queimadas ✓</span>
+      <span class="muted" style="margin-left:auto">5&nbsp;estados em alerta · 1&nbsp;em perigo</span>
+    </div>
+
+    <div class="grid grid-35-65">
+      <aside class="panel" aria-label="Detalhes do estado selecionado">
+        <div class="state-head">
+          <div class="region">Nordeste</div>
+          <h2>Maranhão <span class="uf">MA</span></h2>
+        </div>
+
+        <div class="status s-red">
+          <span class="ico" aria-hidden="true">⛔</span>
+          <div>
+            <div class="lbl">Perigo</div>
+            <h3>Chuva extrema, risco de inundação</h3>
+            <p>3 alertas ativos · severidade máxima do INMET.</p>
+          </div>
+        </div>
+
+        <div class="section-h">Alertas ativos</div>
+        <ul class="alerts">
+          <li class="alert">
+            <div class="row"><h4>Chuvas intensas</h4><span class="risk-pill risk-red">Grande Perigo</span></div>
+            <p>Acumulado &gt; 100&nbsp;mm em 24h. Ventos até 100&nbsp;km/h.</p>
+            <div class="meta"><a href="#">INMET · 2026-04-1234</a><span>há 12 min</span></div>
+          </li>
+          <li class="alert">
+            <div class="row"><h4>Inundação</h4><span class="risk-pill risk-orange">Alerta</span></div>
+            <p>Bacia do Mearim com risco de transbordamento.</p>
+            <div class="meta"><a href="#">CEMADEN · MA-2026-04-0411</a><span>há 27 min</span></div>
+          </li>
+          <li class="alert">
+            <div class="row"><h4>Deslizamento</h4><span class="risk-pill risk-orange">Alerta</span></div>
+            <p>Encostas saturadas em São Luís e Imperatriz.</p>
+            <div class="meta"><a href="#">CEMADEN · MA-2026-04-0419</a><span>há 1 h</span></div>
+          </li>
+        </ul>
+        <a class="footnote-link" href="#">Como calculamos o nível de risco? →</a>
+      </aside>
+
+      <section class="map-area" aria-label="Mapa do Brasil por nível de risco">
+        <div class="legend">
+          <span class="risk-pill risk-green"><span class="ico" aria-hidden="true">✓</span> Sem alertas</span>
+          <span class="risk-pill risk-yellow"><span class="ico" aria-hidden="true">⚠</span> Atenção</span>
+          <span class="risk-pill risk-orange"><span class="ico" aria-hidden="true">⚠⚠</span> Alerta</span>
+          <span class="risk-pill risk-red"><span class="ico" aria-hidden="true">⛔</span> Perigo</span>
+        </div>
+        <div class="map-svg-wrap" id="mapB"></div>
+        <div class="map-caption">Albers cônico, parâmetros [-7°,-22°], rotate [54,0]. Esquemático para sketch.</div>
+      </section>
+    </div>
+
+    <footer class="disclaimer">
+      Este site agrega informações de fontes oficiais. Em caso de emergência, ligue
+      <strong>199</strong> (Defesa Civil) ou <strong>193</strong> (Bombeiros). Não substitui sistemas oficiais de alerta.
+    </footer>
+  </div>
+</section>
+
+<!-- ========================== VARIANT C — TOP LEGEND + 50/50 (MAP LEFT) ========================== -->
+<section class="variant-pane" data-pane="C">
+  <div class="pane">
+    <header class="topbar">
+      <h1>ENSO Brasil <span class="sub">perigos climáticos por estado</span></h1>
+      <span class="meta">Atualizado às 14:32 · há 8 min</span>
+    </header>
+
+    <div class="top-legend" role="region" aria-label="Legenda">
+      <span class="lbl-h">Níveis</span>
+      <span class="risk-pill risk-green"><span class="ico" aria-hidden="true">✓</span> Sem alertas · 17 estados</span>
+      <span class="risk-pill risk-yellow"><span class="ico" aria-hidden="true">⚠</span> Atenção · 6</span>
+      <span class="risk-pill risk-orange"><span class="ico" aria-hidden="true">⚠⚠</span> Alerta · 3</span>
+      <span class="risk-pill risk-red"><span class="ico" aria-hidden="true">⛔</span> Perigo · 1</span>
+      <span class="risk-pill risk-gray"><span class="ico" aria-hidden="true">?</span> Indisponível · 0</span>
+    </div>
+
+    <div class="grid grid-50-50">
+      <section class="map-area" aria-label="Mapa do Brasil por nível de risco">
+        <div class="map-svg-wrap" id="mapC"></div>
+        <div class="map-caption">Toque ou clique em um estado. Esquemático.</div>
+      </section>
+
+      <aside class="panel panel-right" aria-label="Detalhes do estado selecionado">
+        <div class="state-head">
+          <div class="region">Nordeste</div>
+          <h2>Maranhão <span class="uf">MA</span></h2>
+        </div>
+
+        <div class="status s-red">
+          <span class="ico" aria-hidden="true">⛔</span>
+          <div>
+            <div class="lbl">Perigo</div>
+            <h3>Grande Perigo: chuva extrema</h3>
+            <p>3 alertas ativos · severidade máxima do INMET.</p>
+          </div>
+        </div>
+
+        <div class="section-h">Alertas ativos</div>
+        <ul class="alerts">
+          <li class="alert">
+            <div class="row"><h4>Chuvas intensas</h4><span class="risk-pill risk-red">Grande Perigo</span></div>
+            <p>Acumulado &gt; 100&nbsp;mm em 24h, ventos até 100&nbsp;km/h.</p>
+            <div class="meta"><a href="#">INMET · 2026-04-1234</a><span>há 12 min</span></div>
+          </li>
+          <li class="alert">
+            <div class="row"><h4>Inundação</h4><span class="risk-pill risk-orange">Alerta</span></div>
+            <p>Bacia do Mearim em risco de transbordamento.</p>
+            <div class="meta"><a href="#">CEMADEN · MA-2026-04-0411</a><span>há 27 min</span></div>
+          </li>
+          <li class="alert">
+            <div class="row"><h4>Deslizamento</h4><span class="risk-pill risk-orange">Alerta</span></div>
+            <p>Encostas saturadas em São Luís e Imperatriz.</p>
+            <div class="meta"><a href="#">CEMADEN · MA-2026-04-0419</a><span>há 1 h</span></div>
+          </li>
+        </ul>
+        <a class="footnote-link" href="#">Como calculamos o nível de risco? →</a>
+      </aside>
+    </div>
+
+    <footer class="disclaimer">
+      Este site agrega informações de fontes oficiais. Em caso de emergência, ligue
+      <strong>199</strong> (Defesa Civil) ou <strong>193</strong> (Bombeiros). Não substitui sistemas oficiais de alerta.
+    </footer>
+  </div>
+</section>
+
+<!-- ========================== SKETCH TOOLBAR ========================== -->
+<div class="sketch-toolbar" aria-label="Sketch tools">
+  <span style="color:var(--ink-3)">Sketch 001</span>
+  <button onclick="document.documentElement.classList.toggle('grid-overlay')">Grid</button>
+  <button onclick="document.body.style.fontFamily=document.body.style.fontFamily?'':'Georgia,serif'">Type</button>
+</div>
+
+<style>
+  .grid-overlay::before {
+    content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 99;
+    background-image: linear-gradient(to right, rgba(0,0,0,0.04) 1px, transparent 1px);
+    background-size: 8px 8px;
+  }
+</style>
+
+<script>
+  // ========== Tab switching ==========
+  document.querySelectorAll('.variant-tab').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.variant-tab').forEach(b => { b.classList.remove('active'); b.setAttribute('aria-selected','false'); });
+      document.querySelectorAll('.variant-pane').forEach(p => p.classList.remove('active'));
+      btn.classList.add('active'); btn.setAttribute('aria-selected','true');
+      const tab = btn.dataset.tab;
+      document.querySelector(`.variant-pane[data-pane="${tab}"]`).classList.add('active');
+      // Re-render map for newly visible pane
+      renderMap(tab);
+    });
+  });
+
+  // ========== Schematic Brazil map ==========
+  // Each state: UF code, approximate (col,row) on a 14x14 grid, risk level.
+  // This is a SKETCH representation — production uses precise IBGE TopoJSON.
+  const STATES = [
+    { uf:'RR', name:'Roraima',           col:4.2, row:0.5, risk:'green'  },
+    { uf:'AP', name:'Amapá',             col:7.0, row:0.6, risk:'green'  },
+    { uf:'AM', name:'Amazonas',          col:3.0, row:2.2, risk:'green',  w:2.6, h:2.0 },
+    { uf:'PA', name:'Pará',              col:6.0, row:2.0, risk:'green',  w:2.4, h:1.8 },
+    { uf:'MA', name:'Maranhão',          col:8.5, row:2.0, risk:'red',    w:1.5, h:1.5 },
+    { uf:'CE', name:'Ceará',             col:10.2, row:1.7, risk:'green', w:1.2, h:1.2 },
+    { uf:'RN', name:'Rio Grande do Norte', col:11.4, row:1.8, risk:'green', w:1.0, h:0.8 },
+    { uf:'PB', name:'Paraíba',           col:11.7, row:2.6, risk:'green', w:1.0, h:0.7 },
+    { uf:'PE', name:'Pernambuco',        col:11.0, row:3.3, risk:'orange', w:1.7, h:0.7 },
+    { uf:'AL', name:'Alagoas',           col:11.6, row:4.0, risk:'green', w:1.0, h:0.7 },
+    { uf:'SE', name:'Sergipe',           col:11.2, row:4.7, risk:'green', w:0.9, h:0.7 },
+    { uf:'PI', name:'Piauí',             col:9.4,  row:3.0, risk:'green', w:1.3, h:1.5 },
+    { uf:'BA', name:'Bahia',             col:9.6,  row:4.6, risk:'orange', w:2.0, h:1.8 },
+    { uf:'AC', name:'Acre',              col:1.7,  row:3.5, risk:'green', w:1.4, h:1.0 },
+    { uf:'RO', name:'Rondônia',          col:3.5,  row:4.2, risk:'green', w:1.4, h:1.2 },
+    { uf:'TO', name:'Tocantins',         col:7.6,  row:3.7, risk:'green', w:1.3, h:1.6 },
+    { uf:'MT', name:'Mato Grosso',       col:5.2,  row:4.6, risk:'yellow', w:2.2, h:2.0 },
+    { uf:'GO', name:'Goiás',             col:7.6,  row:5.6, risk:'green', w:1.5, h:1.4 },
+    { uf:'DF', name:'DF',                col:8.6,  row:6.1, risk:'green', w:0.5, h:0.5 },
+    { uf:'MG', name:'Minas Gerais',      col:8.6,  row:7.0, risk:'orange', w:2.0, h:1.6 },
+    { uf:'ES', name:'Espírito Santo',    col:10.7, row:7.6, risk:'green', w:0.9, h:1.0 },
+    { uf:'RJ', name:'Rio de Janeiro',    col:9.8,  row:8.7, risk:'green', w:1.4, h:0.8 },
+    { uf:'SP', name:'São Paulo',         col:8.0,  row:8.4, risk:'yellow', w:1.7, h:1.2 },
+    { uf:'MS', name:'Mato Grosso do Sul', col:6.0, row:7.0, risk:'green', w:1.6, h:1.6 },
+    { uf:'PR', name:'Paraná',            col:7.0,  row:9.4, risk:'green', w:1.6, h:1.0 },
+    { uf:'SC', name:'Santa Catarina',    col:7.2,  row:10.4, risk:'green', w:1.5, h:0.8 },
+    { uf:'RS', name:'Rio Grande do Sul', col:6.4,  row:11.4, risk:'green', w:1.8, h:1.4 },
+  ];
+
+  // Brazil rough silhouette outline (very stylized, viewBox 0 0 14 14)
+  const COUNTRY_PATH = `
+    M 4 0.4
+    L 7.5 0.3
+    L 8.0 1.2
+    L 10.5 1.4
+    L 12.4 1.6
+    L 12.6 2.6
+    L 12.8 4.2
+    L 12.0 5.0
+    L 11.6 6.5
+    L 11.4 7.9
+    L 11.2 9.0
+    L 9.5 9.4
+    L 8.8 10.3
+    L 8.4 11.4
+    L 7.8 12.0
+    L 6.0 12.8
+    L 5.6 11.6
+    L 4.6 10.6
+    L 4.0 9.6
+    L 3.6 8.4
+    L 2.4 7.0
+    L 1.2 5.6
+    L 1.0 4.6
+    L 1.4 3.4
+    L 1.8 2.2
+    L 2.6 1.6
+    L 3.4 0.8 Z`;
+
+  function renderMap(paneId) {
+    const wrap = document.getElementById('map' + paneId);
+    if (!wrap || wrap.dataset.rendered) return;
+    const w = 600, h = 600;
+    let svg = `<svg class="map-svg" viewBox="0 0 14 14" width="${w}" height="${h}" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Mapa do Brasil com 27 estados coloridos por nível de risco. Maranhão em perigo (vermelho); Bahia, Minas Gerais e Pernambuco em alerta (laranja); São Paulo, Rio Grande do Sul e Mato Grosso em atenção (amarelo). Demais estados sem alertas.">`;
+    svg += `<path class="country" d="${COUNTRY_PATH}" />`;
+    STATES.forEach(s => {
+      const w2 = s.w || 0.85, h2 = s.h || 0.85;
+      const x = s.col, y = s.row;
+      const isSelected = s.uf === 'MA' ? ' selected' : '';
+      svg += `<rect class="state-tile ${s.risk}${isSelected}" x="${x}" y="${y}" width="${w2}" height="${h2}" rx="0.12" data-uf="${s.uf}" tabindex="0" role="button" aria-label="${s.name} — risco ${s.risk}" />`;
+      svg += `<text class="state-label label-${s.risk}" x="${x + w2/2}" y="${y + h2/2 + 0.13}" text-anchor="middle">${s.uf}</text>`;
+    });
+    svg += `</svg>`;
+    wrap.innerHTML = svg;
+    wrap.dataset.rendered = '1';
+
+    wrap.querySelectorAll('.state-tile').forEach(el => {
+      el.addEventListener('click', e => {
+        wrap.querySelectorAll('.state-tile').forEach(t => t.classList.remove('selected'));
+        el.classList.add('selected');
+      });
+      el.addEventListener('keydown', e => {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); el.click(); }
+      });
+    });
+  }
+
+  renderMap('A');
+</script>
+
+</body>
+</html>
