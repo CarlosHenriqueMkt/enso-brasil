@@ -14,9 +14,14 @@ REQ-IDs are atomic and testable. Each maps to exactly one phase in `ROADMAP.md`.
 - [ ] **FOUND-02**: Next.js 15.5.x App Router scaffolding with TypeScript strict, Tailwind v4, ESLint, Prettier, Husky pre-commit
 - [ ] **FOUND-03**: `next-intl` configured with PT-BR as default locale; structure ready for ES/EN later (`/[locale]/...` routes)
 - [ ] **FOUND-04**: GitHub Actions CI runs typecheck, lint, Vitest, Playwright on every PR; caching enabled
-- [ ] **FOUND-05**: Mandatory disclaimer SSR-rendered in root layout (not client JS) — visible on every page even with JS disabled
+- [ ] **FOUND-05**: Mandatory disclaimer SSR-rendered in root layout (not client JS) — visible on every page even with JS disabled. Disclaimer must include all three emergency contacts: **199 Defesa Civil · 193 Bombeiros · 190 Polícia**
 - [ ] **FOUND-06**: PT-BR privacy/LGPD page at `/privacidade` describing server logs, IP retention, no analytics-by-default
 - [ ] **FOUND-07**: Accessibility shell — color-blind safe palette (icon + text + color), keyboard nav baseline, lang="pt-BR" set, focus-visible styles
+- [ ] **FOUND-08**: Stale-data and source-failure notices render at the **top of the page** (above all main content), SSR-rendered, never inline-only. Pattern: full-width banner on degraded snapshot health
+- [ ] **FOUND-09**: Edge-state copy strings centralized in PT-BR strings file (`src/lib/i18n/messages/pt-BR.ts`):
+  - Verde: "Não encontramos nenhuma emergência nessa localidade. Verifique em outras fontes de informação antes de decidir o que você vai fazer."
+  - Stale source: "Não estamos recebendo dados do(a) {fonte}. Acesse {url} diretamente e busque a informação que você precisa."
+- [ ] **FOUND-10**: Every link to an official source renders the domain in monospace font (helps users recognize external/official destinations)
 
 ### Data Foundation (DATA)
 
@@ -120,7 +125,7 @@ Filled by `ROADMAP.md` — every REQ-ID maps to exactly one phase.
 
 | REQ-ID | Phase |
 |--------|-------|
-| FOUND-01..07 | P0 |
+| FOUND-01..10 | P0 |
 | DATA-01..09 | P1 |
 | RISK-01..10 | P2 |
 | ADAPT-01, ADAPT-02, ADAPT-04 | P3 |

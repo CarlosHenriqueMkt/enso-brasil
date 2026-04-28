@@ -2,7 +2,7 @@
 sketch: 003
 name: edge-states
 question: "How to show 'Verde — sem alertas' without looking like a bug, and how to flag a stale source — using direct, no-fluff Portuguese?"
-winner: null
+winner: "C"
 tags: [states, error, empty, copy]
 ---
 
@@ -51,6 +51,20 @@ Each variant shows the same 4 scenarios stacked, so you can scroll a single phon
 4. **Trust under partial failure.** When CEMADEN is stale but INMET is fine, the user still gets actionable info. Which variant makes the *partial* nature of the degradation clearest?
 5. **Mobile attention budget.** A user under stress reads one or two lines max. Where does each variant put the most important sentence?
 6. **3G / payload friendliness.** A renders identical bytes whether sources are healthy or not (text varies). C requires the banner only when degraded — server-side conditional render.
+
+## Decision (winner: C — top banner + lean cards)
+
+**Stale/desatualizado SEMPRE no topo da página.** Quando uma fonte está degradada, o banner laranja aparece como a primeira coisa visível na página, acima de qualquer conteúdo. É a primeira informação que o usuário precisa receber — saber que algo na cadeia não está 100% antes de tomar decisões.
+
+Cards individuais permanecem limpos com indicadores discretos no footer ("INMET ✓ · CEMADEN ⚠"). Quando todas as fontes caem para um estado específico, o card cinza assume com lista direta de sites oficiais para o usuário acessar.
+
+**Princípios travados como contratos do projeto** (sincronizados em PROJECT.md, REQUIREMENTS.md, e MANIFEST.md):
+
+1. Avisos de stale/desatualizado **sempre no topo** da página, SSR-renderizados
+2. Toda página exibe **199 Defesa Civil · 193 Bombeiros · 190 Polícia** (190 estava faltando — corrigido em todos os sketches)
+3. **Fonte oficial sempre linkada** quando referenciada; domínio em mono-font
+4. Copy locked em PT-BR direto, sem enrolação
+5. Verde = afirmação positiva ("verificamos") + redirecionamento humilde a outras fontes (somos agregador, não autoridade)
 
 ## Notes
 

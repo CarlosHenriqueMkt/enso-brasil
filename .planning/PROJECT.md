@@ -101,6 +101,12 @@ If only this works, the project has shipped.
 | 15-min ingestion cadence | Sufficient for hazard timescales; doesn't strain free tier when batched | Locked |
 | **Disclaimer must be SSR-rendered**, never depend on client JS | Public-safety credibility — disclaimer must show even if JS fails | Locked (research delta) |
 | **PT-BR LGPD privacy page in v1** even without user accounts | LGPD applies to server logs and IPs — needs disclosure | Locked (research delta) |
+| **Stale-data and source-failure notices ALWAYS at the top of the page** | First thing the user must see; never inline-only | Locked (sketch 003 winner) |
+| **Emergency contacts: 199 Defesa Civil · 193 Bombeiros · 190 Polícia** on every page disclaimer | 190 was missing from earlier draft; user-locked principle | Locked (sketch 003 feedback) |
+| **Edge-state copy locked PT-BR direto** — verde "Não encontramos nenhuma emergência…"; stale "Não estamos recebendo dados de [Fonte]. Acesse [site] diretamente…" | Humilde, sem enrolação, sempre redireciona para a fonte oficial | Locked (sketch 003 winner) |
+| **Top legend = national snapshot** on desktop dashboard | Sketch 001 winner C — counts per level visible globally | Locked (sketch 001 winner) |
+| **Mobile card reading order**: Lead → Afeta → Válido → Fontes → Chips → 199/193/190 (em vermelho) → Timestamp | Life-safety information must be scannable in 1-2 lines under stress | Locked (sketch 002 winner B refined) |
+| **Domínios em mono-font** (`alertas.cemaden.gov.br`) em todo link externo a site oficial | Sinaliza "leva você para fora do app" — ajuda na confiança | Locked (sketch 003) |
 | **PT-BR severity labels: "Sem alertas / Atenção / Alerta / Perigo"** | Match CEMADEN + INMET terminology verbatim — do not invent | Locked (research delta) |
 | **Hazard names locked to CEMADEN/INMET vocabulary** (queimada vs incêndio; estiagem vs seca; enchente vs inundação) | Domain accuracy + source compatibility | Locked (research delta) |
 | Open source MIT from commit 1 | Trust/credibility for a public-safety-adjacent project | Locked |
