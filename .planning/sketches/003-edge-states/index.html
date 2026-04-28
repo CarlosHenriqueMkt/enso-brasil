@@ -1,0 +1,529 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sketch 003 — Edge States · ENSO Brasil</title>
+<link rel="stylesheet" href="../themes/default.css">
+<style>
+  body { background: #efeeea; }
+  .stage {
+    display: flex; flex-wrap: wrap; gap: 36px;
+    justify-content: center; align-items: flex-start;
+    padding: 32px 16px 96px; min-height: 100vh;
+  }
+  .pane-wrap { display: none; flex-direction: column; align-items: center; gap: 14px; }
+  .pane-wrap.active { display: flex; }
+  .pane-label {
+    font-size: 13px; font-weight: 500; color: var(--ink-2);
+    letter-spacing: 0.02em; max-width: 800px; text-align: center;
+  }
+  .pane-label small { font-weight: 400; color: var(--ink-3); display: block; margin-top: 3px; }
+
+  .phone {
+    width: 390px;
+    background: var(--bg);
+    border: 1px solid var(--line-strong);
+    border-radius: 28px;
+    overflow: hidden;
+    position: relative;
+  }
+  .phone .status-bar {
+    height: 28px; background: var(--surface);
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 16px; font-size: 11px; color: var(--ink-3);
+    border-bottom: 1px solid var(--line);
+  }
+  .phone .scroll { max-height: none; }
+
+  .m-head {
+    background: var(--surface); border-bottom: 1px solid var(--line);
+    padding: 14px 16px 12px;
+  }
+  .m-head h1 { font-size: 16px; font-weight: 500; }
+  .m-head .sub { color: var(--ink-3); font-size: 12px; margin-top: 2px; }
+
+  /* === Card baseline (matches sketch 002 winner) === */
+  .card-list { padding: 14px 12px; display: flex; flex-direction: column; gap: 14px; background: var(--bg); }
+  .state-card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-left: 4px solid var(--line-strong);
+    border-radius: var(--r-3);
+    padding: 16px;
+    text-decoration: none; color: inherit; display: block;
+  }
+  .state-card.r-red    { border-left-color: var(--red-border);    border-left-width: 5px; }
+  .state-card.r-orange { border-left-color: var(--orange-border); }
+  .state-card.r-yellow { border-left-color: var(--yellow-border); }
+  .state-card.r-green  { border-left-color: var(--green-border);  }
+  .state-card.r-gray   { border-left-color: var(--gray-border);   border-left-style: dashed; }
+
+  .state-card .head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 10px; }
+  .state-card .name h3 { font-size: 17px; font-weight: 500; }
+  .state-card .name .region { font-size: 11.5px; color: var(--ink-3); letter-spacing: 0.04em; text-transform: uppercase; margin-top: 2px; }
+  .state-card .badge {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 5px 10px; border-radius: var(--r-2); border: 1px solid var(--line);
+    font-size: 12.5px; font-weight: 500; flex: 0 0 auto; white-space: nowrap;
+  }
+  .state-card.r-green .badge { background: var(--green-bg); color: var(--green-ink); border-color: var(--green-border); }
+  .state-card.r-gray  .badge { background: var(--gray-bg);  color: var(--gray-ink);  border-color: var(--gray-border); }
+
+  .state-card .lead { font-size: 14.5px; color: var(--ink-1); line-height: 1.5; font-weight: 500; margin-bottom: 8px; }
+  .state-card .body-text { font-size: 13.5px; color: var(--ink-2); line-height: 1.55; margin-bottom: 12px; }
+  .state-card .body-text strong { color: var(--ink-1); font-weight: 500; }
+  .state-card .foot {
+    display: flex; align-items: center; justify-content: space-between;
+    font-size: 12px; color: var(--ink-3);
+    border-top: 1px solid var(--line); padding-top: 10px;
+  }
+  .state-card .foot .arrow { color: var(--ink-2); font-size: 16px; line-height: 1; }
+  .state-card .foot .tnum { color: var(--ink-2); font-weight: 500; }
+
+  /* === Source links list — used in green & gray cards === */
+  .src-links {
+    display: flex; flex-direction: column; gap: 6px;
+    margin: 0 0 12px;
+    padding: 10px 12px;
+    background: var(--surface-muted);
+    border-radius: var(--r-2);
+    border: 1px solid var(--line);
+  }
+  .src-links .h {
+    font-size: 11px; color: var(--ink-3);
+    letter-spacing: 0.05em; text-transform: uppercase;
+    margin-bottom: 2px;
+  }
+  .src-links a {
+    font-size: 13px; color: var(--ink-1);
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 3px 0;
+    text-decoration: none;
+    border-bottom: 1px solid transparent;
+  }
+  .src-links a:hover { color: var(--ink-1); }
+  .src-links a .ext { color: var(--ink-3); font-size: 11px; }
+  .src-links a .domain { color: var(--ink-3); font-family: var(--mono); font-size: 11.5px; }
+  .src-links a.ok    .domain::before  { content: "✓ "; color: var(--green-border); }
+  .src-links a.fail  .domain::before  { content: "✗ "; color: var(--red-border); }
+  .src-links a.stale .domain::before  { content: "⚠ "; color: var(--orange-border); }
+
+  /* === Top banner (global stale notice) === */
+  .top-banner {
+    padding: 12px 16px;
+    background: var(--gray-bg);
+    border-bottom: 1px solid var(--gray-border);
+    border-top: 3px solid var(--gray-border);
+    color: var(--gray-ink);
+    font-size: 13px; line-height: 1.5;
+  }
+  .top-banner strong { font-weight: 500; color: var(--ink-1); }
+  .top-banner.warning {
+    background: #fef0e1; border-color: var(--orange-border); color: var(--orange-ink);
+  }
+
+  /* === Inline stale strip (within a card) === */
+  .stale-strip {
+    margin: -4px 0 12px;
+    padding: 9px 12px;
+    background: #fef0e1;
+    border: 1px solid var(--orange-border);
+    border-radius: var(--r-2);
+    font-size: 12.5px;
+    color: var(--orange-ink);
+    line-height: 1.45;
+    display: flex; align-items: flex-start; gap: 8px;
+  }
+  .stale-strip strong { font-weight: 500; color: var(--ink-1); }
+  .stale-strip a { color: var(--orange-ink); }
+
+  /* === Verified-positive callout (variant B verde detail) === */
+  .verified-callout {
+    margin: 0 0 12px;
+    padding: 12px;
+    background: var(--green-bg);
+    border: 1px solid var(--green-border);
+    border-radius: var(--r-2);
+    color: var(--green-ink);
+    font-size: 13.5px;
+    line-height: 1.5;
+  }
+  .verified-callout strong { font-weight: 500; color: var(--ink-1); }
+
+  /* === State-detail wrapper (variant treatments of /estado/{uf} verde) === */
+  .detail {
+    background: var(--surface);
+    padding: 22px 18px;
+    border-bottom: 1px solid var(--line);
+  }
+  .detail .breadcrumb { font-size: 12px; color: var(--ink-3); margin-bottom: 10px; }
+  .detail h2 { font-size: 22px; font-weight: 500; }
+  .detail .uf { color: var(--ink-3); font-size: 16px; margin-left: 6px; font-weight: 400; }
+  .detail .region { font-size: 11.5px; color: var(--ink-3); letter-spacing: 0.04em; text-transform: uppercase; margin-top: 4px; margin-bottom: 14px; }
+  .detail-status-green {
+    padding: 16px;
+    border: 1px solid var(--green-border);
+    border-left-width: 5px;
+    background: var(--green-bg);
+    border-radius: var(--r-3);
+    margin-bottom: 14px;
+  }
+  .detail-status-green h3 { font-size: 17px; color: var(--green-ink); font-weight: 500; margin-bottom: 6px; }
+  .detail-status-green p { font-size: 13.5px; color: var(--ink-1); line-height: 1.55; }
+  .detail-status-gray {
+    padding: 16px;
+    border: 1px dashed var(--gray-border);
+    border-left-width: 5px;
+    background: var(--gray-bg);
+    border-radius: var(--r-3);
+    margin-bottom: 14px;
+  }
+  .detail-status-gray h3 { font-size: 17px; color: var(--gray-ink); font-weight: 500; margin-bottom: 6px; }
+  .detail-status-gray p { font-size: 13.5px; color: var(--ink-1); line-height: 1.55; }
+
+  .section-h {
+    font-size: 11.5px; font-weight: 500; letter-spacing: 0.06em;
+    text-transform: uppercase; color: var(--ink-3);
+    margin: 14px 0 8px;
+  }
+
+  .m-disc {
+    background: var(--surface); border-top: 1px solid var(--line);
+    padding: 12px 16px; font-size: 11.5px; color: var(--ink-2); line-height: 1.45;
+  }
+  .m-disc strong { color: var(--ink-1); font-weight: 500; }
+
+  .scenario-divider {
+    background: var(--surface-muted);
+    color: var(--ink-3);
+    padding: 8px 16px;
+    font-size: 11.5px;
+    font-weight: 500;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--line);
+    border-top: 1px solid var(--line);
+  }
+</style>
+</head>
+<body>
+
+<a href="#main" class="skip">Pular para o conteúdo principal</a>
+
+<nav class="variants" role="tablist" aria-label="Variantes de edge states">
+  <button class="variant-tab active" data-tab="A" role="tab" aria-selected="true">Variant A — Inline minimal</button>
+  <button class="variant-tab" data-tab="B" role="tab" aria-selected="false">Variant B — Structured callouts</button>
+  <button class="variant-tab" data-tab="C" role="tab" aria-selected="false">Variant C — Top banner + lean cards</button>
+</nav>
+
+<main id="main" class="stage">
+
+<!-- ============================ VARIANT A — INLINE MINIMAL ============================ -->
+<div class="pane-wrap active" data-pane="A">
+  <div class="pane-label">
+    Variant A · Inline minimal
+    <small>Mensagens onde a coisa está faltando. Sem chrome adicional, sem banners. O texto carrega o peso.</small>
+  </div>
+  <div class="phone">
+    <div class="status-bar"><span>14:32</span><span>5G  •••  98%</span></div>
+
+    <div class="scenario-divider">1. Estado verde na lista</div>
+    <div class="card-list">
+      <a href="/estado/sc" class="state-card r-green">
+        <div class="head">
+          <div class="name"><h3>Santa Catarina</h3><div class="region">Sul · SC</div></div>
+          <span class="badge"><span aria-hidden="true">✓</span> Sem alertas</span>
+        </div>
+        <div class="lead">Não encontramos nenhuma emergência nessa localidade.</div>
+        <div class="body-text">Verifique em outras fontes de informação antes de decidir o que você vai fazer.</div>
+        <div class="foot">
+          <span>Verificado <span class="tnum">há 8 min</span> · CEMADEN ✓ INMET ✓</span>
+          <span class="arrow" aria-hidden="true">→</span>
+        </div>
+      </a>
+    </div>
+
+    <div class="scenario-divider">2. Estado com fonte fora — alertas parciais</div>
+    <div class="card-list">
+      <a href="/estado/ba" class="state-card r-orange">
+        <div class="head">
+          <div class="name"><h3>Bahia</h3><div class="region">Nordeste · BA</div></div>
+          <span class="badge"><span aria-hidden="true">⚠⚠</span> Alerta</span>
+        </div>
+        <div class="stale-strip" role="note">
+          <span aria-hidden="true">⚠</span>
+          <span>Não estamos recebendo dados do <strong>CEMADEN</strong> há 47 min. Acesse <a href="https://alertas.cemaden.gov.br" rel="external">alertas.cemaden.gov.br</a> diretamente.</span>
+        </div>
+        <div class="lead">Chuva intensa, risco de deslizamento (INMET).</div>
+        <div class="body-text"><strong>Afeta:</strong> Sul do estado · Ilhéus, Itabuna, vale do Jequitinhonha</div>
+        <div class="foot">
+          <span>1 alerta · INMET há 23 min</span>
+          <span class="arrow" aria-hidden="true">→</span>
+        </div>
+      </a>
+    </div>
+
+    <div class="scenario-divider">3. Estado sem dados — todas as fontes fora</div>
+    <div class="card-list">
+      <a href="/estado/pa" class="state-card r-gray">
+        <div class="head">
+          <div class="name"><h3>Pará</h3><div class="region">Norte · PA</div></div>
+          <span class="badge"><span aria-hidden="true">?</span> Dados indisponíveis</span>
+        </div>
+        <div class="lead">Não estamos recebendo dados das fontes oficiais.</div>
+        <div class="body-text">
+          Acesse os sites diretamente para buscar a informação que você precisa:
+        </div>
+        <div class="src-links">
+          <a class="fail" href="https://alertas.cemaden.gov.br" rel="external">
+            <span>CEMADEN</span><span class="domain">alertas.cemaden.gov.br</span>
+          </a>
+          <a class="fail" href="https://alertas2.inmet.gov.br" rel="external">
+            <span>INMET</span><span class="domain">alertas2.inmet.gov.br</span>
+          </a>
+          <a class="fail" href="https://defesacivil.pa.gov.br" rel="external">
+            <span>Defesa Civil PA</span><span class="domain">defesacivil.pa.gov.br</span>
+          </a>
+        </div>
+        <div class="foot">
+          <span>Última verificação há <span class="tnum">1 h 12 min</span></span>
+          <span class="arrow" aria-hidden="true">→</span>
+        </div>
+      </a>
+    </div>
+
+    <div class="scenario-divider">4. Detalhe /estado/sc — verde</div>
+    <div class="detail">
+      <div class="breadcrumb"><a href="/">← Brasil</a></div>
+      <h2>Santa Catarina <span class="uf">SC</span></h2>
+      <div class="region">Sul</div>
+      <div class="detail-status-green">
+        <h3>✓ Sem alertas oficiais ativos</h3>
+        <p>Não encontramos nenhuma emergência nessa localidade. Verifique em outras fontes de informação antes de decidir o que você vai fazer.</p>
+      </div>
+      <div class="section-h">Fontes verificadas</div>
+      <div class="src-links" style="margin-top:0;">
+        <a class="ok" href="https://alertas.cemaden.gov.br" rel="external"><span>CEMADEN</span><span class="domain">alertas.cemaden.gov.br</span></a>
+        <a class="ok" href="https://alertas2.inmet.gov.br" rel="external"><span>INMET</span><span class="domain">alertas2.inmet.gov.br</span></a>
+        <a class="ok" href="https://www.defesacivil.sc.gov.br" rel="external"><span>Defesa Civil SC</span><span class="domain">defesacivil.sc.gov.br</span></a>
+      </div>
+      <div class="section-h">Como calculamos</div>
+      <p style="font-size:13px;color:var(--ink-2);line-height:1.5;">Aplicamos a fórmula v0 sobre os alertas oficiais ativos. Verde significa "verificamos e não há alertas", não "não conseguimos verificar". <a href="#methodology">Saiba mais →</a></p>
+    </div>
+
+    <footer class="m-disc">
+      Agregamos fontes oficiais. Em emergência: <strong>199</strong> · <strong>193</strong>. Não substitui alertas oficiais.
+    </footer>
+  </div>
+</div>
+
+<!-- ============================ VARIANT B — STRUCTURED CALLOUTS ============================ -->
+<div class="pane-wrap" data-pane="B">
+  <div class="pane-label">
+    Variant B · Structured callouts
+    <small>Containers dedicados para cada caso de borda. Verde tem callout próprio com lista de fontes verificadas; cinza tem callout de "Dados indisponíveis" que mostra os sites para buscar diretamente.</small>
+  </div>
+  <div class="phone">
+    <div class="status-bar"><span>14:32</span><span>5G  •••  98%</span></div>
+
+    <div class="scenario-divider">1. Estado verde na lista</div>
+    <div class="card-list">
+      <a href="/estado/sc" class="state-card r-green">
+        <div class="head">
+          <div class="name"><h3>Santa Catarina</h3><div class="region">Sul · SC</div></div>
+          <span class="badge"><span aria-hidden="true">✓</span> Sem alertas</span>
+        </div>
+        <div class="verified-callout">
+          <strong>Não encontramos nenhuma emergência nessa localidade.</strong><br>
+          Verifique em outras fontes antes de decidir o que você vai fazer.
+        </div>
+        <div class="foot">
+          <span>3 fontes oficiais consultadas · há <span class="tnum">8 min</span></span>
+          <span class="arrow" aria-hidden="true">→</span>
+        </div>
+      </a>
+    </div>
+
+    <div class="scenario-divider">2. Estado com fonte fora</div>
+    <div class="card-list">
+      <a href="/estado/ba" class="state-card r-orange">
+        <div class="head">
+          <div class="name"><h3>Bahia</h3><div class="region">Nordeste · BA</div></div>
+          <span class="badge"><span aria-hidden="true">⚠⚠</span> Alerta</span>
+        </div>
+        <div class="stale-strip" role="note">
+          <span aria-hidden="true">⚠</span>
+          <span>
+            <strong>Não estamos recebendo dados do CEMADEN.</strong>
+            Acesse <a href="https://alertas.cemaden.gov.br" rel="external">alertas.cemaden.gov.br</a> e busque a informação direto na fonte.
+          </span>
+        </div>
+        <div class="lead">Chuva intensa, risco de deslizamento (INMET).</div>
+        <div class="body-text"><strong>Afeta:</strong> Sul do estado · Ilhéus, Itabuna, vale do Jequitinhonha</div>
+        <div class="foot">
+          <span>1 alerta · INMET há 23 min · CEMADEN ⚠ 47 min</span>
+          <span class="arrow" aria-hidden="true">→</span>
+        </div>
+      </a>
+    </div>
+
+    <div class="scenario-divider">3. Estado sem dados</div>
+    <div class="card-list">
+      <a href="/estado/pa" class="state-card r-gray">
+        <div class="head">
+          <div class="name"><h3>Pará</h3><div class="region">Norte · PA</div></div>
+          <span class="badge"><span aria-hidden="true">?</span> Indisponível</span>
+        </div>
+        <div class="lead">Não estamos recebendo dados das fontes oficiais.</div>
+        <div class="body-text">
+          Acesse os sites diretamente para buscar a informação que você precisa:
+        </div>
+        <div class="src-links">
+          <div class="h">Sites oficiais</div>
+          <a class="fail" href="https://alertas.cemaden.gov.br" rel="external"><span>CEMADEN</span><span class="domain">alertas.cemaden.gov.br</span></a>
+          <a class="fail" href="https://alertas2.inmet.gov.br" rel="external"><span>INMET</span><span class="domain">alertas2.inmet.gov.br</span></a>
+          <a class="fail" href="https://defesacivil.pa.gov.br" rel="external"><span>Defesa Civil PA</span><span class="domain">defesacivil.pa.gov.br</span></a>
+        </div>
+        <div class="foot">
+          <span>Última tentativa há <span class="tnum">1 h 12 min</span></span>
+          <span class="arrow" aria-hidden="true">→</span>
+        </div>
+      </a>
+    </div>
+
+    <div class="scenario-divider">4. Detalhe /estado/sc — verde</div>
+    <div class="detail">
+      <div class="breadcrumb"><a href="/">← Brasil</a></div>
+      <h2>Santa Catarina <span class="uf">SC</span></h2>
+      <div class="region">Sul</div>
+      <div class="detail-status-green">
+        <h3>✓ Sem alertas oficiais ativos</h3>
+        <p>Não encontramos nenhuma emergência nessa localidade. Verifique em outras fontes de informação antes de decidir o que você vai fazer.</p>
+      </div>
+      <div class="section-h">Fontes verificadas há 8 min</div>
+      <div class="src-links" style="margin-top:0;">
+        <a class="ok" href="https://alertas.cemaden.gov.br" rel="external"><span>CEMADEN</span><span class="domain">alertas.cemaden.gov.br</span></a>
+        <a class="ok" href="https://alertas2.inmet.gov.br" rel="external"><span>INMET</span><span class="domain">alertas2.inmet.gov.br</span></a>
+        <a class="ok" href="https://www.defesacivil.sc.gov.br" rel="external"><span>Defesa Civil SC</span><span class="domain">defesacivil.sc.gov.br</span></a>
+      </div>
+    </div>
+
+    <footer class="m-disc">
+      Agregamos fontes oficiais. Em emergência: <strong>199</strong> · <strong>193</strong>. Não substitui alertas oficiais.
+    </footer>
+  </div>
+</div>
+
+<!-- ============================ VARIANT C — TOP BANNER + LEAN CARDS ============================ -->
+<div class="pane-wrap" data-pane="C">
+  <div class="pane-label">
+    Variant C · Top banner + lean cards
+    <small>Faixa global no topo da página explica o degradado quando uma fonte cai. Cards individuais ficam limpos com indicador discreto.</small>
+  </div>
+  <div class="phone">
+    <div class="status-bar"><span>14:32</span><span>5G  •••  98%</span></div>
+
+    <div class="top-banner warning" role="status">
+      <strong>CEMADEN fora há 47 min.</strong>
+      Estamos mostrando dados antigos dessa fonte. Acesse
+      <a href="https://alertas.cemaden.gov.br" rel="external">alertas.cemaden.gov.br</a>
+      para verificar diretamente.
+    </div>
+
+    <div class="m-head">
+      <h1>ENSO Brasil</h1>
+      <div class="sub">Perigos por estado · INMET ✓ · CEMADEN ⚠</div>
+    </div>
+
+    <div class="scenario-divider">1. Estado verde na lista</div>
+    <div class="card-list">
+      <a href="/estado/sc" class="state-card r-green">
+        <div class="head">
+          <div class="name"><h3>Santa Catarina</h3><div class="region">Sul · SC</div></div>
+          <span class="badge"><span aria-hidden="true">✓</span> Sem alertas</span>
+        </div>
+        <div class="lead">Não encontramos nenhuma emergência nessa localidade.</div>
+        <div class="body-text">Verifique em outras fontes antes de decidir o que você vai fazer.</div>
+        <div class="foot">
+          <span>Verificado há <span class="tnum">8 min</span></span>
+          <span class="arrow" aria-hidden="true">→</span>
+        </div>
+      </a>
+    </div>
+
+    <div class="scenario-divider">2. Estado com alerta — banner global indica fonte stale</div>
+    <div class="card-list">
+      <a href="/estado/ba" class="state-card r-orange">
+        <div class="head">
+          <div class="name"><h3>Bahia</h3><div class="region">Nordeste · BA</div></div>
+          <span class="badge"><span aria-hidden="true">⚠⚠</span> Alerta</span>
+        </div>
+        <div class="lead">Chuva intensa, risco de deslizamento (INMET).</div>
+        <div class="body-text"><strong>Afeta:</strong> Sul do estado · Ilhéus, Itabuna</div>
+        <div class="foot">
+          <span>1 alerta · há 23 min</span>
+          <span class="arrow" aria-hidden="true">→</span>
+        </div>
+      </a>
+    </div>
+
+    <div class="scenario-divider">3. Estado sem dados — quando todas as fontes caem para um estado específico</div>
+    <div class="card-list">
+      <a href="/estado/pa" class="state-card r-gray">
+        <div class="head">
+          <div class="name"><h3>Pará</h3><div class="region">Norte · PA</div></div>
+          <span class="badge"><span aria-hidden="true">?</span> Indisponível</span>
+        </div>
+        <div class="lead">Não estamos recebendo dados.</div>
+        <div class="body-text">Acesse direto: <a href="https://alertas.cemaden.gov.br" rel="external">CEMADEN</a> · <a href="https://alertas2.inmet.gov.br" rel="external">INMET</a> · <a href="https://defesacivil.pa.gov.br" rel="external">Defesa Civil PA</a>.</div>
+        <div class="foot">
+          <span>Última tentativa há <span class="tnum">1 h 12 min</span></span>
+          <span class="arrow" aria-hidden="true">→</span>
+        </div>
+      </a>
+    </div>
+
+    <div class="scenario-divider">4. Detalhe /estado/pa — todas as fontes fora</div>
+    <div class="detail">
+      <div class="breadcrumb"><a href="/">← Brasil</a></div>
+      <h2>Pará <span class="uf">PA</span></h2>
+      <div class="region">Norte</div>
+      <div class="detail-status-gray">
+        <h3>? Dados indisponíveis</h3>
+        <p>Não estamos recebendo dados das fontes oficiais para o Pará. Acesse os sites abaixo diretamente e busque a informação que você precisa.</p>
+      </div>
+      <div class="section-h">Sites oficiais</div>
+      <div class="src-links" style="margin-top:0;">
+        <a class="fail"  href="https://alertas.cemaden.gov.br" rel="external"><span>CEMADEN</span><span class="domain">alertas.cemaden.gov.br</span></a>
+        <a class="fail"  href="https://alertas2.inmet.gov.br" rel="external"><span>INMET</span><span class="domain">alertas2.inmet.gov.br</span></a>
+        <a class="fail"  href="https://defesacivil.pa.gov.br" rel="external"><span>Defesa Civil PA</span><span class="domain">defesacivil.pa.gov.br</span></a>
+      </div>
+    </div>
+
+    <footer class="m-disc">
+      Em emergência: <strong>199</strong> · <strong>193</strong>. Não substitui alertas oficiais.
+    </footer>
+  </div>
+</div>
+
+</main>
+
+<div class="sketch-toolbar" aria-label="Sketch tools">
+  <span style="color:var(--ink-3)">Sketch 003 · Edge states</span>
+</div>
+
+<script>
+  document.querySelectorAll('.variant-tab').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.variant-tab').forEach(b => { b.classList.remove('active'); b.setAttribute('aria-selected','false'); });
+      document.querySelectorAll('.pane-wrap').forEach(p => p.classList.remove('active'));
+      btn.classList.add('active'); btn.setAttribute('aria-selected','true');
+      const tab = btn.dataset.tab;
+      document.querySelector(`.pane-wrap[data-pane="${tab}"]`).classList.add('active');
+    });
+  });
+</script>
+
+</body>
+</html>
