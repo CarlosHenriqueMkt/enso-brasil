@@ -27,7 +27,7 @@
 | 001 | dashboard-desktop-layout | Does 40/60 panel-on-left + map-on-right feel right at ≥1024px, or should the map breathe more? | **C — top legend + 50/50, map left** | layout, desktop, hierarchy |
 | 002 | mobile-dashboard | Mobile-first vertical card list ordered by severity — what density, hierarchy, and interaction model? | **B — generous cards (refined: Afeta + Válido + 199/193 inline em vermelho)** | layout, mobile, cards |
 | 003 | edge-states | How to show "Verde — sem alertas" without looking like a bug, and how to flag a stale source? | **C — top banner global + cards lean** | states, error, empty |
-| 004 | state-detail-page | What does the `/estado/{uf}` deep-link page look like — the screen that receives WhatsApp shares? | _pending_ | layout, page, deep-link |
+| 004 | state-detail-page | What does the `/estado/{uf}` deep-link page look like — the screen that receives WhatsApp shares? | **C — two-column desktop / linear mobile** | layout, page, deep-link |
 | 005 | tablet-viewport | How does the layout adapt at 640–1024 px (the gap zone between mobile and desktop)? | _planned_ | layout, responsive, breakpoint |
 | 006 | search-filter-states | Search input + region chips interaction: empty, typing, no-results, active chip combinations | _planned_ | interaction, search, filter |
 | 007 | loading-skeleton | Cold-cache and 3G initial paint: skeleton vs SSR-instant vs prefetch shell | _planned_ | states, loading, perf |
@@ -37,7 +37,7 @@
 These came out of sketch winners and are now project-wide design contracts:
 
 1. **Avisos de stale/desatualizado SEMPRE no topo da página** (acima do conteúdo, primeira informação que o usuário vê). Nunca apenas inline. — sketch 003 winner C
-2. **Toda página exibe** (a) link para a fonte oficial original e (b) contatos de emergência completos: **199 Defesa Civil · 193 Bombeiros · 190 Polícia**. Sem esquecer 190.
+2. **Toda página exibe** (a) link para a fonte oficial original e (b) contatos de emergência completos: **199 Defesa Civil · 193 Bombeiros · 190 Polícia**. Sem esquecer 190 e **sempre pareando o número com o nome do órgão** — nunca "199 · 193 · 190" sozinhos.
 3. **Copy de borda travada** em PT-BR direto, sem enrolação:
    - Verde: "Não encontramos nenhuma emergência nessa localidade. Verifique em outras fontes de informação antes de decidir o que você vai fazer."
    - Stale source: "Não estamos recebendo dados do(a) [Fonte]. Acesse [site] diretamente e busque a informação que você precisa."

@@ -103,6 +103,7 @@ If only this works, the project has shipped.
 | **PT-BR LGPD privacy page in v1** even without user accounts | LGPD applies to server logs and IPs — needs disclosure | Locked (research delta) |
 | **Stale-data and source-failure notices ALWAYS at the top of the page** | First thing the user must see; never inline-only | Locked (sketch 003 winner) |
 | **Emergency contacts: 199 Defesa Civil · 193 Bombeiros · 190 Polícia** on every page disclaimer | 190 was missing from earlier draft; user-locked principle | Locked (sketch 003 feedback) |
+| **Emergency numbers ALWAYS paired with agency name** — never bare "199 · 193 · 190" | Many users do not memorize which number reaches which service; the bare number is incomplete information | Locked (sketch 004 feedback) |
 | **Edge-state copy locked PT-BR direto** — verde "Não encontramos nenhuma emergência…"; stale "Não estamos recebendo dados de [Fonte]. Acesse [site] diretamente…" | Humilde, sem enrolação, sempre redireciona para a fonte oficial | Locked (sketch 003 winner) |
 | **Top legend = national snapshot** on desktop dashboard | Sketch 001 winner C — counts per level visible globally | Locked (sketch 001 winner) |
 | **Mobile card reading order**: Lead → Afeta → Válido → Fontes → Chips → 199/193/190 (em vermelho) → Timestamp | Life-safety information must be scannable in 1-2 lines under stress | Locked (sketch 002 winner B refined) |

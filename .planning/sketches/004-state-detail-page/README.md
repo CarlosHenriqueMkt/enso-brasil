@@ -2,7 +2,7 @@
 sketch: 004
 name: state-detail-page
 question: "What does /estado/{uf} look like — the page that receives WhatsApp shares and serves as the per-state deep link?"
-winner: null
+winner: "C"
 tags: [layout, page, deep-link, content-architecture]
 ---
 
@@ -41,6 +41,27 @@ Each variant pane shows desktop (1100px) AND mobile (390px) side-by-side using t
 5. **Compartilhar button** — the action bar appears in all three but at slightly different visual weight. Which makes "share this with my family on WhatsApp" feel obvious without being pushy?
 6. **Mobile parity.** On the phone view, A becomes a long scroll, B keeps the tabs (they wrap horizontally), C streams the aside as final sections. Which mobile experience holds up best on 3G + small screen?
 7. **Neighbor states navigation** (variant C only) — does this matter for the audience, or is it sidebar bloat? In a real emergency, "what's happening next door" can be load-bearing.
+
+## Decision (winner: C — two-column desktop / linear mobile)
+
+**Mirrors the home dashboard's two-column logic.** Desktop main column carries alerts + status + methodology; aside permanently hosts fontes (com domínios mono), Defesa Civil estadual, e navegação para outros estados da mesma região. Mobile streams aside as final sections — sem perder nada, só reorganizando.
+
+**Por que essa venceu:**
+- Aside permanente acelera dois dos três jobs principais da página: (a) "vou ao site oficial verificar" e (b) "como tá o estado vizinho onde mora minha família?"
+- Defesa Civil estadual sempre visível, sem precisar fechar uma aba ou rolar até o fim
+- Layout consistente com sketch 001 home dashboard — usuário não aprende nova gramática
+- Navegação para vizinhos (Nordeste, p. ex.) é load-bearing em emergência regional
+
+### Refinement aplicado pelo feedback
+
+**Princípio travado:** todo número de emergência aparece pareado com o nome do órgão. Nunca "199 · 193 · 190" sozinhos.
+
+> ✗ "Em emergência: 199 · 193 · 190."
+> ✓ "Em emergência: 199 Defesa Civil · 193 Bombeiros · 190 Polícia."
+
+Razão: muita gente não memoriza qual número chama qual serviço. O número sozinho é informação incompleta — mostrar o nome do órgão é parte do contrato.
+
+Aplicado em todas as 6 instâncias mobile compressed do sketch 004 e propagado para `SKILL.md`, `references/02-edge-states-source-trust.md`, `PROJECT.md`, `REQUIREMENTS.md` (FOUND-05).
 
 ## Notes
 

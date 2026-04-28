@@ -48,11 +48,16 @@ INMET                alertas2.inmet.gov.br
 Defesa Civil PA      defesacivil.pa.gov.br
 ```
 
-### Emergency contacts — always present, never partial
+### Emergency contacts — always present, never partial, **always with agency name**
 
-Every page disclaimer includes all three emergency numbers:
+Every page disclaimer includes all three emergency numbers, **and every number is always paired with the name of the agency it dials**. Many users do not memorize which number reaches which service — the number alone is incomplete information.
 
 > **199** Defesa Civil · **193** Bombeiros · **190** Polícia
+
+**Wrong:** "Em emergência: 199 · 193 · 190."
+**Right:** "Em emergência: 199 Defesa Civil · 193 Bombeiros · 190 Polícia."
+
+Do not compress the number-name pairing for any reason — including narrow mobile viewports, footer constraints, or word count. If space is a problem, drop other words ("Em emergência:" can be shortened) or stack the contacts vertically — never strip the agency name.
 
 190 was missing from earlier drafts and was explicitly added by the user. Do not omit any of the three. They appear in:
 - The footer disclaimer of every page (mandatory)
@@ -235,6 +240,7 @@ export const messages = {
   emergency: {
     full: "Em caso de emergência, ligue 199 (Defesa Civil), 193 (Bombeiros) ou 190 (Polícia).",
     inline: "199 Defesa Civil · 193 Bombeiros · 190 Polícia",
+    // ALWAYS pair number + agency. Never use the bare numbers without their agency names.
   },
   disclaimer: "Este site agrega informações de fontes oficiais para facilitar o acesso. O ENSO Brasil não substitui sistemas oficiais de alerta.",
 };
@@ -251,6 +257,7 @@ Do not edit these strings without explicit user approval — they were locked th
 | Auto-defaulting to green when sources fail | Public-safety hazard — a stale upstream during a real disaster could paint a state green |
 | Source-failure messaging that hides which source | Users need to know *which* official site to consult |
 | Removing/abbreviating any of the 3 emergency numbers | 190 was added explicitly; all three must always be present |
+| Showing emergency numbers without their agency names | "199 · 193 · 190" without "Defesa Civil / Bombeiros / Polícia" — many users don't memorize which is which; the bare number is incomplete information |
 | Translating or rewording the locked PT-BR strings | They were locked through user feedback — unauthorized changes degrade trust |
 | Severity-color borders on "Indisponível" | Gray must read as meta-state; dashed border + gray ink is the contract |
 | White text on yellow background | Fails WCAG AA contrast; always black ink on yellow |

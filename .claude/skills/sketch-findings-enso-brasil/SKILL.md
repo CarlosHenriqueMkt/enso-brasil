@@ -81,6 +81,7 @@ Auto-load whenever working on UI for ENSO Brasil — building components, pages,
 - ⛔ Never animate alert content (no pulsing, shaking, blinking) — anti-sensationalism
 - ⛔ Never use white text on yellow background (WCAG AA contrast fail) — black ink on yellow always
 - ⛔ Never render an emergency contact list missing 190 (Polícia)
+- ⛔ Never show emergency numbers without their agency names — "199 Defesa Civil · 193 Bombeiros · 190 Polícia", never bare digits. The number alone is incomplete information.
 - ⛔ Never bury a stale-data notice inline only — top of page is the contract
 - ⛔ Never present green as default-when-uncertain — risk engine produces `unknown` (gray) when sources stale
 - ⛔ Never replace the locked edge-state PT-BR strings without explicit user approval
