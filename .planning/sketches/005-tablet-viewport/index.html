@@ -1,0 +1,717 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sketch 005 — Tablet Viewport (640–1024 px) · ENSO Brasil</title>
+<link rel="stylesheet" href="../themes/default.css">
+<style>
+  body { background: #efeeea; }
+  .stage { display: flex; flex-direction: column; gap: 24px; padding: 24px 16px 96px; align-items: center; }
+  .pane-wrap { display: none; flex-direction: column; gap: 18px; align-items: center; }
+  .pane-wrap.active { display: flex; }
+  .pane-label {
+    font-size: 13px; font-weight: 500; color: var(--ink-2);
+    letter-spacing: 0.02em; max-width: 1100px; text-align: center;
+  }
+  .pane-label small { display: block; margin-top: 4px; color: var(--ink-3); font-weight: 400; }
+
+  .device-row { display: flex; gap: 28px; align-items: flex-start; flex-wrap: wrap; justify-content: center; }
+  .device-label { font-size: 11.5px; color: var(--ink-3); letter-spacing: 0.05em; text-transform: uppercase; margin-bottom: 6px; text-align: center; }
+
+  .tablet {
+    background: var(--bg);
+    border: 1px solid var(--line-strong);
+    border-radius: 16px;
+    overflow: hidden;
+  }
+  .tablet.t-768 { width: 768px; height: 1000px; }
+  .tablet.t-1024 { width: 1024px; height: 720px; }
+  .tablet .browser-bar {
+    background: var(--surface-muted); border-bottom: 1px solid var(--line);
+    padding: 8px 12px; display: flex; align-items: center; gap: 10px; font-size: 11.5px; color: var(--ink-3);
+  }
+  .tablet .browser-bar .url { font-family: var(--mono); background: var(--surface); padding: 3px 10px; border-radius: 999px; border: 1px solid var(--line); flex: 1; max-width: 380px; }
+  .tablet .scroll { height: calc(100% - 32px); overflow-y: auto; }
+
+  /* Shared theme */
+  .top-banner {
+    padding: 12px 18px;
+    background: #fef0e1;
+    border-bottom: 1px solid var(--orange-border);
+    border-top: 3px solid var(--orange-border);
+    color: var(--orange-ink);
+    font-size: 13px; line-height: 1.5;
+  }
+  .top-banner strong { font-weight: 500; color: var(--ink-1); }
+  .topbar {
+    background: var(--surface); border-bottom: 1px solid var(--line);
+    display: flex; align-items: baseline; justify-content: space-between; gap: 16px;
+  }
+  .topbar h1 { font-weight: 500; }
+  .topbar h1 .sub { color: var(--ink-3); font-weight: 400; margin-left: 10px; }
+  .topbar .meta { color: var(--ink-3); }
+
+  /* ================================================ */
+  /* Variant A — Constrained mobile-up                */
+  /* Cards keep mobile width; page padding scales;    */
+  /* type scales gently. Most accessible reading.     */
+  /* ================================================ */
+  .va .topbar { padding: 16px 24px; }
+  .va.size-768 .topbar { padding: 18px 32px; }
+  .va.size-1024 .topbar { padding: 20px 64px; }
+  .va .topbar h1 { font-size: 17px; }
+  .va.size-1024 .topbar h1 { font-size: 19px; }
+
+  .va .counts {
+    display: flex; gap: 8px; flex-wrap: wrap;
+    background: var(--surface-muted); border-bottom: 1px solid var(--line);
+    padding: 12px 24px; font-size: 12px;
+  }
+  .va.size-1024 .counts { padding: 14px 64px; font-size: 13px; }
+  .va .counts .pill {
+    border: 1px solid var(--line); border-radius: 999px;
+    padding: 3px 9px; background: var(--surface);
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+  .va .counts .pill .swatch { width: 8px; height: 8px; border-radius: 50%; }
+  .va .counts .pill.green  .swatch { background: var(--green-border);  }
+  .va .counts .pill.yellow .swatch { background: var(--yellow-border); }
+  .va .counts .pill.orange .swatch { background: var(--orange-border); }
+  .va .counts .pill.red    .swatch { background: var(--red-border);    }
+
+  .va .search { padding: 12px 24px; background: var(--surface); border-bottom: 1px solid var(--line); }
+  .va.size-1024 .search { padding: 14px 64px; }
+  .va .search input {
+    width: 100%; max-width: 480px;
+    height: 38px; padding: 0 12px;
+    border: 1px solid var(--line); border-radius: 6px;
+    background: var(--bg); font: inherit; font-size: 14px;
+  }
+  .va.size-1024 .search input { font-size: 15px; height: 42px; }
+
+  /* Card list — KEY DECISION: max-width capped, centered */
+  .va .card-list {
+    padding: 18px 24px;
+    display: flex; flex-direction: column; gap: 16px;
+    max-width: 560px;             /* ★ constrained — same width regardless of viewport */
+    margin: 0 auto;               /* centered */
+  }
+  .va.size-1024 .card-list { padding: 22px 24px; gap: 18px; }
+
+  .va .state-card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-left: 4px solid var(--line-strong);
+    border-radius: 6px;
+    padding: 18px;
+    text-decoration: none; color: inherit; display: block;
+  }
+  .va.size-1024 .state-card { padding: 20px; }
+  .va .state-card.r-red    { border-left-color: var(--red-border);    border-left-width: 5px; }
+  .va .state-card.r-orange { border-left-color: var(--orange-border); }
+  .va .state-card.r-yellow { border-left-color: var(--yellow-border); }
+  .va .state-card.r-green  { border-left-color: var(--green-border);  }
+
+  .va .state-card .head { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; margin-bottom: 12px; }
+  .va .state-card h3 { font-size: 18px; font-weight: 500; line-height: 1.3; }
+  .va.size-1024 .state-card h3 { font-size: 19px; }
+  .va .state-card .region { font-size: 12px; color: var(--ink-3); letter-spacing: 0.04em; text-transform: uppercase; margin-top: 2px; }
+  .va .state-card .badge {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 5px 11px; border-radius: 4px; border: 1px solid var(--line);
+    font-size: 13px; font-weight: 500;
+  }
+  .va.size-1024 .state-card .badge { font-size: 13.5px; padding: 6px 12px; }
+  .va .state-card.r-red    .badge { background: var(--red-bg);    color: var(--red-ink);    border-color: var(--red-border);    }
+  .va .state-card.r-orange .badge { background: var(--orange-bg); color: var(--orange-ink); border-color: var(--orange-border); }
+  .va .state-card.r-yellow .badge { background: var(--yellow-bg); color: var(--yellow-ink); border-color: var(--yellow-border); }
+  .va .state-card.r-green  .badge { background: var(--green-bg);  color: var(--green-ink);  border-color: var(--green-border);  }
+
+  .va .state-card .lead {
+    font-size: 15px; font-weight: 500; line-height: 1.5;
+    margin-bottom: 10px; color: var(--ink-1);
+  }
+  .va.size-1024 .state-card .lead { font-size: 15.5px; }
+
+  .va .state-card .facts {
+    display: grid; grid-template-columns: max-content 1fr; gap: 4px 12px;
+    font-size: 13.5px; color: var(--ink-2); line-height: 1.5;
+    margin-bottom: 12px;
+  }
+  .va.size-1024 .state-card .facts { font-size: 14px; }
+  .va .state-card .facts dt { color: var(--ink-3); font-size: 11.5px; letter-spacing: 0.04em; text-transform: uppercase; padding-top: 2px; }
+  .va.size-1024 .state-card .facts dt { font-size: 12px; }
+  .va .state-card .facts dd { margin: 0; color: var(--ink-1); }
+
+  .va .state-card .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+  .va .state-card .chip {
+    font-size: 12.5px; padding: 3px 9px;
+    border: 1px solid var(--line); border-radius: 999px;
+    background: var(--surface-muted); color: var(--ink-2);
+  }
+
+  .va .state-card .emerg {
+    margin-top: 10px;
+    background: var(--red-bg); border: 1px solid var(--red-border);
+    border-radius: 4px; padding: 9px 13px;
+    font-size: 13px; color: var(--red-ink); line-height: 1.5;
+    display: flex; align-items: center; gap: 9px;
+  }
+  .va .state-card .emerg strong { color: var(--ink-1); font-weight: 500; }
+  .va .state-card .emerg .num {
+    background: var(--surface); color: var(--red-ink); font-weight: 500;
+    border: 1px solid var(--red-border);
+    padding: 2px 8px; border-radius: 4px; font-family: var(--mono); margin-right: 4px;
+  }
+
+  .va .state-card .foot {
+    display: flex; justify-content: space-between; align-items: center;
+    border-top: 1px solid var(--line); padding-top: 10px;
+    font-size: 12.5px; color: var(--ink-3);
+  }
+  .va .state-card .foot .tnum { color: var(--ink-2); font-weight: 500; }
+  .va .state-card .foot .arrow { color: var(--ink-2); font-size: 16px; }
+
+  .va .disc {
+    border-top: 1px solid var(--line); background: var(--surface);
+    padding: 14px 24px; font-size: 13px; line-height: 1.5; color: var(--ink-2);
+  }
+  .va.size-1024 .disc { padding: 16px 64px; font-size: 13.5px; }
+  .va .disc strong { color: var(--ink-1); font-weight: 500; }
+
+  /* ================================================ */
+  /* Variant B — Desktop-down                         */
+  /* Mantém top-legend + map+panel; reduz proporções. */
+  /* ================================================ */
+  .vb .topbar { padding: 14px 20px; }
+  .vb .top-legend {
+    background: var(--surface); border-bottom: 1px solid var(--line);
+    padding: 10px 20px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center;
+    font-size: 12px;
+  }
+  .vb .top-legend .lbl-h { color: var(--ink-3); font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; margin-right: 6px; font-size: 11.5px; }
+  .vb .top-legend .pill {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 3px 9px; border: 1px solid var(--line); border-radius: 4px;
+    font-size: 12px; font-weight: 500; background: var(--surface);
+  }
+  .vb .top-legend .pill.green  { background: var(--green-bg);  color: var(--green-ink);  border-color: var(--green-border);  }
+  .vb .top-legend .pill.yellow { background: var(--yellow-bg); color: var(--yellow-ink); border-color: var(--yellow-border); }
+  .vb .top-legend .pill.orange { background: var(--orange-bg); color: var(--orange-ink); border-color: var(--orange-border); }
+  .vb .top-legend .pill.red    { background: var(--red-bg);    color: var(--red-ink);    border-color: var(--red-border);    }
+
+  .vb .grid { display: grid; grid-template-columns: 50% 50%; height: calc(100% - 130px); }
+  .vb .map-area { padding: 16px; background: var(--bg); display: flex; align-items: center; justify-content: center; }
+  .vb .panel { padding: 18px 20px; border-left: 1px solid var(--line); background: var(--surface); overflow-y: auto; }
+  .vb .panel h2 { font-size: 22px; font-weight: 500; margin-bottom: 4px; }
+  .vb .panel .region { font-size: 11.5px; color: var(--ink-3); letter-spacing: 0.05em; text-transform: uppercase; margin-bottom: 14px; }
+  .vb .status { padding: 12px 14px; border: 1px solid var(--red-border); border-left-width: 5px; background: var(--red-bg); border-radius: 6px; margin-bottom: 14px; }
+  .vb .status .lbl { font-size: 11px; font-weight: 500; letter-spacing: 0.05em; text-transform: uppercase; color: var(--red-ink); margin-bottom: 4px; }
+  .vb .status h3 { font-size: 16px; font-weight: 500; margin-bottom: 6px; }
+  .vb .status p { font-size: 13px; color: var(--ink-1); line-height: 1.5; }
+  .vb .alert { border: 1px solid var(--line); border-radius: 6px; padding: 12px; margin-bottom: 8px; background: var(--surface); }
+  .vb .alert .row1 { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+  .vb .alert h4 { font-size: 13.5px; font-weight: 500; }
+  .vb .alert p { font-size: 12.5px; color: var(--ink-2); margin: 4px 0 6px; line-height: 1.45; }
+  .vb .alert .meta { font-size: 11.5px; color: var(--ink-3); display: flex; justify-content: space-between; }
+
+  .vb .disc {
+    border-top: 1px solid var(--line); background: var(--surface);
+    padding: 12px 20px; font-size: 12px; line-height: 1.5; color: var(--ink-2);
+  }
+  .vb .disc strong { color: var(--ink-1); font-weight: 500; }
+
+  /* ================================================ */
+  /* Variant C — Hybrid (cards grid 2-col + map below) */
+  /* ================================================ */
+  .vc .topbar { padding: 14px 20px; }
+  .vc .counts {
+    background: var(--surface-muted); border-bottom: 1px solid var(--line);
+    padding: 10px 20px; display: flex; gap: 8px; flex-wrap: wrap; font-size: 12px;
+  }
+  .vc .counts .pill {
+    border: 1px solid var(--line); border-radius: 999px;
+    padding: 3px 9px; background: var(--surface);
+    display: inline-flex; gap: 6px; align-items: center;
+  }
+  .vc .counts .pill .swatch { width: 8px; height: 8px; border-radius: 50%; }
+  .vc .counts .pill.green  .swatch { background: var(--green-border); }
+  .vc .counts .pill.yellow .swatch { background: var(--yellow-border); }
+  .vc .counts .pill.orange .swatch { background: var(--orange-border); }
+  .vc .counts .pill.red    .swatch { background: var(--red-border); }
+
+  .vc .grid {
+    padding: 18px 20px;
+    display: grid;
+    gap: 14px;
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .vc.size-1024 .grid { padding: 20px 32px; gap: 16px; grid-template-columns: repeat(3, 1fr); }
+  .vc .state-card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-left: 4px solid var(--line-strong);
+    border-radius: 6px;
+    padding: 14px;
+    text-decoration: none; color: inherit; display: block;
+  }
+  .vc .state-card.r-red    { border-left-color: var(--red-border); border-left-width: 5px; }
+  .vc .state-card.r-orange { border-left-color: var(--orange-border); }
+  .vc .state-card.r-yellow { border-left-color: var(--yellow-border); }
+  .vc .state-card.r-green  { border-left-color: var(--green-border); }
+  .vc .state-card .head { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; margin-bottom: 8px; }
+  .vc .state-card h3 { font-size: 14.5px; font-weight: 500; }
+  .vc .state-card .region { font-size: 11px; color: var(--ink-3); letter-spacing: 0.04em; text-transform: uppercase; margin-top: 2px; }
+  .vc .state-card .badge {
+    font-size: 11.5px; padding: 3px 8px; border-radius: 4px; border: 1px solid var(--line);
+    font-weight: 500; white-space: nowrap;
+  }
+  .vc .state-card.r-red    .badge { background: var(--red-bg);    color: var(--red-ink);    border-color: var(--red-border);    }
+  .vc .state-card.r-orange .badge { background: var(--orange-bg); color: var(--orange-ink); border-color: var(--orange-border); }
+  .vc .state-card.r-yellow .badge { background: var(--yellow-bg); color: var(--yellow-ink); border-color: var(--yellow-border); }
+  .vc .state-card.r-green  .badge { background: var(--green-bg);  color: var(--green-ink);  border-color: var(--green-border);  }
+  .vc .state-card .lead { font-size: 13.5px; line-height: 1.45; margin-bottom: 8px; }
+  .vc .state-card .meta { font-size: 11.5px; color: var(--ink-3); }
+
+  .vc .map-section {
+    border-top: 1px solid var(--line); background: var(--bg);
+    padding: 18px 20px;
+  }
+  .vc .map-section h2 {
+    font-size: 12px; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase;
+    color: var(--ink-3); margin-bottom: 8px;
+  }
+  .vc .disc {
+    border-top: 1px solid var(--line); background: var(--surface);
+    padding: 12px 20px; font-size: 12px; line-height: 1.5; color: var(--ink-2);
+  }
+  .vc .disc strong { color: var(--ink-1); font-weight: 500; }
+
+  /* ===== Schematic Brazil mini-map ===== */
+  .map-svg { display: block; width: 100%; height: 280px; }
+  .map-svg .country { fill: none; stroke: var(--line-strong); stroke-width: 0.4; }
+  .map-svg .state-tile { stroke: rgba(0,0,0,0.15); stroke-width: 0.3; }
+  .map-svg .state-tile.selected { stroke: #000; stroke-width: 1.0; }
+  .map-svg .green  { fill: var(--green-bg);  }
+  .map-svg .yellow { fill: var(--yellow-bg); }
+  .map-svg .orange { fill: var(--orange-bg); }
+  .map-svg .red    { fill: var(--red-bg);    }
+</style>
+</head>
+<body>
+
+<a href="#main" class="skip">Pular para o conteúdo principal</a>
+
+<nav class="variants" role="tablist" aria-label="Variantes de tablet viewport">
+  <button class="variant-tab active" data-tab="A" role="tab" aria-selected="true">Variant A — Constrained mobile-up (per direction)</button>
+  <button class="variant-tab" data-tab="B" role="tab" aria-selected="false">Variant B — Desktop-down adapted</button>
+  <button class="variant-tab" data-tab="C" role="tab" aria-selected="false">Variant C — Cards grid + map below</button>
+</nav>
+
+<main id="main" class="stage">
+
+<!-- ==================== VARIANT A — CONSTRAINED MOBILE-UP ==================== -->
+<div class="pane-wrap active" data-pane="A">
+  <div class="pane-label">
+    Variant A · Constrained mobile-up <small>Per directive: cards mantêm largura próxima ao mobile (max 560px, centralizados); margens laterais e tipografia escalam com o viewport. Lê tão bem quanto no mobile, sem o desperdício de cards esticados.</small>
+  </div>
+
+  <div class="device-row">
+    <div>
+      <div class="device-label">iPad portrait · 768 × 1000</div>
+      <div class="tablet t-768">
+        <div class="browser-bar"><div class="url">enso.com.br</div></div>
+        <div class="scroll va size-768">
+          <div class="top-banner"><strong>CEMADEN fora há 47 min.</strong> Acesse <a href="#">alertas.cemaden.gov.br</a> para verificar.</div>
+          <header class="topbar"><h1>ENSO Brasil <span class="sub">perigos climáticos por estado</span></h1><span class="meta">há 8 min</span></header>
+          <div class="counts">
+            <span class="pill red"><span class="swatch"></span><strong>1</strong> em perigo</span>
+            <span class="pill orange"><span class="swatch"></span><strong>3</strong> em alerta</span>
+            <span class="pill yellow"><span class="swatch"></span><strong>3</strong> em atenção</span>
+            <span class="pill green"><span class="swatch"></span><strong>20</strong> sem alertas</span>
+          </div>
+          <div class="search"><input type="search" placeholder="Buscar por estado…"></div>
+          <div class="card-list">
+
+            <a href="#" class="state-card r-red">
+              <div class="head">
+                <div><h3>Maranhão</h3><div class="region">Nordeste · MA</div></div>
+                <span class="badge">⛔ Perigo</span>
+              </div>
+              <div class="lead">Chuva extrema com risco de inundação e deslizamento.</div>
+              <dl class="facts">
+                <dt>Afeta</dt><dd>Oeste e centro · São Luís, Imperatriz, bacia do Mearim</dd>
+                <dt>Válido</dt><dd>Até quarta-feira, 22h00 (≈ 31 h)</dd>
+                <dt>Fontes</dt><dd>INMET (Grande Perigo) · CEMADEN</dd>
+              </dl>
+              <div class="chips">
+                <span class="chip">Chuva extrema</span>
+                <span class="chip">Inundação</span>
+                <span class="chip">Deslizamento</span>
+              </div>
+              <div class="emerg">
+                <span aria-hidden="true">📞</span>
+                <span>Em emergência: <span class="num">199</span> Defesa Civil · <span class="num">193</span> Bombeiros · <span class="num">190</span> Polícia</span>
+              </div>
+              <div class="foot">
+                <span>Atualizado há <span class="tnum">12 min</span></span>
+                <span class="arrow">→</span>
+              </div>
+            </a>
+
+            <a href="#" class="state-card r-orange">
+              <div class="head"><div><h3>Bahia</h3><div class="region">Nordeste · BA</div></div><span class="badge">⚠⚠ Alerta</span></div>
+              <div class="lead">Chuva intensa, risco de deslizamento em encostas saturadas.</div>
+              <dl class="facts">
+                <dt>Afeta</dt><dd>Sul · Ilhéus, Itabuna, vale do Jequitinhonha</dd>
+                <dt>Válido</dt><dd>Até hoje, 20h00</dd>
+              </dl>
+              <div class="chips"><span class="chip">Chuva intensa</span><span class="chip">Deslizamento</span></div>
+              <div class="foot"><span>2 alertas · há 23 min</span><span class="arrow">→</span></div>
+            </a>
+
+            <a href="#" class="state-card r-yellow">
+              <div class="head"><div><h3>São Paulo</h3><div class="region">Sudeste · SP</div></div><span class="badge">⚠ Atenção</span></div>
+              <div class="lead">Onda de calor: temperatura 5°C acima da média.</div>
+              <dl class="facts">
+                <dt>Afeta</dt><dd>Interior · Ribeirão Preto, Bauru</dd>
+                <dt>Válido</dt><dd>Até sexta, 18h00</dd>
+              </dl>
+              <div class="chips"><span class="chip">Onda de calor</span></div>
+              <div class="foot"><span>1 alerta · há 1 h</span><span class="arrow">→</span></div>
+            </a>
+
+            <a href="#" class="state-card r-green">
+              <div class="head"><div><h3>Santa Catarina</h3><div class="region">Sul · SC</div></div><span class="badge">✓ Sem alertas</span></div>
+              <div class="lead">Não encontramos nenhuma emergência nessa localidade.</div>
+              <div class="foot"><span>Verificado há <span class="tnum">8 min</span></span><span class="arrow">→</span></div>
+            </a>
+
+          </div>
+          <footer class="disc">
+            Em emergência: <strong>199</strong> Defesa Civil · <strong>193</strong> Bombeiros · <strong>190</strong> Polícia. Não substitui alertas oficiais.
+          </footer>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="device-label">iPad landscape · 1024 × 720</div>
+      <div class="tablet t-1024">
+        <div class="browser-bar"><div class="url">enso.com.br</div></div>
+        <div class="scroll va size-1024">
+          <div class="top-banner"><strong>CEMADEN fora há 47 min.</strong> Acesse <a href="#">alertas.cemaden.gov.br</a> para verificar.</div>
+          <header class="topbar"><h1>ENSO Brasil <span class="sub">perigos climáticos por estado</span></h1><span class="meta">Atualizado há 8 min · CEMADEN ⚠ INMET ✓</span></header>
+          <div class="counts">
+            <span class="pill red"><span class="swatch"></span><strong>1</strong> em perigo</span>
+            <span class="pill orange"><span class="swatch"></span><strong>3</strong> em alerta</span>
+            <span class="pill yellow"><span class="swatch"></span><strong>3</strong> em atenção</span>
+            <span class="pill green"><span class="swatch"></span><strong>20</strong> sem alertas</span>
+          </div>
+          <div class="search"><input type="search" placeholder="Buscar por estado…"></div>
+          <div class="card-list">
+            <a href="#" class="state-card r-red">
+              <div class="head"><div><h3>Maranhão</h3><div class="region">Nordeste · MA</div></div><span class="badge">⛔ Perigo</span></div>
+              <div class="lead">Chuva extrema com risco de inundação e deslizamento.</div>
+              <dl class="facts">
+                <dt>Afeta</dt><dd>Oeste e centro · São Luís, Imperatriz</dd>
+                <dt>Válido</dt><dd>Até quarta-feira, 22h00</dd>
+              </dl>
+              <div class="emerg">
+                <span aria-hidden="true">📞</span>
+                <span>Em emergência: <span class="num">199</span> Defesa Civil · <span class="num">193</span> Bombeiros · <span class="num">190</span> Polícia</span>
+              </div>
+              <div class="foot"><span>Atualizado há <span class="tnum">12 min</span></span><span class="arrow">→</span></div>
+            </a>
+            <a href="#" class="state-card r-orange">
+              <div class="head"><div><h3>Bahia</h3><div class="region">Nordeste · BA</div></div><span class="badge">⚠⚠ Alerta</span></div>
+              <div class="lead">Chuva intensa, risco de deslizamento.</div>
+              <div class="foot"><span>2 alertas · há 23 min</span><span class="arrow">→</span></div>
+            </a>
+          </div>
+          <footer class="disc">
+            Em emergência: <strong>199</strong> Defesa Civil · <strong>193</strong> Bombeiros · <strong>190</strong> Polícia.
+          </footer>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== VARIANT B — DESKTOP-DOWN ==================== -->
+<div class="pane-wrap" data-pane="B">
+  <div class="pane-label">
+    Variant B · Desktop-down adapted <small>Mantém o layout desktop (top legend + 50/50 map+panel) mas com proporções compactadas. Mostra Brasil + estado simultaneamente. Trade: panel fica apertado em 768px.</small>
+  </div>
+
+  <div class="device-row">
+    <div>
+      <div class="device-label">iPad portrait · 768 × 1000</div>
+      <div class="tablet t-768">
+        <div class="browser-bar"><div class="url">enso.com.br</div></div>
+        <div class="scroll vb">
+          <div class="top-banner"><strong>CEMADEN fora há 47 min.</strong> Acesse <a href="#">alertas.cemaden.gov.br</a>.</div>
+          <header class="topbar"><h1 style="font-size:16px">ENSO Brasil</h1><span class="meta" style="font-size:12px">há 8 min</span></header>
+          <div class="top-legend">
+            <span class="lbl-h">Níveis</span>
+            <span class="pill green">✓ 20 OK</span>
+            <span class="pill yellow">⚠ 3</span>
+            <span class="pill orange">⚠⚠ 3</span>
+            <span class="pill red">⛔ 1</span>
+          </div>
+          <div class="grid">
+            <div class="map-area">
+              <div id="mapBp"></div>
+            </div>
+            <div class="panel">
+              <div class="region">Nordeste · MA</div>
+              <h2>Maranhão</h2>
+              <div class="status">
+                <div class="lbl">⛔ Perigo</div>
+                <h3>Chuva extrema</h3>
+                <p>3 alertas · INMET Grande Perigo</p>
+              </div>
+              <div class="alert">
+                <div class="row1"><h4>Chuvas intensas</h4><span class="risk-pill risk-red" style="font-size:11px;padding:2px 6px">Grande Perigo</span></div>
+                <p>&gt; 100 mm em 24 h.</p>
+                <div class="meta"><a href="#">alertas2.inmet.gov.br</a><span>há 12 min</span></div>
+              </div>
+              <div class="alert">
+                <div class="row1"><h4>Inundação</h4><span class="risk-pill risk-orange" style="font-size:11px;padding:2px 6px">Alerta</span></div>
+                <p>Bacia do Mearim.</p>
+              </div>
+              <div class="alert">
+                <div class="row1"><h4>Deslizamento</h4><span class="risk-pill risk-orange" style="font-size:11px;padding:2px 6px">Alerta</span></div>
+                <p>São Luís, Imperatriz.</p>
+              </div>
+            </div>
+          </div>
+          <footer class="disc">Em emergência: <strong>199</strong> Defesa Civil · <strong>193</strong> Bombeiros · <strong>190</strong> Polícia.</footer>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="device-label">iPad landscape · 1024 × 720</div>
+      <div class="tablet t-1024">
+        <div class="browser-bar"><div class="url">enso.com.br</div></div>
+        <div class="scroll vb">
+          <div class="top-banner"><strong>CEMADEN fora há 47 min.</strong> Acesse <a href="#">alertas.cemaden.gov.br</a>.</div>
+          <header class="topbar"><h1 style="font-size:17px">ENSO Brasil</h1><span class="meta" style="font-size:12.5px">há 8 min</span></header>
+          <div class="top-legend">
+            <span class="lbl-h">Níveis</span>
+            <span class="pill green">✓ 20 sem alertas</span>
+            <span class="pill yellow">⚠ 3 atenção</span>
+            <span class="pill orange">⚠⚠ 3 alerta</span>
+            <span class="pill red">⛔ 1 perigo</span>
+          </div>
+          <div class="grid">
+            <div class="map-area">
+              <div id="mapBl"></div>
+            </div>
+            <div class="panel">
+              <div class="region">Nordeste · MA</div>
+              <h2>Maranhão</h2>
+              <div class="status">
+                <div class="lbl">⛔ Perigo</div>
+                <h3>Chuva extrema, inundação, deslizamento</h3>
+                <p>1 aviso de Grande Perigo do INMET. Acumulado &gt; 100 mm em 24 h.</p>
+              </div>
+              <div class="alert">
+                <div class="row1"><h4>Chuvas intensas</h4><span class="risk-pill risk-red" style="font-size:11px;padding:2px 6px">Grande Perigo</span></div>
+                <p>&gt; 100 mm em 24 h, ventos até 100 km/h.</p>
+                <div class="meta"><a href="#">alertas2.inmet.gov.br</a><span>há 12 min</span></div>
+              </div>
+              <div class="alert">
+                <div class="row1"><h4>Inundação</h4><span class="risk-pill risk-orange" style="font-size:11px;padding:2px 6px">Alerta</span></div>
+                <p>Bacia do Mearim com risco de transbordamento.</p>
+                <div class="meta"><a href="#">alertas.cemaden.gov.br</a><span>há 27 min</span></div>
+              </div>
+              <div class="alert">
+                <div class="row1"><h4>Deslizamento</h4><span class="risk-pill risk-orange" style="font-size:11px;padding:2px 6px">Alerta</span></div>
+                <p>Encostas saturadas em São Luís e Imperatriz.</p>
+                <div class="meta"><a href="#">alertas.cemaden.gov.br</a><span>há 1 h</span></div>
+              </div>
+            </div>
+          </div>
+          <footer class="disc">Em emergência: <strong>199</strong> Defesa Civil · <strong>193</strong> Bombeiros · <strong>190</strong> Polícia.</footer>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== VARIANT C — CARDS GRID + MAP BELOW ==================== -->
+<div class="pane-wrap" data-pane="C">
+  <div class="pane-label">
+    Variant C · Cards grid + map below <small>iPad-native composition: cards em grid 2-col (768) ou 3-col (1024), depois mapa secundário no fim. Aproveita largura sem alargar cada card individualmente, mas perde a leitura sequencial do mobile.</small>
+  </div>
+
+  <div class="device-row">
+    <div>
+      <div class="device-label">iPad portrait · 768 × 1000</div>
+      <div class="tablet t-768">
+        <div class="browser-bar"><div class="url">enso.com.br</div></div>
+        <div class="scroll vc size-768">
+          <div class="top-banner"><strong>CEMADEN fora há 47 min.</strong> Acesse <a href="#">alertas.cemaden.gov.br</a>.</div>
+          <header class="topbar"><h1 style="font-size:17px">ENSO Brasil <span class="sub">perigos por estado</span></h1><span class="meta" style="font-size:12.5px">há 8 min</span></header>
+          <div class="counts">
+            <span class="pill red"><span class="swatch"></span>1 perigo</span>
+            <span class="pill orange"><span class="swatch"></span>3 alerta</span>
+            <span class="pill yellow"><span class="swatch"></span>3 atenção</span>
+            <span class="pill green"><span class="swatch"></span>20 OK</span>
+          </div>
+          <div class="grid">
+            <a href="#" class="state-card r-red">
+              <div class="head"><div><h3>Maranhão</h3><div class="region">MA · Nordeste</div></div><span class="badge">⛔ Perigo</span></div>
+              <div class="lead">Chuva extrema, inundação, deslizamento.</div>
+              <div class="meta">3 alertas · há 12 min</div>
+            </a>
+            <a href="#" class="state-card r-orange">
+              <div class="head"><div><h3>Bahia</h3><div class="region">BA · Nordeste</div></div><span class="badge">⚠⚠ Alerta</span></div>
+              <div class="lead">Chuva intensa, risco de deslizamento.</div>
+              <div class="meta">2 alertas · há 23 min</div>
+            </a>
+            <a href="#" class="state-card r-orange">
+              <div class="head"><div><h3>Minas Gerais</h3><div class="region">MG · Sudeste</div></div><span class="badge">⚠⚠ Alerta</span></div>
+              <div class="lead">Chuva intensa na zona da mata.</div>
+              <div class="meta">1 alerta · há 31 min</div>
+            </a>
+            <a href="#" class="state-card r-orange">
+              <div class="head"><div><h3>Pernambuco</h3><div class="region">PE · Nordeste</div></div><span class="badge">⚠⚠ Alerta</span></div>
+              <div class="lead">Chuva intensa no agreste.</div>
+              <div class="meta">1 alerta · há 44 min</div>
+            </a>
+            <a href="#" class="state-card r-yellow">
+              <div class="head"><div><h3>São Paulo</h3><div class="region">SP · Sudeste</div></div><span class="badge">⚠ Atenção</span></div>
+              <div class="lead">Onda de calor 5°C acima.</div>
+              <div class="meta">1 alerta · há 1 h</div>
+            </a>
+            <a href="#" class="state-card r-yellow">
+              <div class="head"><div><h3>RS</h3><div class="region">Sul</div></div><span class="badge">⚠ Atenção</span></div>
+              <div class="lead">Perigo potencial de chuva.</div>
+              <div class="meta">há 1 h</div>
+            </a>
+          </div>
+          <section class="map-section">
+            <h2>Mapa nacional</h2>
+            <div id="mapCp"></div>
+          </section>
+          <footer class="disc">Em emergência: <strong>199</strong> Defesa Civil · <strong>193</strong> Bombeiros · <strong>190</strong> Polícia.</footer>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="device-label">iPad landscape · 1024 × 720</div>
+      <div class="tablet t-1024">
+        <div class="browser-bar"><div class="url">enso.com.br</div></div>
+        <div class="scroll vc size-1024">
+          <div class="top-banner"><strong>CEMADEN fora há 47 min.</strong> Acesse <a href="#">alertas.cemaden.gov.br</a>.</div>
+          <header class="topbar"><h1 style="font-size:18px">ENSO Brasil <span class="sub">perigos por estado</span></h1><span class="meta" style="font-size:13px">há 8 min</span></header>
+          <div class="counts">
+            <span class="pill red"><span class="swatch"></span>1 perigo</span>
+            <span class="pill orange"><span class="swatch"></span>3 alerta</span>
+            <span class="pill yellow"><span class="swatch"></span>3 atenção</span>
+            <span class="pill green"><span class="swatch"></span>20 OK</span>
+          </div>
+          <div class="grid">
+            <a href="#" class="state-card r-red">
+              <div class="head"><div><h3>Maranhão</h3><div class="region">MA · Nordeste</div></div><span class="badge">⛔ Perigo</span></div>
+              <div class="lead">Chuva extrema, inundação.</div>
+              <div class="meta">3 alertas · há 12 min</div>
+            </a>
+            <a href="#" class="state-card r-orange">
+              <div class="head"><div><h3>Bahia</h3><div class="region">BA · Nordeste</div></div><span class="badge">⚠⚠ Alerta</span></div>
+              <div class="lead">Chuva intensa, deslizamento.</div>
+              <div class="meta">2 alertas · há 23 min</div>
+            </a>
+            <a href="#" class="state-card r-orange">
+              <div class="head"><div><h3>Minas Gerais</h3><div class="region">MG · Sudeste</div></div><span class="badge">⚠⚠ Alerta</span></div>
+              <div class="lead">Chuva intensa.</div>
+              <div class="meta">1 alerta · há 31 min</div>
+            </a>
+          </div>
+          <section class="map-section">
+            <h2>Mapa nacional · clique em um estado para detalhes</h2>
+            <div id="mapCl"></div>
+          </section>
+          <footer class="disc">Em emergência: <strong>199</strong> Defesa Civil · <strong>193</strong> Bombeiros · <strong>190</strong> Polícia.</footer>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</main>
+
+<div class="sketch-toolbar"><span style="color:var(--ink-3)">Sketch 005 · Tablet</span></div>
+
+<script>
+  document.querySelectorAll('.variant-tab').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.variant-tab').forEach(b => { b.classList.remove('active'); b.setAttribute('aria-selected','false'); });
+      document.querySelectorAll('.pane-wrap').forEach(p => p.classList.remove('active'));
+      btn.classList.add('active'); btn.setAttribute('aria-selected','true');
+      const tab = btn.dataset.tab;
+      document.querySelector(`.pane-wrap[data-pane="${tab}"]`).classList.add('active');
+      renderMaps();
+    });
+  });
+
+  // Schematic mini-map (matches earlier sketches)
+  const STATES = [
+    { uf:'RR', col:4.2, row:0.5, risk:'green'  },
+    { uf:'AP', col:7.0, row:0.6, risk:'green'  },
+    { uf:'AM', col:3.0, row:2.2, risk:'green',  w:2.6, h:2.0 },
+    { uf:'PA', col:6.0, row:2.0, risk:'green',  w:2.4, h:1.8 },
+    { uf:'MA', col:8.5, row:2.0, risk:'red',    w:1.5, h:1.5 },
+    { uf:'CE', col:10.2, row:1.7, risk:'green', w:1.2, h:1.2 },
+    { uf:'RN', col:11.4, row:1.8, risk:'green', w:1.0, h:0.8 },
+    { uf:'PB', col:11.7, row:2.6, risk:'green', w:1.0, h:0.7 },
+    { uf:'PE', col:11.0, row:3.3, risk:'orange', w:1.7, h:0.7 },
+    { uf:'AL', col:11.6, row:4.0, risk:'green', w:1.0, h:0.7 },
+    { uf:'SE', col:11.2, row:4.7, risk:'green', w:0.9, h:0.7 },
+    { uf:'PI', col:9.4,  row:3.0, risk:'green', w:1.3, h:1.5 },
+    { uf:'BA', col:9.6,  row:4.6, risk:'orange', w:2.0, h:1.8 },
+    { uf:'AC', col:1.7,  row:3.5, risk:'green', w:1.4, h:1.0 },
+    { uf:'RO', col:3.5,  row:4.2, risk:'green', w:1.4, h:1.2 },
+    { uf:'TO', col:7.6,  row:3.7, risk:'green', w:1.3, h:1.6 },
+    { uf:'MT', col:5.2,  row:4.6, risk:'yellow', w:2.2, h:2.0 },
+    { uf:'GO', col:7.6,  row:5.6, risk:'green', w:1.5, h:1.4 },
+    { uf:'DF', col:8.6,  row:6.1, risk:'green', w:0.5, h:0.5 },
+    { uf:'MG', col:8.6,  row:7.0, risk:'orange', w:2.0, h:1.6 },
+    { uf:'ES', col:10.7, row:7.6, risk:'green', w:0.9, h:1.0 },
+    { uf:'RJ', col:9.8,  row:8.7, risk:'green', w:1.4, h:0.8 },
+    { uf:'SP', col:8.0,  row:8.4, risk:'yellow', w:1.7, h:1.2 },
+    { uf:'MS', col:6.0, row:7.0, risk:'green', w:1.6, h:1.6 },
+    { uf:'PR', col:7.0,  row:9.4, risk:'green', w:1.6, h:1.0 },
+    { uf:'SC', col:7.2,  row:10.4, risk:'green', w:1.5, h:0.8 },
+    { uf:'RS', col:6.4,  row:11.4, risk:'green', w:1.8, h:1.4 },
+  ];
+
+  function renderTo(id, height) {
+    const wrap = document.getElementById(id);
+    if (!wrap || wrap.dataset.rendered) return;
+    let svg = `<svg class="map-svg" viewBox="0 0 14 14" preserveAspectRatio="xMidYMid meet" style="height:${height}px" role="img" aria-label="Mapa do Brasil esquemático.">`;
+    STATES.forEach(s => {
+      const w = s.w || 0.85, h = s.h || 0.85;
+      const sel = s.uf === 'MA' ? ' selected' : '';
+      svg += `<rect class="state-tile ${s.risk}${sel}" x="${s.col}" y="${s.row}" width="${w}" height="${h}" rx="0.1" />`;
+    });
+    svg += `</svg>`;
+    wrap.innerHTML = svg;
+    wrap.dataset.rendered = '1';
+  }
+  function renderMaps() {
+    renderTo('mapBp', 320);
+    renderTo('mapBl', 360);
+    renderTo('mapCp', 320);
+    renderTo('mapCl', 320);
+  }
+  renderMaps();
+</script>
+
+</body>
+</html>
