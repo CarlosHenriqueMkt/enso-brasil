@@ -1,0 +1,885 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sketch 002 — Mobile Dashboard · ENSO Brasil</title>
+<link rel="stylesheet" href="../themes/default.css">
+<style>
+  /* ============ Sketch shell (desktop preview chrome) ============ */
+  body { background: #efeeea; }
+  .stage {
+    display: flex; flex-wrap: wrap; gap: 36px;
+    justify-content: center; align-items: flex-start;
+    padding: 32px 16px 96px; min-height: 100vh;
+  }
+  .phone-wrap {
+    display: none; flex-direction: column; align-items: center; gap: 14px;
+  }
+  .phone-wrap.active { display: flex; }
+  .phone-label {
+    font-size: 13px; font-weight: 500; color: var(--ink-2);
+    letter-spacing: 0.02em;
+  }
+  .phone-label small { font-weight: 400; color: var(--ink-3); margin-left: 8px; }
+  .phone {
+    width: 390px;
+    height: 780px;
+    background: var(--bg);
+    border: 1px solid var(--line-strong);
+    border-radius: 28px;
+    overflow: hidden;
+    position: relative;
+    display: flex; flex-direction: column;
+  }
+  .phone .status-bar {
+    height: 28px; background: var(--surface);
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 16px; font-size: 11px; color: var(--ink-3);
+    border-bottom: 1px solid var(--line);
+  }
+  .phone .scroll {
+    flex: 1; overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* ============ Mobile header ============ */
+  .m-head {
+    background: var(--surface); border-bottom: 1px solid var(--line);
+    padding: 14px 16px 12px;
+  }
+  .m-head h1 {
+    font-size: 16px; font-weight: 500; letter-spacing: 0;
+  }
+  .m-head .sub { color: var(--ink-3); font-size: 12px; margin-top: 2px; }
+
+  .m-counts {
+    display: flex; gap: 6px; flex-wrap: wrap;
+    padding: 10px 16px; background: var(--surface-muted);
+    border-bottom: 1px solid var(--line);
+    font-size: 11.5px;
+  }
+  .m-counts .pill {
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 3px 8px;
+    background: var(--surface);
+    display: inline-flex; align-items: center; gap: 5px;
+  }
+  .m-counts .pill .swatch { width: 8px; height: 8px; border-radius: 50%; }
+  .m-counts .pill.green  .swatch { background: var(--green-border);  }
+  .m-counts .pill.yellow .swatch { background: var(--yellow-border); }
+  .m-counts .pill.orange .swatch { background: var(--orange-border); }
+  .m-counts .pill.red    .swatch { background: var(--red-border);    }
+
+  /* ============ Search ============ */
+  .m-search {
+    padding: 10px 16px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--line);
+  }
+  .m-search input {
+    width: 100%; height: 36px;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    background: var(--bg);
+    padding: 0 12px;
+    font: inherit; font-size: 14px;
+    color: var(--ink-1);
+  }
+  .m-search input::placeholder { color: var(--ink-4); }
+
+  /* ============ Last-update strip ============ */
+  .m-update {
+    padding: 8px 16px; font-size: 11.5px; color: var(--ink-3);
+    background: var(--surface); border-bottom: 1px solid var(--line);
+    display: flex; gap: 8px; align-items: center;
+  }
+  .m-update .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green-border); }
+
+  /* ============ Variant A — dense list rows ============ */
+  .va .row-list { background: var(--surface); }
+  .va .state-row {
+    display: flex; align-items: stretch;
+    border-bottom: 1px solid var(--line);
+    padding: 0;
+    background: var(--surface);
+    cursor: pointer;
+  }
+  .va .state-row:active { background: var(--surface-muted); }
+  .va .state-row .stripe { width: 4px; flex: 0 0 4px; }
+  .va .state-row.r-red    .stripe { background: var(--red-border); }
+  .va .state-row.r-orange .stripe { background: var(--orange-border); }
+  .va .state-row.r-yellow .stripe { background: var(--yellow-border); }
+  .va .state-row.r-green  .stripe { background: var(--green-border); }
+  .va .state-row .body { flex: 1; padding: 12px 14px; min-width: 0; }
+  .va .state-row .toprow { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+  .va .state-row .uf { font-family: var(--mono); font-size: 11px; color: var(--ink-3); flex: 0 0 auto; }
+  .va .state-row .name { font-size: 14.5px; font-weight: 500; flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .va .state-row .ico { font-size: 14px; line-height: 1; }
+  .va .state-row .summary {
+    font-size: 13px; color: var(--ink-2); line-height: 1.4;
+    overflow: hidden;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+  }
+  .va .state-row .meta { display: flex; gap: 6px; align-items: center; margin-top: 4px; font-size: 11.5px; color: var(--ink-3); }
+  .va .state-row .meta .level { font-weight: 500; }
+  .va .state-row.r-red    .meta .level { color: var(--red-ink); }
+  .va .state-row.r-orange .meta .level { color: var(--orange-ink); }
+  .va .state-row.r-yellow .meta .level { color: var(--yellow-ink); }
+  .va .state-row.r-green  .meta .level { color: var(--green-ink); }
+  .va .chev { padding: 0 14px; display: flex; align-items: center; color: var(--ink-3); }
+
+  /* ============ Variant B — generous card (refined for life-safety) ============ */
+  .vb .card-list { padding: 14px 12px; display: flex; flex-direction: column; gap: 14px; background: var(--bg); }
+  .vb .state-card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-left: 4px solid var(--line-strong);
+    border-radius: var(--r-3);
+    padding: 16px;
+    cursor: pointer;
+    text-decoration: none;
+    color: inherit;
+    display: block;
+  }
+  .vb .state-card.r-red    { border-left-color: var(--red-border);    border-left-width: 5px; }
+  .vb .state-card.r-orange { border-left-color: var(--orange-border); }
+  .vb .state-card.r-yellow { border-left-color: var(--yellow-border); }
+  .vb .state-card.r-green  { border-left-color: var(--green-border);  }
+
+  .vb .state-card .head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 10px; }
+  .vb .state-card .name h3 { font-size: 17px; font-weight: 500; line-height: 1.3; }
+  .vb .state-card .name .region { font-size: 11.5px; color: var(--ink-3); letter-spacing: 0.04em; text-transform: uppercase; margin-top: 2px; }
+  .vb .state-card .badge {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 5px 10px; border-radius: var(--r-2); border: 1px solid var(--line);
+    font-size: 12.5px; font-weight: 500; flex: 0 0 auto; white-space: nowrap;
+  }
+  .vb .state-card.r-red    .badge { background: var(--red-bg);    color: var(--red-ink);    border-color: var(--red-border);    }
+  .vb .state-card.r-orange .badge { background: var(--orange-bg); color: var(--orange-ink); border-color: var(--orange-border); }
+  .vb .state-card.r-yellow .badge { background: var(--yellow-bg); color: var(--yellow-ink); border-color: var(--yellow-border); }
+  .vb .state-card.r-green  .badge { background: var(--green-bg);  color: var(--green-ink);  border-color: var(--green-border);  }
+
+  /* Lead line — the one-sentence "what is happening" — boldest text */
+  .vb .state-card .lead {
+    font-size: 14.5px; color: var(--ink-1); line-height: 1.45;
+    font-weight: 500;
+    margin-bottom: 8px;
+  }
+  /* Facts list — affects, valid until — quickly scannable */
+  .vb .state-card .facts {
+    display: grid; grid-template-columns: auto 1fr; gap: 4px 10px;
+    font-size: 13px; color: var(--ink-2); line-height: 1.45;
+    margin-bottom: 10px;
+  }
+  .vb .state-card .facts dt { color: var(--ink-3); font-size: 11.5px; letter-spacing: 0.03em; text-transform: uppercase; padding-top: 2px; }
+  .vb .state-card .facts dd { margin: 0; color: var(--ink-1); }
+
+  .vb .state-card .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+  .vb .state-card .chip {
+    font-size: 12px; padding: 3px 9px;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: var(--surface-muted);
+    color: var(--ink-2);
+  }
+  .vb .state-card .foot {
+    display: flex; align-items: center; justify-content: space-between;
+    font-size: 12px; color: var(--ink-3);
+    border-top: 1px solid var(--line); padding-top: 10px;
+  }
+  .vb .state-card .foot .ts .tnum { color: var(--ink-2); font-weight: 500; }
+  .vb .state-card .foot .arrow { color: var(--ink-2); font-size: 16px; line-height: 1; }
+
+  /* Emergency strip — only on red cards */
+  .vb .state-card .emerg {
+    margin-top: 10px;
+    background: var(--red-bg);
+    border: 1px solid var(--red-border);
+    border-radius: var(--r-2);
+    padding: 8px 12px;
+    font-size: 12.5px;
+    color: var(--red-ink);
+    line-height: 1.45;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .vb .state-card .emerg strong { font-weight: 500; }
+  .vb .state-card .emerg .num {
+    background: var(--surface);
+    color: var(--red-ink);
+    font-weight: 500;
+    border: 1px solid var(--red-border);
+    padding: 1px 7px;
+    border-radius: var(--r-2);
+    font-family: var(--mono);
+  }
+
+  /* ============ Variant C — hybrid expandable ============ */
+  .vc .accord-list { background: var(--surface); }
+  .vc .acc-row {
+    border-bottom: 1px solid var(--line);
+  }
+  .vc .acc-head {
+    display: flex; align-items: stretch;
+    cursor: pointer; padding: 0;
+    background: var(--surface);
+  }
+  .vc .acc-head:active { background: var(--surface-muted); }
+  .vc .acc-head .stripe { width: 4px; flex: 0 0 4px; }
+  .vc .acc-row.r-red    .stripe { background: var(--red-border); }
+  .vc .acc-row.r-orange .stripe { background: var(--orange-border); }
+  .vc .acc-row.r-yellow .stripe { background: var(--yellow-border); }
+  .vc .acc-row.r-green  .stripe { background: var(--green-border); }
+  .vc .acc-head .body { flex: 1; padding: 12px 14px; min-width: 0; }
+  .vc .acc-head .toprow { display: flex; align-items: center; gap: 8px; }
+  .vc .acc-head .name { font-size: 14.5px; font-weight: 500; flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .vc .acc-head .uf  { font-family: var(--mono); font-size: 11px; color: var(--ink-3); }
+  .vc .acc-head .badge {
+    font-size: 11.5px; padding: 2px 7px; border-radius: var(--r-2); border: 1px solid var(--line);
+    font-weight: 500;
+  }
+  .vc .acc-row.r-red    .acc-head .badge { background: var(--red-bg);    color: var(--red-ink);    border-color: var(--red-border);    }
+  .vc .acc-row.r-orange .acc-head .badge { background: var(--orange-bg); color: var(--orange-ink); border-color: var(--orange-border); }
+  .vc .acc-row.r-yellow .acc-head .badge { background: var(--yellow-bg); color: var(--yellow-ink); border-color: var(--yellow-border); }
+  .vc .acc-row.r-green  .acc-head .badge { background: var(--green-bg);  color: var(--green-ink);  border-color: var(--green-border);  }
+  .vc .acc-head .summary {
+    font-size: 12.5px; color: var(--ink-3);
+    margin-top: 3px; line-height: 1.4;
+    overflow: hidden;
+    display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical;
+  }
+  .vc .acc-head .chev {
+    padding: 0 14px; display: flex; align-items: center;
+    color: var(--ink-3); transition: transform 180ms;
+  }
+  .vc .acc-row.open .acc-head .chev { transform: rotate(90deg); }
+  .vc .acc-body {
+    display: none;
+    padding: 0 14px 14px 18px;
+    background: var(--surface);
+    border-top: 1px dashed var(--line);
+  }
+  .vc .acc-row.open .acc-body { display: block; }
+  .vc .acc-body .alert-mini {
+    padding: 10px 0; border-bottom: 1px solid var(--line);
+  }
+  .vc .acc-body .alert-mini:last-child { border-bottom: 0; }
+  .vc .acc-body .alert-mini .row1 { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .vc .acc-body .alert-mini h4 { font-size: 13.5px; font-weight: 500; }
+  .vc .acc-body .alert-mini p { font-size: 12.5px; color: var(--ink-2); margin: 4px 0 6px; line-height: 1.45; }
+  .vc .acc-body .alert-mini .meta { font-size: 11.5px; color: var(--ink-3); display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .vc .acc-body .alert-mini .meta a { color: var(--ink-2); }
+  .vc .acc-body .actions { display: flex; gap: 8px; margin-top: 12px; }
+  .vc .acc-body .actions a {
+    flex: 1; text-align: center; padding: 9px 10px;
+    border: 1px solid var(--line); border-radius: 6px;
+    font-size: 13px; font-weight: 500; color: var(--ink-1);
+    text-decoration: none; background: var(--surface);
+  }
+  .vc .acc-body .actions a.primary {
+    background: var(--ink-1); color: var(--surface); border-color: var(--ink-1);
+  }
+
+  /* ============ Mini map (secondary, all variants) ============ */
+  .mini-map {
+    background: var(--surface); border-top: 1px solid var(--line);
+    padding: 14px 16px 16px;
+  }
+  .mini-map .mh { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+  .mini-map .mh h2 { font-size: 13px; font-weight: 500; color: var(--ink-2); letter-spacing: 0.04em; text-transform: uppercase; }
+  .mini-map .mh a { font-size: 12px; color: var(--ink-3); }
+  .mini-map svg { display: block; width: 100%; height: 200px; }
+  .mini-map .country { fill: none; stroke: var(--line-strong); stroke-width: 0.4; }
+  .mini-map .state-tile { stroke: rgba(0,0,0,0.15); stroke-width: 0.3; }
+  .mini-map .state-tile.selected { stroke: #000; stroke-width: 1.0; }
+  .mini-map .green  { fill: var(--green-bg); }
+  .mini-map .yellow { fill: var(--yellow-bg); }
+  .mini-map .orange { fill: var(--orange-bg); }
+  .mini-map .red    { fill: var(--red-bg); }
+  .mini-map .lbl    { font-family: var(--font); font-size: 0.6px; pointer-events: none; }
+  .mini-map .label-green  { fill: var(--green-ink); }
+  .mini-map .label-yellow { fill: var(--yellow-ink); }
+  .mini-map .label-orange { fill: var(--orange-ink); }
+  .mini-map .label-red    { fill: var(--red-ink); }
+
+  /* ============ Mobile disclaimer ============ */
+  .m-disc {
+    background: var(--surface); border-top: 1px solid var(--line);
+    padding: 12px 16px; font-size: 11.5px; color: var(--ink-2);
+    line-height: 1.45;
+  }
+  .m-disc strong { color: var(--ink-1); font-weight: 500; }
+
+  /* ============ Toolbar override (sketch chrome) ============ */
+</style>
+</head>
+<body>
+
+<a href="#main" class="skip">Pular para o conteúdo principal</a>
+
+<nav class="variants" role="tablist" aria-label="Variantes mobile">
+  <button class="variant-tab active" data-tab="A" role="tab" aria-selected="true">Variant A — Dense list rows</button>
+  <button class="variant-tab winner" data-tab="B" role="tab" aria-selected="false">Variant B — Generous cards (refined)</button>
+  <button class="variant-tab" data-tab="C" role="tab" aria-selected="false">Variant C — Expandable accordion</button>
+</nav>
+
+<main id="main" class="stage">
+
+<!-- ============================ VARIANT A — DENSE LIST ============================ -->
+<div class="phone-wrap active" data-pane="A">
+  <div class="phone-label">Variant A · Dense list rows <small>scannable, news-feed feel</small></div>
+  <div class="phone va">
+    <div class="status-bar"><span>14:32</span><span>5G  •••  98%</span></div>
+    <div class="scroll">
+      <header class="m-head">
+        <h1>ENSO Brasil</h1>
+        <div class="sub">Perigos climáticos por estado</div>
+      </header>
+      <div class="m-update" role="status">
+        <span class="dot" aria-hidden="true"></span>
+        <span>Atualizado há 8 min</span>
+        <span style="margin-left:auto" class="muted">CEMADEN ✓ INMET ✓</span>
+      </div>
+      <div class="m-counts" aria-label="Resumo nacional">
+        <span class="pill red"><span class="swatch"></span><strong>1</strong> em perigo</span>
+        <span class="pill orange"><span class="swatch"></span><strong>3</strong> em alerta</span>
+        <span class="pill yellow"><span class="swatch"></span><strong>3</strong> em atenção</span>
+        <span class="pill green"><span class="swatch"></span><strong>20</strong> sem alertas</span>
+      </div>
+      <div class="m-search">
+        <input type="search" placeholder="Buscar por estado…" aria-label="Buscar estado">
+      </div>
+
+      <div class="row-list" role="list" aria-label="Estados ordenados por severidade">
+        <a href="#" class="state-row r-red" role="listitem">
+          <span class="stripe" aria-hidden="true"></span>
+          <div class="body">
+            <div class="toprow">
+              <span class="ico" aria-hidden="true">⛔</span>
+              <span class="name">Maranhão</span>
+              <span class="uf">MA</span>
+            </div>
+            <div class="summary">Grande Perigo: chuva extrema, acumulado &gt;100mm em 24h. Risco de inundação na bacia do Mearim.</div>
+            <div class="meta"><span class="level">PERIGO</span> · 3 alertas · há 12 min</div>
+          </div>
+          <span class="chev" aria-hidden="true">›</span>
+        </a>
+        <a href="#" class="state-row r-orange" role="listitem">
+          <span class="stripe" aria-hidden="true"></span>
+          <div class="body">
+            <div class="toprow"><span class="ico" aria-hidden="true">⚠⚠</span><span class="name">Bahia</span><span class="uf">BA</span></div>
+            <div class="summary">Chuva intensa + risco de deslizamento em encostas saturadas no sul do estado.</div>
+            <div class="meta"><span class="level">ALERTA</span> · 2 alertas · há 23 min</div>
+          </div>
+          <span class="chev" aria-hidden="true">›</span>
+        </a>
+        <a href="#" class="state-row r-orange" role="listitem">
+          <span class="stripe" aria-hidden="true"></span>
+          <div class="body">
+            <div class="toprow"><span class="ico" aria-hidden="true">⚠⚠</span><span class="name">Minas Gerais</span><span class="uf">MG</span></div>
+            <div class="summary">Chuva intensa, alerta INMET para zona da mata e região metropolitana.</div>
+            <div class="meta"><span class="level">ALERTA</span> · 1 alerta · há 31 min</div>
+          </div>
+          <span class="chev" aria-hidden="true">›</span>
+        </a>
+        <a href="#" class="state-row r-orange" role="listitem">
+          <span class="stripe" aria-hidden="true"></span>
+          <div class="body">
+            <div class="toprow"><span class="ico" aria-hidden="true">⚠⚠</span><span class="name">Pernambuco</span><span class="uf">PE</span></div>
+            <div class="summary">Chuva intensa no agreste e zona da mata.</div>
+            <div class="meta"><span class="level">ALERTA</span> · 1 alerta · há 44 min</div>
+          </div>
+          <span class="chev" aria-hidden="true">›</span>
+        </a>
+        <a href="#" class="state-row r-yellow" role="listitem">
+          <span class="stripe" aria-hidden="true"></span>
+          <div class="body">
+            <div class="toprow"><span class="ico" aria-hidden="true">⚠</span><span class="name">São Paulo</span><span class="uf">SP</span></div>
+            <div class="summary">Onda de calor: temperatura 5°C acima da média no interior.</div>
+            <div class="meta"><span class="level">ATENÇÃO</span> · 1 alerta · há 1 h</div>
+          </div>
+          <span class="chev" aria-hidden="true">›</span>
+        </a>
+        <a href="#" class="state-row r-yellow" role="listitem">
+          <span class="stripe" aria-hidden="true"></span>
+          <div class="body">
+            <div class="toprow"><span class="ico" aria-hidden="true">⚠</span><span class="name">Rio Grande do Sul</span><span class="uf">RS</span></div>
+            <div class="summary">Perigo potencial de chuva no oeste e centro do estado.</div>
+            <div class="meta"><span class="level">ATENÇÃO</span> · 1 alerta · há 1 h</div>
+          </div>
+          <span class="chev" aria-hidden="true">›</span>
+        </a>
+        <a href="#" class="state-row r-yellow" role="listitem">
+          <span class="stripe" aria-hidden="true"></span>
+          <div class="body">
+            <div class="toprow"><span class="ico" aria-hidden="true">⚠</span><span class="name">Mato Grosso</span><span class="uf">MT</span></div>
+            <div class="summary">Perigo potencial de queimada — baixa umidade e ventos secos.</div>
+            <div class="meta"><span class="level">ATENÇÃO</span> · 1 alerta · há 2 h</div>
+          </div>
+          <span class="chev" aria-hidden="true">›</span>
+        </a>
+        <a href="#" class="state-row r-green" role="listitem">
+          <span class="stripe" aria-hidden="true"></span>
+          <div class="body">
+            <div class="toprow"><span class="ico" aria-hidden="true">✓</span><span class="name">Santa Catarina</span><span class="uf">SC</span></div>
+            <div class="summary">Sem alertas ativos. Última verificação há 8 minutos.</div>
+            <div class="meta"><span class="level">SEM ALERTAS</span> · há 8 min</div>
+          </div>
+          <span class="chev" aria-hidden="true">›</span>
+        </a>
+        <a href="#" class="state-row r-green" role="listitem">
+          <span class="stripe" aria-hidden="true"></span>
+          <div class="body">
+            <div class="toprow"><span class="ico" aria-hidden="true">✓</span><span class="name">Acre</span><span class="uf">AC</span></div>
+            <div class="summary">Sem alertas ativos.</div>
+            <div class="meta"><span class="level">SEM ALERTAS</span> · há 8 min</div>
+          </div>
+          <span class="chev" aria-hidden="true">›</span>
+        </a>
+      </div>
+
+      <section class="mini-map" aria-label="Mapa do Brasil">
+        <div class="mh"><h2>Mapa</h2><a href="#">Ver completo →</a></div>
+        <div id="mapA"></div>
+      </section>
+
+      <footer class="m-disc">
+        Agregamos fontes oficiais. Em emergência: <strong>199</strong> Defesa Civil · <strong>193</strong> Bombeiros · <strong>190</strong> Polícia. Não substitui alertas oficiais.
+      </footer>
+    </div>
+  </div>
+</div>
+
+<!-- ============================ VARIANT B — GENEROUS CARDS ============================ -->
+<div class="phone-wrap" data-pane="B">
+  <div class="phone-label">Variant B · Generous cards <small>richer per-card hierarchy</small></div>
+  <div class="phone vb">
+    <div class="status-bar"><span>14:32</span><span>5G  •••  98%</span></div>
+    <div class="scroll">
+      <header class="m-head">
+        <h1>ENSO Brasil</h1>
+        <div class="sub">Perigos climáticos por estado · atualizado há 8 min</div>
+      </header>
+      <div class="m-counts">
+        <span class="pill red"><span class="swatch"></span><strong>1</strong></span>
+        <span class="pill orange"><span class="swatch"></span><strong>3</strong></span>
+        <span class="pill yellow"><span class="swatch"></span><strong>3</strong></span>
+        <span class="pill green"><span class="swatch"></span><strong>20 OK</strong></span>
+      </div>
+      <div class="m-search">
+        <input type="search" placeholder="Buscar por estado…">
+      </div>
+
+      <div class="card-list">
+
+        <!-- RED — Maranhão: life-safety detail -->
+        <a href="/estado/ma" class="state-card r-red">
+          <div class="head">
+            <div class="name">
+              <h3>Maranhão</h3>
+              <div class="region">Nordeste · MA</div>
+            </div>
+            <span class="badge"><span aria-hidden="true">⛔</span> Perigo</span>
+          </div>
+          <div class="lead">Chuva extrema com risco de inundação e deslizamento.</div>
+          <dl class="facts">
+            <dt>Afeta</dt><dd>Oeste e centro · São Luís, Imperatriz, bacia do Mearim</dd>
+            <dt>Válido</dt><dd>Até quarta-feira, 22h00 (≈ 31 h)</dd>
+            <dt>Fontes</dt><dd>INMET (Grande Perigo) · CEMADEN (2 alertas)</dd>
+          </dl>
+          <div class="chips">
+            <span class="chip">Chuva extrema</span>
+            <span class="chip">Inundação</span>
+            <span class="chip">Deslizamento</span>
+          </div>
+          <div class="emerg" role="note">
+            <span aria-hidden="true">📞</span>
+            <span>Em emergência: <span class="num">199</span> Defesa Civil · <span class="num">193</span> Bombeiros · <span class="num">190</span> Polícia</span>
+          </div>
+          <div class="foot">
+            <span>Atualizado há <span class="tnum">12 min</span></span>
+            <span class="arrow" aria-hidden="true">→</span>
+          </div>
+        </a>
+
+        <!-- ORANGE — Bahia -->
+        <a href="/estado/ba" class="state-card r-orange">
+          <div class="head">
+            <div class="name">
+              <h3>Bahia</h3>
+              <div class="region">Nordeste · BA</div>
+            </div>
+            <span class="badge"><span aria-hidden="true">⚠⚠</span> Alerta</span>
+          </div>
+          <div class="lead">Chuva intensa, risco de deslizamento em encostas saturadas.</div>
+          <dl class="facts">
+            <dt>Afeta</dt><dd>Sul do estado · Ilhéus, Itabuna, vale do Jequitinhonha</dd>
+            <dt>Válido</dt><dd>Até hoje, 20h00 (≈ 5 h)</dd>
+            <dt>Fontes</dt><dd>INMET · CEMADEN</dd>
+          </dl>
+          <div class="chips">
+            <span class="chip">Chuva intensa</span>
+            <span class="chip">Deslizamento</span>
+          </div>
+          <div class="foot">
+            <span>2 alertas · há <span class="tnum">23 min</span></span>
+            <span class="arrow" aria-hidden="true">→</span>
+          </div>
+        </a>
+
+        <!-- ORANGE — Minas Gerais -->
+        <a href="/estado/mg" class="state-card r-orange">
+          <div class="head">
+            <div class="name">
+              <h3>Minas Gerais</h3>
+              <div class="region">Sudeste · MG</div>
+            </div>
+            <span class="badge"><span aria-hidden="true">⚠⚠</span> Alerta</span>
+          </div>
+          <div class="lead">Chuva intensa na zona da mata e RMBH.</div>
+          <dl class="facts">
+            <dt>Afeta</dt><dd>Belo Horizonte, Juiz de Fora, Governador Valadares</dd>
+            <dt>Válido</dt><dd>Até amanhã, 06h00</dd>
+            <dt>Fonte</dt><dd>INMET</dd>
+          </dl>
+          <div class="chips"><span class="chip">Chuva intensa</span></div>
+          <div class="foot">
+            <span>1 alerta · há <span class="tnum">31 min</span></span>
+            <span class="arrow" aria-hidden="true">→</span>
+          </div>
+        </a>
+
+        <!-- ORANGE — Pernambuco -->
+        <a href="/estado/pe" class="state-card r-orange">
+          <div class="head">
+            <div class="name">
+              <h3>Pernambuco</h3>
+              <div class="region">Nordeste · PE</div>
+            </div>
+            <span class="badge"><span aria-hidden="true">⚠⚠</span> Alerta</span>
+          </div>
+          <div class="lead">Chuva intensa no agreste e zona da mata.</div>
+          <dl class="facts">
+            <dt>Afeta</dt><dd>Recife, Caruaru, Garanhuns</dd>
+            <dt>Válido</dt><dd>Até hoje, 23h00</dd>
+            <dt>Fonte</dt><dd>INMET</dd>
+          </dl>
+          <div class="chips"><span class="chip">Chuva intensa</span></div>
+          <div class="foot">
+            <span>1 alerta · há <span class="tnum">44 min</span></span>
+            <span class="arrow" aria-hidden="true">→</span>
+          </div>
+        </a>
+
+        <!-- YELLOW — São Paulo -->
+        <a href="/estado/sp" class="state-card r-yellow">
+          <div class="head">
+            <div class="name">
+              <h3>São Paulo</h3>
+              <div class="region">Sudeste · SP</div>
+            </div>
+            <span class="badge"><span aria-hidden="true">⚠</span> Atenção</span>
+          </div>
+          <div class="lead">Onda de calor: temperatura 5°C acima da média.</div>
+          <dl class="facts">
+            <dt>Afeta</dt><dd>Interior · Ribeirão Preto, Bauru, Araçatuba</dd>
+            <dt>Válido</dt><dd>Até sexta-feira, 18h00 (3 dias)</dd>
+            <dt>Fonte</dt><dd>INMET</dd>
+          </dl>
+          <div class="chips"><span class="chip">Onda de calor</span></div>
+          <div class="foot">
+            <span>1 alerta · há <span class="tnum">1 h</span></span>
+            <span class="arrow" aria-hidden="true">→</span>
+          </div>
+        </a>
+
+        <!-- YELLOW — Mato Grosso -->
+        <a href="/estado/mt" class="state-card r-yellow">
+          <div class="head">
+            <div class="name">
+              <h3>Mato Grosso</h3>
+              <div class="region">Centro-Oeste · MT</div>
+            </div>
+            <span class="badge"><span aria-hidden="true">⚠</span> Atenção</span>
+          </div>
+          <div class="lead">Perigo potencial de queimada — baixa umidade.</div>
+          <dl class="facts">
+            <dt>Afeta</dt><dd>Norte do estado · Sinop, Alta Floresta</dd>
+            <dt>Válido</dt><dd>Até segunda-feira (5 dias)</dd>
+            <dt>Fonte</dt><dd>INMET · INPE Queimadas</dd>
+          </dl>
+          <div class="chips"><span class="chip">Queimada</span></div>
+          <div class="foot">
+            <span>1 alerta · há <span class="tnum">2 h</span></span>
+            <span class="arrow" aria-hidden="true">→</span>
+          </div>
+        </a>
+
+        <!-- GREEN — Santa Catarina -->
+        <a href="/estado/sc" class="state-card r-green">
+          <div class="head">
+            <div class="name">
+              <h3>Santa Catarina</h3>
+              <div class="region">Sul · SC</div>
+            </div>
+            <span class="badge"><span aria-hidden="true">✓</span> Sem alertas</span>
+          </div>
+          <div class="lead">Nenhum alerta oficial ativo no estado.</div>
+          <div class="foot">
+            <span>Última verificação <span class="tnum">há 8 min</span> · CEMADEN ✓ INMET ✓</span>
+            <span class="arrow" aria-hidden="true">→</span>
+          </div>
+        </a>
+
+      </div>
+
+      <section class="mini-map">
+        <div class="mh"><h2>Mapa</h2><a href="#">Ver completo →</a></div>
+        <div id="mapB"></div>
+      </section>
+
+      <footer class="m-disc">
+        Agregamos fontes oficiais. Em emergência: <strong>199</strong> Defesa Civil · <strong>193</strong> Bombeiros · <strong>190</strong> Polícia. Não substitui alertas oficiais.
+      </footer>
+    </div>
+  </div>
+</div>
+
+<!-- ============================ VARIANT C — EXPANDABLE ACCORDION ============================ -->
+<div class="phone-wrap" data-pane="C">
+  <div class="phone-label">Variant C · Expandable accordion <small>scan + drill-in inline</small></div>
+  <div class="phone vc">
+    <div class="status-bar"><span>14:32</span><span>5G  •••  98%</span></div>
+    <div class="scroll">
+      <header class="m-head">
+        <h1>ENSO Brasil</h1>
+        <div class="sub">Toque no estado para ver os alertas · atualizado há 8 min</div>
+      </header>
+      <div class="m-counts">
+        <span class="pill red"><span class="swatch"></span><strong>1</strong> perigo</span>
+        <span class="pill orange"><span class="swatch"></span><strong>3</strong> alerta</span>
+        <span class="pill yellow"><span class="swatch"></span><strong>3</strong> atenção</span>
+        <span class="pill green"><span class="swatch"></span><strong>20</strong> ok</span>
+      </div>
+      <div class="m-search">
+        <input type="search" placeholder="Buscar por estado…">
+      </div>
+
+      <div class="accord-list" role="list">
+        <div class="acc-row r-red open" role="listitem">
+          <div class="acc-head" data-acc>
+            <span class="stripe" aria-hidden="true"></span>
+            <div class="body">
+              <div class="toprow">
+                <span class="name">Maranhão</span>
+                <span class="uf">MA</span>
+                <span class="badge">⛔ Perigo</span>
+              </div>
+              <div class="summary">3 alertas · chuva extrema, inundação, deslizamento</div>
+            </div>
+            <span class="chev" aria-hidden="true">›</span>
+          </div>
+          <div class="acc-body">
+            <div class="alert-mini">
+              <div class="row1"><h4>Chuvas intensas</h4><span class="risk-pill risk-red">Grande Perigo</span></div>
+              <p>Acumulado &gt; 100&nbsp;mm em 24h. Ventos até 100&nbsp;km/h previstos.</p>
+              <div class="meta"><a href="#">INMET · 2026-04-1234</a><span>há 12 min</span></div>
+            </div>
+            <div class="alert-mini">
+              <div class="row1"><h4>Risco de inundação</h4><span class="risk-pill risk-orange">Alerta</span></div>
+              <p>Bacia do Mearim com risco de transbordamento.</p>
+              <div class="meta"><a href="#">CEMADEN · MA-2026-04-0411</a><span>há 27 min</span></div>
+            </div>
+            <div class="alert-mini">
+              <div class="row1"><h4>Deslizamento</h4><span class="risk-pill risk-orange">Alerta</span></div>
+              <p>Encostas saturadas em São Luís e Imperatriz.</p>
+              <div class="meta"><a href="#">CEMADEN · MA-2026-04-0419</a><span>há 1 h</span></div>
+            </div>
+            <div class="actions">
+              <a href="#" class="primary">Ver detalhes</a>
+              <a href="#">Compartilhar</a>
+            </div>
+          </div>
+        </div>
+
+        <div class="acc-row r-orange" role="listitem">
+          <div class="acc-head" data-acc>
+            <span class="stripe" aria-hidden="true"></span>
+            <div class="body">
+              <div class="toprow">
+                <span class="name">Bahia</span>
+                <span class="uf">BA</span>
+                <span class="badge">⚠⚠ Alerta</span>
+              </div>
+              <div class="summary">2 alertas · chuva intensa, deslizamento</div>
+            </div>
+            <span class="chev" aria-hidden="true">›</span>
+          </div>
+          <div class="acc-body"></div>
+        </div>
+
+        <div class="acc-row r-orange" role="listitem">
+          <div class="acc-head" data-acc>
+            <span class="stripe" aria-hidden="true"></span>
+            <div class="body">
+              <div class="toprow">
+                <span class="name">Minas Gerais</span>
+                <span class="uf">MG</span>
+                <span class="badge">⚠⚠ Alerta</span>
+              </div>
+              <div class="summary">1 alerta · chuva intensa</div>
+            </div>
+            <span class="chev" aria-hidden="true">›</span>
+          </div>
+          <div class="acc-body"></div>
+        </div>
+
+        <div class="acc-row r-orange" role="listitem">
+          <div class="acc-head" data-acc>
+            <span class="stripe" aria-hidden="true"></span>
+            <div class="body">
+              <div class="toprow"><span class="name">Pernambuco</span><span class="uf">PE</span><span class="badge">⚠⚠ Alerta</span></div>
+              <div class="summary">1 alerta · chuva intensa</div>
+            </div>
+            <span class="chev" aria-hidden="true">›</span>
+          </div>
+          <div class="acc-body"></div>
+        </div>
+
+        <div class="acc-row r-yellow" role="listitem">
+          <div class="acc-head" data-acc>
+            <span class="stripe" aria-hidden="true"></span>
+            <div class="body">
+              <div class="toprow"><span class="name">São Paulo</span><span class="uf">SP</span><span class="badge">⚠ Atenção</span></div>
+              <div class="summary">1 alerta · onda de calor</div>
+            </div>
+            <span class="chev" aria-hidden="true">›</span>
+          </div>
+          <div class="acc-body"></div>
+        </div>
+
+        <div class="acc-row r-yellow" role="listitem">
+          <div class="acc-head" data-acc>
+            <span class="stripe" aria-hidden="true"></span>
+            <div class="body">
+              <div class="toprow"><span class="name">Rio Grande do Sul</span><span class="uf">RS</span><span class="badge">⚠ Atenção</span></div>
+              <div class="summary">1 alerta · perigo potencial de chuva</div>
+            </div>
+            <span class="chev" aria-hidden="true">›</span>
+          </div>
+          <div class="acc-body"></div>
+        </div>
+
+        <div class="acc-row r-yellow" role="listitem">
+          <div class="acc-head" data-acc>
+            <span class="stripe" aria-hidden="true"></span>
+            <div class="body">
+              <div class="toprow"><span class="name">Mato Grosso</span><span class="uf">MT</span><span class="badge">⚠ Atenção</span></div>
+              <div class="summary">1 alerta · perigo potencial de queimada</div>
+            </div>
+            <span class="chev" aria-hidden="true">›</span>
+          </div>
+          <div class="acc-body"></div>
+        </div>
+
+        <div class="acc-row r-green" role="listitem">
+          <div class="acc-head" data-acc>
+            <span class="stripe" aria-hidden="true"></span>
+            <div class="body">
+              <div class="toprow"><span class="name">Santa Catarina</span><span class="uf">SC</span><span class="badge">✓ Sem alertas</span></div>
+              <div class="summary">Última verificação há 8 min</div>
+            </div>
+            <span class="chev" aria-hidden="true">›</span>
+          </div>
+          <div class="acc-body"></div>
+        </div>
+      </div>
+
+      <section class="mini-map">
+        <div class="mh"><h2>Mapa</h2><a href="#">Ver completo →</a></div>
+        <div id="mapC"></div>
+      </section>
+
+      <footer class="m-disc">
+        Agregamos fontes oficiais. Em emergência: <strong>199</strong> Defesa Civil · <strong>193</strong> Bombeiros · <strong>190</strong> Polícia. Não substitui alertas oficiais.
+      </footer>
+    </div>
+  </div>
+</div>
+
+</main>
+
+<div class="sketch-toolbar" aria-label="Sketch tools">
+  <span style="color:var(--ink-3)">Sketch 002 · Mobile</span>
+</div>
+
+<script>
+  document.querySelectorAll('.variant-tab').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.variant-tab').forEach(b => { b.classList.remove('active'); b.setAttribute('aria-selected','false'); });
+      document.querySelectorAll('.phone-wrap').forEach(p => p.classList.remove('active'));
+      btn.classList.add('active'); btn.setAttribute('aria-selected','true');
+      const tab = btn.dataset.tab;
+      document.querySelector(`.phone-wrap[data-pane="${tab}"]`).classList.add('active');
+      renderMiniMap(tab);
+    });
+  });
+
+  // Accordion in variant C
+  document.querySelectorAll('.vc [data-acc]').forEach(head => {
+    head.addEventListener('click', e => {
+      e.preventDefault();
+      head.parentElement.classList.toggle('open');
+    });
+  });
+
+  // ===== Schematic Brazil mini-map (smaller version of 001) =====
+  const STATES = [
+    { uf:'RR', col:4.2, row:0.5, risk:'green'  },
+    { uf:'AP', col:7.0, row:0.6, risk:'green'  },
+    { uf:'AM', col:3.0, row:2.2, risk:'green',  w:2.6, h:2.0 },
+    { uf:'PA', col:6.0, row:2.0, risk:'green',  w:2.4, h:1.8 },
+    { uf:'MA', col:8.5, row:2.0, risk:'red',    w:1.5, h:1.5 },
+    { uf:'CE', col:10.2, row:1.7, risk:'green', w:1.2, h:1.2 },
+    { uf:'RN', col:11.4, row:1.8, risk:'green', w:1.0, h:0.8 },
+    { uf:'PB', col:11.7, row:2.6, risk:'green', w:1.0, h:0.7 },
+    { uf:'PE', col:11.0, row:3.3, risk:'orange', w:1.7, h:0.7 },
+    { uf:'AL', col:11.6, row:4.0, risk:'green', w:1.0, h:0.7 },
+    { uf:'SE', col:11.2, row:4.7, risk:'green', w:0.9, h:0.7 },
+    { uf:'PI', col:9.4,  row:3.0, risk:'green', w:1.3, h:1.5 },
+    { uf:'BA', col:9.6,  row:4.6, risk:'orange', w:2.0, h:1.8 },
+    { uf:'AC', col:1.7,  row:3.5, risk:'green', w:1.4, h:1.0 },
+    { uf:'RO', col:3.5,  row:4.2, risk:'green', w:1.4, h:1.2 },
+    { uf:'TO', col:7.6,  row:3.7, risk:'green', w:1.3, h:1.6 },
+    { uf:'MT', col:5.2,  row:4.6, risk:'yellow', w:2.2, h:2.0 },
+    { uf:'GO', col:7.6,  row:5.6, risk:'green', w:1.5, h:1.4 },
+    { uf:'DF', col:8.6,  row:6.1, risk:'green', w:0.5, h:0.5 },
+    { uf:'MG', col:8.6,  row:7.0, risk:'orange', w:2.0, h:1.6 },
+    { uf:'ES', col:10.7, row:7.6, risk:'green', w:0.9, h:1.0 },
+    { uf:'RJ', col:9.8,  row:8.7, risk:'green', w:1.4, h:0.8 },
+    { uf:'SP', col:8.0,  row:8.4, risk:'yellow', w:1.7, h:1.2 },
+    { uf:'MS', col:6.0, row:7.0, risk:'green', w:1.6, h:1.6 },
+    { uf:'PR', col:7.0,  row:9.4, risk:'green', w:1.6, h:1.0 },
+    { uf:'SC', col:7.2,  row:10.4, risk:'green', w:1.5, h:0.8 },
+    { uf:'RS', col:6.4,  row:11.4, risk:'green', w:1.8, h:1.4 },
+  ];
+
+  function renderMiniMap(paneId) {
+    const wrap = document.getElementById('map' + paneId);
+    if (!wrap || wrap.dataset.rendered) return;
+    let svg = `<svg class="ms" viewBox="0 0 14 14" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Mapa do Brasil — Maranhão em perigo, Bahia/MG/PE em alerta, SP/RS/MT em atenção, demais sem alertas.">`;
+    STATES.forEach(s => {
+      const w2 = s.w || 0.85, h2 = s.h || 0.85;
+      const isSelected = s.uf === 'MA' ? ' selected' : '';
+      svg += `<rect class="state-tile ${s.risk}${isSelected}" x="${s.col}" y="${s.row}" width="${w2}" height="${h2}" rx="0.1" />`;
+    });
+    svg += `</svg>`;
+    wrap.innerHTML = svg;
+    wrap.dataset.rendered = '1';
+  }
+  renderMiniMap('A');
+</script>
+
+</body>
+</html>

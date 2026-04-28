@@ -55,6 +55,10 @@ Always start with `.planning/STATE.md` to know the current phase, then `.plannin
 - Analytics that track individuals
 - Replacing Defesa Civil / CEMADEN as official alert systems
 
+## Auto-loaded skills
+
+- **Sketch findings for enso-brasil** (validated design decisions, CSS patterns, theme tokens, locked PT-BR copy, hard UI contracts) → `Skill("sketch-findings-enso-brasil")`. Auto-load this whenever building UI for ENSO Brasil (Phase 1 disclaimer/layout shell, Phase 5 dashboard, any future UI milestone).
+
 ## Running GSD commands
 
 - `/gsd-progress` — see current phase and next action
