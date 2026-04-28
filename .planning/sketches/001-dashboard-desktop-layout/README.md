@@ -2,7 +2,7 @@
 sketch: 001
 name: dashboard-desktop-layout
 question: "Does the 40/60 panel-on-left + map-on-right composition feel right at ≥1024px, or should the map breathe more?"
-winner: null
+winner: "C"
 tags: [layout, desktop, hierarchy]
 ---
 
@@ -34,6 +34,12 @@ open .planning/sketches/001-dashboard-desktop-layout/index.html
 4. **Update freshness signal** — header-only (A) vs dedicated band (B) vs implied via legend counts (C). Which conveys "this is alive" without alarming?
 5. **Map breathing room** — does the map feel cramped at 60% (A), comfortable at 65% (B), or unnecessarily roomy at 50% (C)?
 6. **Reading direction** — Brazilian users read left-to-right; the panel-first composition (A, B) leads with the personalized answer. C asks the user to scan the country first. Which matches the audience priority (vulnerable populations seeking their own state)?
+
+## Decision (winner: C)
+
+**Top-legend strip + 50/50, map on the left.** The full-width legend doubles as a national-scale snapshot ("17 sem alertas · 6 atenção · 3 alerta · 1 perigo") that anchors the page. The 50/50 split gives the map more weight than the spec's 40/60 without crowding the panel. Map-first reading direction works for a national dashboard where users land on `/` to scan Brazil; per-state focus moves to the deep-link route `/estado/{uf}` (REQ DASH-04).
+
+Implementation hint: top-legend counts derive from the snapshot — keep the legend a server component fed by the same payload that paints the map. Avoid client-side recomputation.
 
 ## Notes
 
