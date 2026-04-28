@@ -2,7 +2,8 @@
 sketch: 006
 name: search-filter-states
 question: "Search input + region chips: empty / typing / no-results / active-chip combinations — what interaction model serves life-safety-adjacent UX best?"
-winner: null
+winner: "A"
+migration_trigger: "If a 4th filter dimension lands (e.g. hazard type, ENSO status from M5, fonte específica), migrate to Variant C drawer pattern."
 tags: [interaction, search, filter]
 ---
 

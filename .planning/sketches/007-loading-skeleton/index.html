@@ -1,0 +1,519 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sketch 007 — Loading & Skeleton States · ENSO Brasil</title>
+<link rel="stylesheet" href="../themes/default.css">
+<style>
+  body { background: #efeeea; }
+  .stage { display: flex; flex-direction: column; gap: 24px; padding: 24px 16px 96px; align-items: center; }
+  .pane-wrap { display: none; flex-direction: column; gap: 18px; align-items: center; }
+  .pane-wrap.active { display: flex; }
+  .pane-label {
+    font-size: 13px; font-weight: 500; color: var(--ink-2);
+    letter-spacing: 0.02em; max-width: 1000px; text-align: center;
+  }
+  .pane-label small { display: block; margin-top: 4px; color: var(--ink-3); font-weight: 400; }
+
+  .device-row { display: flex; gap: 24px; align-items: flex-start; flex-wrap: wrap; justify-content: center; }
+  .state-label { font-size: 11.5px; color: var(--ink-3); letter-spacing: 0.05em; text-transform: uppercase; margin-bottom: 8px; text-align: center; max-width: 390px; }
+  .state-label small { display: block; color: var(--ink-4); font-weight: 400; text-transform: none; letter-spacing: 0; margin-top: 3px; font-size: 11px; }
+
+  .phone {
+    width: 390px; height: 720px;
+    background: var(--bg);
+    border: 1px solid var(--line-strong);
+    border-radius: 24px;
+    overflow: hidden;
+    display: flex; flex-direction: column;
+  }
+  .phone .status-bar {
+    height: 24px; background: var(--surface);
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 14px; font-size: 10.5px; color: var(--ink-3);
+    border-bottom: 1px solid var(--line);
+    flex: 0 0 24px;
+  }
+  .phone .scroll { flex: 1; overflow: hidden; }
+
+  /* ===== Common ===== */
+  .top-banner {
+    padding: 11px 16px; font-size: 12.5px; line-height: 1.5;
+    border-bottom: 1px solid var(--orange-border);
+    border-top: 3px solid var(--orange-border);
+    background: #fef0e1; color: var(--orange-ink);
+  }
+  .top-banner.gray {
+    background: var(--gray-bg);
+    border-color: var(--gray-border);
+    color: var(--gray-ink);
+  }
+  .top-banner strong { font-weight: 500; color: var(--ink-1); }
+  .top-banner a { color: inherit; }
+
+  .m-head {
+    background: var(--surface); border-bottom: 1px solid var(--line);
+    padding: 12px 16px;
+  }
+  .m-head h1 { font-size: 15px; font-weight: 500; }
+  .m-head .sub { color: var(--ink-3); font-size: 11.5px; margin-top: 1px; }
+
+  .m-counts {
+    display: flex; gap: 6px; flex-wrap: wrap;
+    background: var(--surface-muted); border-bottom: 1px solid var(--line);
+    padding: 8px 16px; font-size: 11px;
+  }
+  .m-counts .pill {
+    border: 1px solid var(--line); border-radius: 999px;
+    padding: 2px 8px; background: var(--surface);
+    display: inline-flex; align-items: center; gap: 4px;
+  }
+  .m-counts .pill .swatch { width: 7px; height: 7px; border-radius: 50%; }
+  .m-counts .pill.red    .swatch { background: var(--red-border); }
+  .m-counts .pill.orange .swatch { background: var(--orange-border); }
+  .m-counts .pill.yellow .swatch { background: var(--yellow-border); }
+  .m-counts .pill.green  .swatch { background: var(--green-border); }
+  .m-counts .pill.gray   .swatch { background: var(--gray-border); }
+
+  .card-list { padding: 12px; display: flex; flex-direction: column; gap: 10px; flex: 1; overflow-y: auto; }
+  .state-card {
+    background: var(--surface); border: 1px solid var(--line);
+    border-left: 4px solid var(--line-strong); border-radius: 6px;
+    padding: 12px 14px;
+  }
+  .state-card.r-red    { border-left-color: var(--red-border); border-left-width: 5px; }
+  .state-card.r-orange { border-left-color: var(--orange-border); }
+  .state-card.r-yellow { border-left-color: var(--yellow-border); }
+  .state-card.r-green  { border-left-color: var(--green-border); }
+  .state-card.r-gray   { border-left-color: var(--gray-border); border-left-style: dashed; }
+  .state-card .head { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 4px; }
+  .state-card h3 { font-size: 14px; font-weight: 500; }
+  .state-card .badge {
+    font-size: 11px; padding: 2px 7px; border-radius: 4px;
+    border: 1px solid var(--line); font-weight: 500;
+  }
+  .state-card.r-red    .badge { background: var(--red-bg);    color: var(--red-ink);    border-color: var(--red-border); }
+  .state-card.r-orange .badge { background: var(--orange-bg); color: var(--orange-ink); border-color: var(--orange-border); }
+  .state-card.r-yellow .badge { background: var(--yellow-bg); color: var(--yellow-ink); border-color: var(--yellow-border); }
+  .state-card.r-green  .badge { background: var(--green-bg);  color: var(--green-ink);  border-color: var(--green-border); }
+  .state-card.r-gray   .badge { background: var(--gray-bg);   color: var(--gray-ink);   border-color: var(--gray-border); }
+  .state-card .lead { font-size: 12.5px; color: var(--ink-2); line-height: 1.4; }
+
+  .m-disc {
+    background: var(--surface); border-top: 1px solid var(--line);
+    padding: 12px 16px; font-size: 11.5px; color: var(--ink-2); line-height: 1.45;
+  }
+  .m-disc strong { color: var(--ink-1); font-weight: 500; }
+
+  /* ===== Variant B — skeleton bars ===== */
+  @keyframes shimmer {
+    0%   { background-position: -400px 0; }
+    100% { background-position: 400px 0; }
+  }
+  .sk {
+    background: var(--surface-muted);
+    background-image: linear-gradient(90deg, var(--surface-muted) 0%, var(--surface) 50%, var(--surface-muted) 100%);
+    background-size: 800px 100%;
+    animation: shimmer 1.6s linear infinite;
+    border-radius: 4px;
+  }
+  .vb .skel-card {
+    background: var(--surface); border: 1px solid var(--line);
+    border-left: 4px solid var(--line); border-radius: 6px;
+    padding: 12px 14px;
+    display: flex; flex-direction: column; gap: 6px;
+  }
+  .vb .skel-card .h { display: flex; justify-content: space-between; align-items: center; }
+  .vb .skel-card .h .nm { width: 100px; height: 14px; }
+  .vb .skel-card .h .bd { width: 56px; height: 18px; border-radius: 4px; }
+  .vb .skel-card .l1 { width: 90%; height: 12px; }
+  .vb .skel-card .l2 { width: 60%; height: 12px; }
+
+  .vb .skel-counts { display: flex; gap: 6px; padding: 8px 16px; background: var(--surface-muted); border-bottom: 1px solid var(--line); }
+  .vb .skel-counts .sk { width: 50px; height: 18px; border-radius: 999px; }
+
+  /* ===== Variant C — total failure ===== */
+  .vc-total {
+    padding: 32px 24px;
+    flex: 1; display: flex; flex-direction: column;
+    text-align: left; gap: 18px;
+  }
+  .vc-total .icn { font-size: 36px; opacity: 0.5; line-height: 1; }
+  .vc-total h2 { font-size: 19px; font-weight: 500; line-height: 1.35; }
+  .vc-total p { font-size: 14px; color: var(--ink-2); line-height: 1.5; }
+  .vc-total .src-list {
+    border: 1px solid var(--line); border-radius: 6px;
+    background: var(--surface);
+    padding: 10px 14px;
+  }
+  .vc-total .src-list .h { font-size: 11px; color: var(--ink-3); letter-spacing: 0.06em; text-transform: uppercase; padding: 4px 0 6px; border-bottom: 1px solid var(--line); margin-bottom: 4px; }
+  .vc-total .src-list a {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 8px 0; font-size: 13.5px; color: var(--ink-1); text-decoration: none;
+    border-bottom: 1px solid var(--line);
+  }
+  .vc-total .src-list a:last-child { border-bottom: 0; }
+  .vc-total .src-list a .domain { color: var(--ink-3); font-family: var(--mono); font-size: 11.5px; }
+  .vc-total .emerg-block {
+    background: var(--red-bg); border: 1px solid var(--red-border);
+    border-radius: 6px; padding: 12px 14px;
+    color: var(--red-ink); font-size: 13.5px; line-height: 1.5;
+  }
+  .vc-total .emerg-block strong { color: var(--ink-1); font-weight: 500; }
+  .vc-total .emerg-block .num {
+    background: var(--surface); border: 1px solid var(--red-border);
+    color: var(--red-ink); font-weight: 500;
+    padding: 1px 7px; border-radius: 4px; font-family: var(--mono); margin-right: 4px;
+  }
+  .vc-total .meta { font-size: 12px; color: var(--ink-3); }
+
+  /* "data age" indicator (variant A) */
+  .age-pill {
+    display: inline-flex; align-items: center; gap: 5px;
+    background: var(--surface-muted); border: 1px solid var(--line);
+    border-radius: 999px; padding: 2px 9px;
+    font-size: 11.5px; color: var(--ink-2);
+    margin-left: 6px;
+  }
+  .age-pill .dot { width: 6px; height: 6px; border-radius: 50%; }
+  .age-pill.fresh .dot { background: var(--green-border); }
+  .age-pill.stale .dot { background: var(--orange-border); }
+</style>
+</head>
+<body>
+
+<a href="#main" class="skip">Pular para o conteúdo principal</a>
+
+<nav class="variants" role="tablist" aria-label="Variantes de loading">
+  <button class="variant-tab active" data-tab="A" role="tab" aria-selected="true">Variant A — SSR-instant + last-known</button>
+  <button class="variant-tab" data-tab="B" role="tab" aria-selected="false">Variant B — Skeleton + streaming</button>
+  <button class="variant-tab" data-tab="C" role="tab" aria-selected="false">Variant C — Total failure page</button>
+</nav>
+
+<main id="main" class="stage">
+
+<!-- ============================ VARIANT A — SSR-INSTANT + LAST-KNOWN ============================ -->
+<div class="pane-wrap active" data-pane="A">
+  <div class="pane-label">
+    Variant A · SSR-instant + last-known
+    <small>Página sempre carrega com dado real do snapshot. Hot cache → instantâneo. Cold cache → fallback de Postgres com freshness explícito ("Snapshot de 17 min atrás · atualizando…"). <strong>Nunca skeleton</strong> — em emergência, dado antigo honesto é melhor do que tela vazia.</small>
+  </div>
+
+  <div class="device-row">
+
+    <div>
+      <div class="state-label">1. Hot cache hit · &lt; 50 ms<small>Upstash retorna; renderiza completo instantaneamente</small></div>
+      <div class="phone">
+        <div class="status-bar"><span>14:32</span><span>5G  98%</span></div>
+        <div class="scroll">
+          <header class="m-head">
+            <h1>ENSO Brasil <span class="age-pill fresh"><span class="dot"></span>há 8 min</span></h1>
+            <div class="sub">Perigos por estado</div>
+          </header>
+          <div class="m-counts">
+            <span class="pill red"><span class="swatch"></span>1 perigo</span>
+            <span class="pill orange"><span class="swatch"></span>3 alerta</span>
+            <span class="pill yellow"><span class="swatch"></span>3 atenção</span>
+            <span class="pill green"><span class="swatch"></span>20 OK</span>
+          </div>
+          <div class="card-list">
+            <a class="state-card r-red"><div class="head"><h3>Maranhão</h3><span class="badge">⛔ Perigo</span></div><div class="lead">Chuva extrema, inundação</div></a>
+            <a class="state-card r-orange"><div class="head"><h3>Bahia</h3><span class="badge">⚠⚠ Alerta</span></div><div class="lead">Chuva intensa, deslizamento</div></a>
+            <a class="state-card r-orange"><div class="head"><h3>Minas Gerais</h3><span class="badge">⚠⚠ Alerta</span></div><div class="lead">Chuva intensa</div></a>
+            <a class="state-card r-yellow"><div class="head"><h3>São Paulo</h3><span class="badge">⚠ Atenção</span></div><div class="lead">Onda de calor</div></a>
+          </div>
+          <footer class="m-disc">Em emergência: <strong>199</strong> Defesa Civil · <strong>193</strong> Bombeiros · <strong>190</strong> Polícia.</footer>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="state-label">2. Cold cache · 17 min<small>Upstash miss → Postgres last snapshot. Renderiza com pill "stale"</small></div>
+      <div class="phone">
+        <div class="status-bar"><span>14:32</span><span>5G  98%</span></div>
+        <div class="scroll">
+          <div class="top-banner">
+            <strong>Mostrando snapshot de 17 minutos atrás.</strong> Estamos buscando dados novos. Recarregue em alguns instantes.
+          </div>
+          <header class="m-head">
+            <h1>ENSO Brasil <span class="age-pill stale"><span class="dot"></span>há 17 min</span></h1>
+            <div class="sub">Perigos por estado</div>
+          </header>
+          <div class="m-counts">
+            <span class="pill red"><span class="swatch"></span>1 perigo</span>
+            <span class="pill orange"><span class="swatch"></span>3 alerta</span>
+            <span class="pill yellow"><span class="swatch"></span>3 atenção</span>
+            <span class="pill green"><span class="swatch"></span>20 OK</span>
+          </div>
+          <div class="card-list">
+            <a class="state-card r-red"><div class="head"><h3>Maranhão</h3><span class="badge">⛔ Perigo</span></div><div class="lead">Chuva extrema, inundação</div></a>
+            <a class="state-card r-orange"><div class="head"><h3>Bahia</h3><span class="badge">⚠⚠ Alerta</span></div><div class="lead">Chuva intensa</div></a>
+            <a class="state-card r-orange"><div class="head"><h3>Minas Gerais</h3><span class="badge">⚠⚠ Alerta</span></div><div class="lead">Chuva intensa</div></a>
+            <a class="state-card r-yellow"><div class="head"><h3>São Paulo</h3><span class="badge">⚠ Atenção</span></div><div class="lead">Onda de calor</div></a>
+          </div>
+          <footer class="m-disc">Em emergência: <strong>199</strong> Defesa Civil · <strong>193</strong> Bombeiros · <strong>190</strong> Polícia.</footer>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="state-label">3. Mapa SVG ainda carregando<small>Cards renderizam SSR; mapa é client-island com fallback</small></div>
+      <div class="phone">
+        <div class="status-bar"><span>14:32</span><span>5G  98%</span></div>
+        <div class="scroll">
+          <header class="m-head">
+            <h1>ENSO Brasil <span class="age-pill fresh"><span class="dot"></span>há 8 min</span></h1>
+            <div class="sub">Perigos por estado</div>
+          </header>
+          <div class="m-counts">
+            <span class="pill red"><span class="swatch"></span>1 perigo</span>
+            <span class="pill orange"><span class="swatch"></span>3 alerta</span>
+            <span class="pill yellow"><span class="swatch"></span>3 atenção</span>
+            <span class="pill green"><span class="swatch"></span>20 OK</span>
+          </div>
+          <div class="card-list">
+            <a class="state-card r-red"><div class="head"><h3>Maranhão</h3><span class="badge">⛔ Perigo</span></div><div class="lead">Chuva extrema</div></a>
+            <a class="state-card r-orange"><div class="head"><h3>Bahia</h3><span class="badge">⚠⚠ Alerta</span></div><div class="lead">Chuva intensa</div></a>
+            <div style="background:var(--surface);border:1px dashed var(--line);border-radius:6px;padding:24px 16px;text-align:center;color:var(--ink-3);font-size:12.5px;line-height:1.5">
+              📍 Mapa carregando…<br>
+              <small style="font-size:11.5px;color:var(--ink-4)">Use a lista acima ou o link <a href="/texto" style="color:var(--ink-2)">versão em texto</a> se preferir.</small>
+            </div>
+          </div>
+          <footer class="m-disc">Em emergência: <strong>199</strong> Defesa Civil · <strong>193</strong> Bombeiros · <strong>190</strong> Polícia.</footer>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ============================ VARIANT B — SKELETON + STREAMING ============================ -->
+<div class="pane-wrap" data-pane="B">
+  <div class="pane-label">
+    Variant B · Skeleton + streaming
+    <small>Padrão Next.js convencional: header renderiza imediatamente; cards são `&lt;Suspense fallback={Skeleton}&gt;`. Bom para apps tradicionais. Para emergência climática, mostrar barras cinzas durante 800–2000 ms num momento crítico é fricção evitável.</small>
+  </div>
+
+  <div class="device-row">
+
+    <div>
+      <div class="state-label">1. Skeleton inicial<small>Header pronto; cards = barras shimmer</small></div>
+      <div class="phone vb">
+        <div class="status-bar"><span>14:32</span><span>5G  98%</span></div>
+        <div class="scroll">
+          <header class="m-head">
+            <h1>ENSO Brasil</h1>
+            <div class="sub">Carregando dados…</div>
+          </header>
+          <div class="skel-counts">
+            <div class="sk"></div><div class="sk"></div><div class="sk"></div><div class="sk"></div>
+          </div>
+          <div class="card-list">
+            <div class="skel-card">
+              <div class="h"><div class="sk nm"></div><div class="sk bd"></div></div>
+              <div class="sk l1"></div><div class="sk l2"></div>
+            </div>
+            <div class="skel-card">
+              <div class="h"><div class="sk nm"></div><div class="sk bd"></div></div>
+              <div class="sk l1"></div><div class="sk l2"></div>
+            </div>
+            <div class="skel-card">
+              <div class="h"><div class="sk nm"></div><div class="sk bd"></div></div>
+              <div class="sk l1"></div><div class="sk l2"></div>
+            </div>
+            <div class="skel-card">
+              <div class="h"><div class="sk nm"></div><div class="sk bd"></div></div>
+              <div class="sk l1"></div><div class="sk l2"></div>
+            </div>
+          </div>
+          <footer class="m-disc">Em emergência: <strong>199</strong> Defesa Civil · <strong>193</strong> Bombeiros · <strong>190</strong> Polícia.</footer>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="state-label">2. Streaming · primeiros chegando<small>Counts pintaram, primeiros 2 cards renderizaram, próximos em skeleton</small></div>
+      <div class="phone vb">
+        <div class="status-bar"><span>14:32</span><span>5G  98%</span></div>
+        <div class="scroll">
+          <header class="m-head"><h1>ENSO Brasil</h1><div class="sub">há 8 min</div></header>
+          <div class="m-counts">
+            <span class="pill red"><span class="swatch"></span>1 perigo</span>
+            <span class="pill orange"><span class="swatch"></span>3 alerta</span>
+            <span class="pill yellow"><span class="swatch"></span>3 atenção</span>
+            <span class="pill green"><span class="swatch"></span>20 OK</span>
+          </div>
+          <div class="card-list">
+            <a class="state-card r-red"><div class="head"><h3>Maranhão</h3><span class="badge">⛔ Perigo</span></div><div class="lead">Chuva extrema</div></a>
+            <a class="state-card r-orange"><div class="head"><h3>Bahia</h3><span class="badge">⚠⚠ Alerta</span></div><div class="lead">Chuva intensa</div></a>
+            <div class="skel-card">
+              <div class="h"><div class="sk nm"></div><div class="sk bd"></div></div>
+              <div class="sk l1"></div><div class="sk l2"></div>
+            </div>
+            <div class="skel-card">
+              <div class="h"><div class="sk nm"></div><div class="sk bd"></div></div>
+              <div class="sk l1"></div><div class="sk l2"></div>
+            </div>
+          </div>
+          <footer class="m-disc">Em emergência: <strong>199</strong> Defesa Civil · <strong>193</strong> Bombeiros · <strong>190</strong> Polícia.</footer>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="state-label">3. Pronto<small>Skeleton trocado por dados reais</small></div>
+      <div class="phone vb">
+        <div class="status-bar"><span>14:32</span><span>5G  98%</span></div>
+        <div class="scroll">
+          <header class="m-head"><h1>ENSO Brasil</h1><div class="sub">há 8 min</div></header>
+          <div class="m-counts">
+            <span class="pill red"><span class="swatch"></span>1</span>
+            <span class="pill orange"><span class="swatch"></span>3</span>
+            <span class="pill yellow"><span class="swatch"></span>3</span>
+            <span class="pill green"><span class="swatch"></span>20</span>
+          </div>
+          <div class="card-list">
+            <a class="state-card r-red"><div class="head"><h3>Maranhão</h3><span class="badge">⛔ Perigo</span></div><div class="lead">Chuva extrema, inundação</div></a>
+            <a class="state-card r-orange"><div class="head"><h3>Bahia</h3><span class="badge">⚠⚠ Alerta</span></div><div class="lead">Chuva intensa</div></a>
+            <a class="state-card r-orange"><div class="head"><h3>Minas Gerais</h3><span class="badge">⚠⚠ Alerta</span></div><div class="lead">Chuva intensa</div></a>
+            <a class="state-card r-yellow"><div class="head"><h3>São Paulo</h3><span class="badge">⚠ Atenção</span></div><div class="lead">Onda de calor</div></a>
+          </div>
+          <footer class="m-disc">Em emergência: <strong>199</strong> Defesa Civil · <strong>193</strong> Bombeiros · <strong>190</strong> Polícia.</footer>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ============================ VARIANT C — TOTAL FAILURE PAGE ============================ -->
+<div class="pane-wrap" data-pane="C">
+  <div class="pane-label">
+    Variant C · Total-failure / first-deploy page
+    <small>O que renderizar quando <em>nada</em> está disponível: snapshot vazio (primeiro deploy), todas as fontes fora há horas, falha catastrófica no servidor. Página dedicada que assume responsabilidade pelo problema, redireciona honestamente para fontes oficiais. <strong>Necessária independente de A ou B</strong> — é o piso.</small>
+  </div>
+
+  <div class="device-row">
+
+    <div>
+      <div class="state-label">1. Snapshot vazio · primeiro deploy<small>Site no ar mas snapshot ainda não populado</small></div>
+      <div class="phone">
+        <div class="status-bar"><span>14:32</span><span>5G  98%</span></div>
+        <div class="scroll">
+          <div class="top-banner gray">
+            <strong>Estamos coletando os primeiros dados.</strong> O site ficará disponível em alguns minutos. Enquanto isso, acesse as fontes diretamente.
+          </div>
+          <header class="m-head"><h1>ENSO Brasil</h1><div class="sub">Inicializando…</div></header>
+          <div class="vc-total">
+            <div class="icn">⏳</div>
+            <div>
+              <h2>Estamos coletando os primeiros alertas</h2>
+              <p>Pode levar alguns minutos para que o ENSO Brasil esteja com todos os 27 estados pintados. Enquanto isso, acesse os sites oficiais diretamente.</p>
+            </div>
+            <div class="src-list">
+              <div class="h">Sites oficiais</div>
+              <a href="https://alertas.cemaden.gov.br" rel="external"><span>CEMADEN</span><span class="domain">alertas.cemaden.gov.br</span></a>
+              <a href="https://alertas2.inmet.gov.br" rel="external"><span>INMET</span><span class="domain">alertas2.inmet.gov.br</span></a>
+              <a href="https://www.gov.br/mdr" rel="external"><span>Defesa Civil Nacional</span><span class="domain">gov.br/mdr</span></a>
+            </div>
+            <div class="emerg-block">
+              <strong>Em emergência:</strong>
+              <span class="num">199</span> Defesa Civil ·
+              <span class="num">193</span> Bombeiros ·
+              <span class="num">190</span> Polícia
+            </div>
+            <p class="meta">Recarregue em alguns minutos.</p>
+          </div>
+          <footer class="m-disc">Não substitui sistemas oficiais de alerta.</footer>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="state-label">2. Todas as fontes fora &gt;1h<small>Snapshot existe mas todos os dados são `unknown`</small></div>
+      <div class="phone">
+        <div class="status-bar"><span>14:32</span><span>5G  98%</span></div>
+        <div class="scroll">
+          <div class="top-banner gray">
+            <strong>Não estamos recebendo dados das fontes oficiais há mais de 1 hora.</strong> Acesse os sites diretamente para informação atualizada.
+          </div>
+          <header class="m-head"><h1>ENSO Brasil</h1><div class="sub">há 1 h 14 min · todas as fontes indisponíveis</div></header>
+          <div class="vc-total">
+            <div>
+              <h2>Não temos dados confiáveis no momento</h2>
+              <p>CEMADEN, INMET e INPE não responderam às últimas tentativas. Para informação correta agora, vá direto à fonte.</p>
+            </div>
+            <div class="src-list">
+              <div class="h">Sites oficiais</div>
+              <a href="https://alertas.cemaden.gov.br" rel="external"><span>CEMADEN</span><span class="domain">alertas.cemaden.gov.br</span></a>
+              <a href="https://alertas2.inmet.gov.br" rel="external"><span>INMET</span><span class="domain">alertas2.inmet.gov.br</span></a>
+              <a href="https://queimadas.dgi.inpe.br" rel="external"><span>INPE Queimadas</span><span class="domain">queimadas.dgi.inpe.br</span></a>
+            </div>
+            <div class="emerg-block">
+              <strong>Em emergência:</strong>
+              <span class="num">199</span> Defesa Civil ·
+              <span class="num">193</span> Bombeiros ·
+              <span class="num">190</span> Polícia
+            </div>
+            <p class="meta">Última tentativa há 14 min · estamos tentando novamente a cada 5 min.</p>
+          </div>
+          <footer class="m-disc">Não substitui sistemas oficiais de alerta.</footer>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="state-label">3. Erro 500 · servidor caiu<small>Servidor do ENSO Brasil fora — não Vercel deploy issue</small></div>
+      <div class="phone">
+        <div class="status-bar"><span>14:32</span><span>5G  98%</span></div>
+        <div class="scroll">
+          <div class="top-banner gray">
+            <strong>Algo deu errado de nosso lado.</strong> Tente recarregar. Se persistir, acesse direto os sites das fontes.
+          </div>
+          <header class="m-head"><h1>ENSO Brasil</h1><div class="sub">Erro do servidor</div></header>
+          <div class="vc-total">
+            <div class="icn">🛠</div>
+            <div>
+              <h2>O ENSO Brasil está temporariamente fora</h2>
+              <p>Nosso servidor não respondeu. Não é problema na sua conexão. Recarregue em alguns minutos ou acesse as fontes oficiais diretamente.</p>
+            </div>
+            <div class="src-list">
+              <div class="h">Sites oficiais</div>
+              <a href="https://alertas.cemaden.gov.br" rel="external"><span>CEMADEN</span><span class="domain">alertas.cemaden.gov.br</span></a>
+              <a href="https://alertas2.inmet.gov.br" rel="external"><span>INMET</span><span class="domain">alertas2.inmet.gov.br</span></a>
+            </div>
+            <div class="emerg-block">
+              <strong>Em emergência:</strong>
+              <span class="num">199</span> Defesa Civil ·
+              <span class="num">193</span> Bombeiros ·
+              <span class="num">190</span> Polícia
+            </div>
+            <p class="meta">Erro reportado: ENSO-2026-04-28-1432-A</p>
+          </div>
+          <footer class="m-disc">Não substitui sistemas oficiais de alerta.</footer>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+</main>
+
+<div class="sketch-toolbar"><span style="color:var(--ink-3)">Sketch 007 · Loading & error</span></div>
+
+<script>
+  document.querySelectorAll('.variant-tab').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.variant-tab').forEach(b => { b.classList.remove('active'); b.setAttribute('aria-selected','false'); });
+      document.querySelectorAll('.pane-wrap').forEach(p => p.classList.remove('active'));
+      btn.classList.add('active'); btn.setAttribute('aria-selected','true');
+      const tab = btn.dataset.tab;
+      document.querySelector(`.pane-wrap[data-pane="${tab}"]`).classList.add('active');
+    });
+  });
+</script>
+
+</body>
+</html>
