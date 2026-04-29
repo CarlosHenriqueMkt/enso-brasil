@@ -27,6 +27,7 @@ ENSO Brasil — public PT-BR climate hazard aggregator dashboard. Visual directi
 - **Risk palette = INMET-aligned** four levels + a fifth `unknown` (gray) reserved for absence-of-data, never auto-assigned to green.
 - **Three redundant signals per risk level**: color + icon + text label. Never color alone.
 - **PT-BR labels locked verbatim** to CEMADEN/INMET vocabulary: "Sem alertas / Atenção / Alerta / Perigo / Dados indisponíveis".
+- **PT-BR ONLY · no i18n routing.** Project dropped `next-intl` and locale routing entirely. Strings live in `src/lib/messages.ts` as plain TypeScript constants, not as a translation catalog.
 - **Anti-sensationalism guardrails**: no animation on alerts, no pulsing, no ALL-CAPS warnings, same type weight across severities. Severity is conveyed by color + position + structure.
 - **Mobile-first**: most users arrive via WhatsApp link. Card hierarchy locked to scan order — Lead → Afeta → Válido → Fontes → Chips → 199/193/190 (red only) → Timestamp.
 - **Stale/desatualizado notices ALWAYS at the top of the page** (SSR-rendered, above all main content, never inline-only).

@@ -19,7 +19,7 @@ If only this works, the project has shipped.
 2. Small rural producers / farmers dependent on climate forecasts
 3. Curious citizens wanting to understand if extreme events relate to ENSO
 
-**Language:** PT-BR, simple, jargon-translated. Architecture i18n-ready (`next-intl`) for later ES/EN expansion.
+**Language:** PT-BR only. Project focuses exclusively on the Brazilian audience. No i18n routing; no `next-intl`. If foreign-language content (NOAA, NASA, papers) needs to be displayed later, translation happens in the ingestion pipeline before persistence — never as runtime locale-switching.
 
 **Stance:** Aggregator of official sources, **not** an alert system. Defesa Civil and CEMADEN are the official systems. Strong disclaimer on every page.
 
@@ -72,7 +72,7 @@ If only this works, the project has shipped.
 - State Defesa Civil scraping — *deferred to M9 (v1 is API-only, no scraping)*
 - Historical comparison (1997–98, 2015–16, 2023–24) — *deferred to M10*
 - Notifications (push/email/Telegram) — *deferred to M11*
-- ES/EN translations — *deferred to M12 (i18n scaffolding ready in v1)*
+- ES/EN translations — *removed entirely. Project is PT-BR only.*
 - NASA/ECMWF integrations — *deferred to M13*
 - User accounts, social features, monetization — *never. Permanent non-goals.*
 - Own forecast model — *never. Aggregator only.*
@@ -90,7 +90,7 @@ If only this works, the project has shipped.
 | `ofetch` (unjs) for HTTP, not native fetch | Built-in retry/timeout/status-aware retry, isomorphic, TS-first | Locked (research delta) |
 | `react-simple-maps` + `carolinabigonha/br-atlas` simplified TopoJSON (~80 KB) | Cost (free), 3G-friendly bundle. Pin version; fork available if maintenance lapses | Locked |
 | **Albers conic projection**, parallels [-7, -22], rotate [54, 0] | Mercator distorts Brazil at equator. Albers gives equal-area for the Brazilian latitudes | Locked (research delta) |
-| `next-intl` from day 1 even though v1 is PT-BR only | Cheaper to set up structure now than retrofit when M12 hits | Locked |
+| **PT-BR ONLY · no i18n routing · `next-intl` REMOVED** | Project focuses on Brazilian audience exclusively. Translation utilities will live in the ingestion pipeline (e.g., translating NOAA/NASA content before persisting), not in routing. M12 (ES/EN translations) deleted from roadmap. | Locked (decision reversed during Phase 1 SPEC) |
 | Tailwind v4 (Oxide engine) | ~70% smaller CSS than v3 — matters for 3G | Locked |
 | TypeScript strict + Vitest + Playwright | Standard 2026 web stack; Playwright only for critical flows in v1 | Locked |
 | API-only sources in v1 (no scraping) | Legal/credibility safety; scraping moved to M9 with proper governance | Locked |

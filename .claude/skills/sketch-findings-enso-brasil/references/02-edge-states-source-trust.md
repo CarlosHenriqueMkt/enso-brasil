@@ -221,7 +221,7 @@ Render conditionally — server-component prop driven by `snapshot.staleSourceCo
 
 ## Locked Copy Strings (canonical)
 
-Centralize in `src/lib/i18n/messages/pt-BR.ts`:
+Centralize in `src/lib/messages.ts` (plain TypeScript constants — project is PT-BR only, no i18n catalog):
 
 ```ts
 export const messages = {

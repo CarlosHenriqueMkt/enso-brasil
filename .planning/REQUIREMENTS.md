@@ -12,13 +12,13 @@ REQ-IDs are atomic and testable. Each maps to exactly one phase in `ROADMAP.md`.
 
 - [ ] **FOUND-01**: Public GitHub repo with MIT LICENSE, README (PT-BR primary, EN secondary), CONTRIBUTING.md, CODE_OF_CONDUCT.md from first commit
 - [ ] **FOUND-02**: Next.js 15.5.x App Router scaffolding with TypeScript strict, Tailwind v4, ESLint, Prettier, Husky pre-commit
-- [ ] **FOUND-03**: `next-intl` configured with PT-BR as default locale; structure ready for ES/EN later (`/[locale]/...` routes)
+- [ ] ~~**FOUND-03**~~: REMOVED. Project is PT-BR only; no `next-intl`, no locale routing. Decision reversed during Phase 1 SPEC.
 - [ ] **FOUND-04**: GitHub Actions CI runs typecheck, lint, Vitest, Playwright on every PR; caching enabled
 - [ ] **FOUND-05**: Mandatory disclaimer SSR-rendered in root layout (not client JS) — visible on every page even with JS disabled. Disclaimer must include all three emergency contacts **paired with agency names**: **199 Defesa Civil · 193 Bombeiros · 190 Polícia**. Never display the bare numbers — the number alone is incomplete information
 - [ ] **FOUND-06**: PT-BR privacy/LGPD page at `/privacidade` describing server logs, IP retention, no analytics-by-default
 - [ ] **FOUND-07**: Accessibility shell — color-blind safe palette (icon + text + color), keyboard nav baseline, lang="pt-BR" set, focus-visible styles
 - [ ] **FOUND-08**: Stale-data and source-failure notices render at the **top of the page** (above all main content), SSR-rendered, never inline-only. Pattern: full-width banner on degraded snapshot health
-- [ ] **FOUND-09**: Edge-state copy strings centralized in PT-BR strings file (`src/lib/i18n/messages/pt-BR.ts`):
+- [ ] **FOUND-09**: Edge-state copy strings centralized in `src/lib/messages.ts` (plain TypeScript constants — NOT an i18n catalog, since the project is PT-BR only):
   - Verde: "Não encontramos nenhuma emergência nessa localidade. Verifique em outras fontes de informação antes de decidir o que você vai fazer."
   - Stale source: "Não estamos recebendo dados do(a) {fonte}. Acesse {url} diretamente e busque a informação que você precisa."
 - [ ] **FOUND-10**: Every link to an official source renders the domain in monospace font (helps users recognize external/official destinations)
@@ -104,7 +104,7 @@ These belong to milestones M2–M13 in `BACKLOG.md` and are not part of v1.
 | M9 | Defesa Civil estadual scraping | Requires governance + scraper infra |
 | M10 | Historical comparison (1997–98, 2015–16, 2023–24) | Daily archive starts in v1; UI later |
 | M11 | Push/email/Telegram notifications | Risk-transition table populated from v1; UI/transport later |
-| M12 | ES/EN translations | i18n scaffolding ready in v1 |
+| ~~M12~~ | ~~ES/EN translations~~ | REMOVED. Project is PT-BR only. |
 | M13 | NASA/ECMWF wider integrations | After v1 stabilizes |
 
 ---

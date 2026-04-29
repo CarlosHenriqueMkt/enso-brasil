@@ -7,14 +7,16 @@
 
 ## Current Phase
 
-**Next:** Phase 1 — Skeleton & OSS Foundation
-**Command to run:** `/gsd-discuss-phase 1` (or `/gsd-plan-phase 1` to skip discussion)
+**Next:** Phase 1 — Skeleton & OSS Foundation (SPEC locked, ambiguity 0.15)
+**Command to run:** `/gsd-discuss-phase 1` — picks up SPEC.md automatically and focuses on implementation decisions only
+
+**Project-level decision change** (locked 2026-04-28 during SPEC): **i18n removed entirely.** Project is PT-BR only. `next-intl` dropped from stack. M12 (ES/EN translations) deleted from roadmap. Translation utilities for foreign-language ingestion (NOAA, NASA) become an ingestion-pipeline concern, decided when M5 lands.
 
 ## Phase Progression
 
 | # | Phase | Status |
 |---|-------|--------|
-| 1 | Skeleton & OSS Foundation | ⏳ pending |
+| 1 | Skeleton & OSS Foundation | 📋 SPEC locked at `phases/01-skeleton-oss-foundation/01-SPEC.md` |
 | 2 | Data Foundation | ⏳ pending |
 | 3 | Pure Risk Engine | ⏳ pending |
 | 4 | First Two Adapters (CEMADEN + INMET) | ⏳ pending |

@@ -13,7 +13,7 @@
 
 | # | Phase | Goal | Requirements | Success criteria |
 |---|-------|------|--------------|------------------|
-| 1 | **Skeleton & OSS Foundation** | Public repo, scaffolded Next.js app, CI green, accessibility shell, disclaimer + privacy live | FOUND-01..07 | 4 |
+| 1 | **Skeleton & OSS Foundation** | Public repo, scaffolded Next.js app, CI green, accessibility shell, disclaimer + privacy live · SPEC locked at `phases/01-skeleton-oss-foundation/01-SPEC.md` | FOUND-01,02,04..10 (FOUND-03 removed) | 4 |
 | 2 | **Data Foundation** | Postgres + Upstash + ofetch + adapter contract + cron skeleton wired end-to-end with no real source yet | DATA-01..09 | 4 |
 | 3 | **Pure Risk Engine** | `calculateRiskLevel()` shipped with `unknown` level, 100% test coverage, plain-language explanations, versioned snapshot shape | RISK-01..10 | 4 |
 | 4 | **First Two Adapters** | CEMADEN + INMET adapters live; full ingest → normalize → store → snapshot → cache → serve flow working | ADAPT-01, ADAPT-02, ADAPT-04 | 5 |
@@ -31,11 +31,11 @@
 
 **Goal:** A public, accessible, MIT-licensed Next.js skeleton that already feels like ENSO Brasil — disclaimer visible, privacy page live, CI green — but no data flow yet.
 
-**Requirements:** FOUND-01, FOUND-02, FOUND-03, FOUND-04, FOUND-05, FOUND-06, FOUND-07
+**Requirements:** FOUND-01, FOUND-02, FOUND-04, FOUND-05, FOUND-06, FOUND-07, FOUND-08, FOUND-09, FOUND-10, FOUND-11 *(FOUND-03 removed — no i18n)*
 
 **Success criteria:**
 1. Public GitHub repo with MIT LICENSE, README (PT-BR primary), CONTRIBUTING, CODE_OF_CONDUCT visible at root
-2. `npm run build` succeeds; `next-intl` PT-BR routing works (`/`, future `/en`, `/es` routable but not populated)
+2. `npm run build` succeeds; `/` and `/privacidade` render server-side without errors
 3. GitHub Actions CI runs typecheck, lint, Vitest, Playwright smoke on PR; passes on main
 4. Visiting `/` and `/privacidade` with JavaScript disabled still shows disclaimer text in the rendered HTML
 
