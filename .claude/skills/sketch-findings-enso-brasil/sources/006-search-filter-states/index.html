@@ -1,0 +1,685 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sketch 006 — Search & Filter States · ENSO Brasil</title>
+<link rel="stylesheet" href="../themes/default.css">
+<style>
+  body { background: #efeeea; }
+  .stage { display: flex; flex-direction: column; gap: 24px; padding: 24px 16px 96px; align-items: center; }
+  .pane-wrap { display: none; flex-direction: column; gap: 18px; align-items: center; }
+  .pane-wrap.active { display: flex; }
+  .pane-label {
+    font-size: 13px; font-weight: 500; color: var(--ink-2);
+    letter-spacing: 0.02em; max-width: 1000px; text-align: center;
+  }
+  .pane-label small { display: block; margin-top: 4px; color: var(--ink-3); font-weight: 400; }
+
+  .device-row { display: flex; gap: 24px; align-items: flex-start; flex-wrap: wrap; justify-content: center; }
+  .state-label { font-size: 11.5px; color: var(--ink-3); letter-spacing: 0.05em; text-transform: uppercase; margin-bottom: 8px; text-align: center; }
+
+  .phone {
+    width: 390px; height: 720px;
+    background: var(--bg);
+    border: 1px solid var(--line-strong);
+    border-radius: 24px;
+    overflow: hidden;
+    display: flex; flex-direction: column;
+  }
+  .phone .status-bar {
+    height: 24px; background: var(--surface);
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 14px; font-size: 10.5px; color: var(--ink-3);
+    border-bottom: 1px solid var(--line);
+    flex: 0 0 24px;
+  }
+  .phone .scroll { flex: 1; overflow: hidden; position: relative; background: var(--bg); }
+
+  /* ===== Common header / counts / chips ===== */
+  .m-head {
+    background: var(--surface); border-bottom: 1px solid var(--line);
+    padding: 12px 16px;
+  }
+  .m-head h1 { font-size: 15px; font-weight: 500; }
+  .m-head .sub { color: var(--ink-3); font-size: 11.5px; margin-top: 1px; }
+
+  .m-counts {
+    display: flex; gap: 6px; flex-wrap: wrap;
+    background: var(--surface-muted); border-bottom: 1px solid var(--line);
+    padding: 8px 16px; font-size: 11px;
+  }
+  .m-counts .pill {
+    border: 1px solid var(--line); border-radius: 999px;
+    padding: 2px 8px; background: var(--surface);
+    display: inline-flex; align-items: center; gap: 4px;
+  }
+  .m-counts .pill .swatch { width: 7px; height: 7px; border-radius: 50%; }
+  .m-counts .pill.green  .swatch { background: var(--green-border);  }
+  .m-counts .pill.yellow .swatch { background: var(--yellow-border); }
+  .m-counts .pill.orange .swatch { background: var(--orange-border); }
+  .m-counts .pill.red    .swatch { background: var(--red-border);    }
+
+  /* ===== Search input ===== */
+  .m-search {
+    background: var(--surface); border-bottom: 1px solid var(--line);
+    padding: 10px 16px;
+    position: relative;
+  }
+  .m-search .field {
+    display: flex; align-items: center; gap: 8px;
+    height: 38px;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    background: var(--bg);
+    padding: 0 12px;
+    transition: border-color 120ms;
+  }
+  .m-search .field.focus { border-color: var(--ink-2); background: var(--surface); }
+  .m-search .field .ico { color: var(--ink-3); font-size: 14px; line-height: 1; flex: 0 0 auto; }
+  .m-search input {
+    flex: 1; height: 36px; border: 0; outline: 0; background: transparent;
+    font: inherit; font-size: 14px; color: var(--ink-1);
+    min-width: 0;
+  }
+  .m-search input::placeholder { color: var(--ink-4); }
+  .m-search .clear {
+    background: transparent; border: 0; color: var(--ink-3);
+    font: inherit; font-size: 16px; line-height: 1; cursor: pointer; padding: 0 4px;
+  }
+  .m-search .clear:hover { color: var(--ink-1); }
+
+  /* ===== Region chips ===== */
+  .m-regions {
+    display: flex; gap: 6px; overflow-x: auto;
+    background: var(--surface); border-bottom: 1px solid var(--line);
+    padding: 8px 16px;
+    scrollbar-width: none;
+  }
+  .m-regions::-webkit-scrollbar { display: none; }
+  .m-regions .chip {
+    flex: 0 0 auto;
+    padding: 5px 12px;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: var(--surface);
+    font-size: 12.5px; font-weight: 500; color: var(--ink-2);
+    cursor: pointer;
+    display: inline-flex; align-items: center; gap: 5px;
+    transition: all 120ms;
+  }
+  .m-regions .chip:hover { background: var(--surface-muted); }
+  .m-regions .chip.active {
+    background: var(--ink-1); color: var(--surface); border-color: var(--ink-1);
+  }
+  .m-regions .chip.active .x { font-size: 13px; line-height: 1; }
+  .m-regions .chip .count { color: var(--ink-3); font-weight: 400; font-size: 11px; }
+  .m-regions .chip.active .count { color: var(--surface); opacity: 0.6; }
+
+  /* ===== Active filters strip ===== */
+  .filters-active {
+    background: var(--surface-muted);
+    border-bottom: 1px solid var(--line);
+    padding: 8px 16px;
+    font-size: 12px; color: var(--ink-3);
+    display: flex; align-items: center; gap: 8px;
+  }
+  .filters-active .clear-all {
+    background: transparent; border: 0;
+    font: inherit; font-size: 12px; color: var(--ink-1);
+    text-decoration: underline; cursor: pointer; padding: 0;
+  }
+
+  /* ===== Cards (compact for state preview) ===== */
+  .card-list { padding: 12px; display: flex; flex-direction: column; gap: 10px; flex: 1; overflow-y: auto; }
+  .state-card {
+    background: var(--surface); border: 1px solid var(--line);
+    border-left: 4px solid var(--line-strong); border-radius: 6px;
+    padding: 12px 14px;
+    text-decoration: none; color: inherit;
+  }
+  .state-card.r-red    { border-left-color: var(--red-border); border-left-width: 5px; }
+  .state-card.r-orange { border-left-color: var(--orange-border); }
+  .state-card.r-yellow { border-left-color: var(--yellow-border); }
+  .state-card.r-green  { border-left-color: var(--green-border); }
+  .state-card .head { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 4px; }
+  .state-card h3 { font-size: 14px; font-weight: 500; }
+  .state-card .uf { font-family: var(--mono); font-size: 11px; color: var(--ink-3); margin-left: 4px; }
+  .state-card .badge {
+    font-size: 11px; padding: 2px 7px; border-radius: 4px;
+    border: 1px solid var(--line); font-weight: 500;
+  }
+  .state-card.r-red    .badge { background: var(--red-bg);    color: var(--red-ink);    border-color: var(--red-border);    }
+  .state-card.r-orange .badge { background: var(--orange-bg); color: var(--orange-ink); border-color: var(--orange-border); }
+  .state-card.r-yellow .badge { background: var(--yellow-bg); color: var(--yellow-ink); border-color: var(--yellow-border); }
+  .state-card.r-green  .badge { background: var(--green-bg);  color: var(--green-ink);  border-color: var(--green-border);  }
+  .state-card .lead { font-size: 12.5px; color: var(--ink-2); line-height: 1.4; }
+  .state-card mark { background: var(--yellow-bg); color: var(--ink-1); padding: 0 2px; border-radius: 2px; }
+
+  /* ===== Empty / no-results ===== */
+  .empty-state {
+    padding: 32px 24px; text-align: center; color: var(--ink-3);
+    flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  }
+  .empty-state .icn { font-size: 32px; margin-bottom: 12px; opacity: 0.4; }
+  .empty-state h4 { font-size: 15px; font-weight: 500; color: var(--ink-1); margin-bottom: 4px; }
+  .empty-state p { font-size: 13px; line-height: 1.45; max-width: 280px; }
+  .empty-state .actions { display: flex; gap: 8px; margin-top: 16px; }
+  .empty-state .actions button {
+    background: transparent; border: 1px solid var(--line);
+    border-radius: 6px; padding: 7px 12px;
+    font: inherit; font-size: 12.5px; color: var(--ink-1); cursor: pointer;
+  }
+
+  /* ===== Variant B autocomplete dropdown ===== */
+  .autocomplete {
+    position: absolute; left: 16px; right: 16px; top: 60px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.06);
+    z-index: 5;
+    max-height: 360px; overflow-y: auto;
+  }
+  .autocomplete .ac-section {
+    padding: 6px 12px 4px;
+    font-size: 11px; color: var(--ink-3);
+    letter-spacing: 0.05em; text-transform: uppercase;
+    border-bottom: 1px solid var(--line);
+  }
+  .autocomplete .ac-row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 12px;
+    text-decoration: none; color: var(--ink-1);
+    border-bottom: 1px solid var(--line);
+    cursor: pointer;
+  }
+  .autocomplete .ac-row:hover, .autocomplete .ac-row.kbd {
+    background: var(--surface-muted);
+  }
+  .autocomplete .ac-row:last-child { border-bottom: 0; }
+  .autocomplete .ac-row .swatch { width: 8px; height: 8px; border-radius: 50%; flex: 0 0 8px; }
+  .autocomplete .ac-row .swatch.r-red    { background: var(--red-border); }
+  .autocomplete .ac-row .swatch.r-orange { background: var(--orange-border); }
+  .autocomplete .ac-row .swatch.r-yellow { background: var(--yellow-border); }
+  .autocomplete .ac-row .swatch.r-green  { background: var(--green-border); }
+  .autocomplete .ac-row .nm { font-size: 14px; font-weight: 500; flex: 1; }
+  .autocomplete .ac-row .uf { font-family: var(--mono); font-size: 11px; color: var(--ink-3); }
+  .autocomplete .ac-row .lvl { font-size: 11px; color: var(--ink-3); }
+  .autocomplete mark { background: var(--yellow-bg); color: var(--ink-1); padding: 0 2px; border-radius: 2px; }
+
+  /* ===== Variant C modal/drawer ===== */
+  .scrim {
+    position: absolute; inset: 0; background: rgba(0,0,0,0.35);
+    display: flex; align-items: flex-end; z-index: 10;
+  }
+  .drawer {
+    background: var(--surface); width: 100%;
+    border-top-left-radius: 16px; border-top-right-radius: 16px;
+    padding: 16px 16px 18px;
+    display: flex; flex-direction: column; gap: 14px;
+    max-height: 70%;
+  }
+  .drawer .dh {
+    display: flex; align-items: center; justify-content: space-between;
+    border-bottom: 1px solid var(--line); padding-bottom: 12px;
+  }
+  .drawer .dh h2 { font-size: 16px; font-weight: 500; }
+  .drawer .dh .close {
+    background: transparent; border: 0; cursor: pointer;
+    font-size: 20px; line-height: 1; color: var(--ink-2);
+  }
+  .drawer .dsection h3 { font-size: 11px; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-3); margin-bottom: 8px; }
+  .drawer .field {
+    display: flex; align-items: center; gap: 8px;
+    height: 38px; border: 1px solid var(--line); border-radius: 6px;
+    background: var(--bg); padding: 0 12px;
+  }
+  .drawer .field input {
+    flex: 1; border: 0; outline: 0; background: transparent;
+    font: inherit; font-size: 14px;
+  }
+  .drawer .chip-grid { display: flex; flex-wrap: wrap; gap: 6px; }
+  .drawer .chip-grid .chip {
+    padding: 6px 12px; border: 1px solid var(--line); border-radius: 999px;
+    background: var(--surface); font-size: 12.5px; font-weight: 500; color: var(--ink-2);
+    cursor: pointer;
+  }
+  .drawer .chip-grid .chip.active {
+    background: var(--ink-1); color: var(--surface); border-color: var(--ink-1);
+  }
+  .drawer .level-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; }
+  .drawer .level-grid .lc {
+    padding: 8px 10px; border: 1px solid var(--line); border-radius: 6px;
+    background: var(--surface); display: flex; align-items: center; gap: 8px;
+    font-size: 12.5px; cursor: pointer;
+  }
+  .drawer .level-grid .lc.active { border-color: var(--ink-1); background: var(--surface-muted); }
+  .drawer .level-grid .lc .swatch { width: 9px; height: 9px; border-radius: 50%; }
+  .drawer .level-grid .lc.l-red    .swatch { background: var(--red-border); }
+  .drawer .level-grid .lc.l-orange .swatch { background: var(--orange-border); }
+  .drawer .level-grid .lc.l-yellow .swatch { background: var(--yellow-border); }
+  .drawer .level-grid .lc.l-green  .swatch { background: var(--green-border); }
+  .drawer .actions { display: flex; gap: 8px; margin-top: 4px; }
+  .drawer .actions button {
+    flex: 1; padding: 11px; border: 1px solid var(--line); border-radius: 6px;
+    font: inherit; font-size: 14px; font-weight: 500; cursor: pointer;
+    background: var(--surface); color: var(--ink-1);
+  }
+  .drawer .actions button.primary { background: var(--ink-1); color: var(--surface); border-color: var(--ink-1); }
+
+  /* Filter bar (Variant C — replaces inline search) */
+  .filter-bar {
+    background: var(--surface); border-bottom: 1px solid var(--line);
+    padding: 10px 16px; display: flex; gap: 8px; align-items: center;
+  }
+  .filter-bar input {
+    flex: 1; height: 36px; padding: 0 12px;
+    border: 1px solid var(--line); border-radius: 6px;
+    background: var(--bg); font: inherit; font-size: 14px;
+  }
+  .filter-bar .filter-btn {
+    padding: 0 14px; height: 36px;
+    border: 1px solid var(--line); border-radius: 6px;
+    background: var(--surface); font: inherit; font-size: 13px; font-weight: 500;
+    cursor: pointer; display: inline-flex; align-items: center; gap: 6px;
+    color: var(--ink-1);
+  }
+  .filter-bar .filter-btn .badge {
+    background: var(--ink-1); color: var(--surface);
+    border-radius: 999px; padding: 1px 7px; font-size: 11px; font-weight: 500;
+  }
+</style>
+</head>
+<body>
+
+<a href="#main" class="skip">Pular para o conteúdo principal</a>
+
+<nav class="variants" role="tablist" aria-label="Variantes de search & filter">
+  <button class="variant-tab winner active" data-tab="A" role="tab" aria-selected="true">Variant A — Inline filter (always visible)</button>
+  <button class="variant-tab" data-tab="B" role="tab" aria-selected="false">Variant B — Autocomplete dropdown</button>
+  <button class="variant-tab" data-tab="C" role="tab" aria-selected="false">Variant C — Filter button → drawer</button>
+</nav>
+
+<main id="main" class="stage">
+
+<!-- ============================ VARIANT A — INLINE FILTER ============================ -->
+<div class="pane-wrap active" data-pane="A">
+  <div class="pane-label">
+    Variant A · Inline filter
+    <small>Search e region chips visíveis ao mesmo tempo, sempre. Filtro aplica imediatamente, sem dropdown nem dialog. Feedback do filtro num strip discreto acima da lista. Resultado: zero JS extra para mostrar resultados — só `.filter()` no servidor.</small>
+  </div>
+
+  <div class="device-row">
+
+    <!-- State 1: Empty / default -->
+    <div>
+      <div class="state-label">1. Estado padrão</div>
+      <div class="phone">
+        <div class="status-bar"><span>14:32</span><span>5G  98%</span></div>
+        <div class="scroll">
+          <header class="m-head"><h1>ENSO Brasil</h1><div class="sub">Perigos por estado · há 8 min</div></header>
+          <div class="m-search"><div class="field"><span class="ico">🔍</span><input type="search" placeholder="Buscar por estado…" aria-label="Buscar"></div></div>
+          <div class="m-regions" role="tablist">
+            <button class="chip">Todas <span class="count">27</span></button>
+            <button class="chip">Norte <span class="count">7</span></button>
+            <button class="chip">Nordeste <span class="count">9</span></button>
+            <button class="chip">Centro-Oeste <span class="count">4</span></button>
+            <button class="chip">Sudeste <span class="count">4</span></button>
+            <button class="chip">Sul <span class="count">3</span></button>
+          </div>
+          <div class="m-counts">
+            <span class="pill red"><span class="swatch"></span><strong>1</strong></span>
+            <span class="pill orange"><span class="swatch"></span><strong>3</strong></span>
+            <span class="pill yellow"><span class="swatch"></span><strong>3</strong></span>
+            <span class="pill green"><span class="swatch"></span><strong>20</strong></span>
+          </div>
+          <div class="card-list">
+            <a class="state-card r-red"><div class="head"><h3>Maranhão <span class="uf">MA</span></h3><span class="badge">⛔ Perigo</span></div><div class="lead">Chuva extrema, inundação, deslizamento</div></a>
+            <a class="state-card r-orange"><div class="head"><h3>Bahia <span class="uf">BA</span></h3><span class="badge">⚠⚠ Alerta</span></div><div class="lead">Chuva intensa, deslizamento</div></a>
+            <a class="state-card r-orange"><div class="head"><h3>Minas Gerais <span class="uf">MG</span></h3><span class="badge">⚠⚠ Alerta</span></div><div class="lead">Chuva intensa zona da mata</div></a>
+            <a class="state-card r-yellow"><div class="head"><h3>São Paulo <span class="uf">SP</span></h3><span class="badge">⚠ Atenção</span></div><div class="lead">Onda de calor</div></a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- State 2: Typing with results -->
+    <div>
+      <div class="state-label">2. Digitando · 3 resultados</div>
+      <div class="phone">
+        <div class="status-bar"><span>14:32</span><span>5G  98%</span></div>
+        <div class="scroll">
+          <header class="m-head"><h1>ENSO Brasil</h1><div class="sub">Perigos por estado · há 8 min</div></header>
+          <div class="m-search"><div class="field focus"><span class="ico">🔍</span><input type="search" value="ma" aria-label="Buscar"><button class="clear" aria-label="Limpar">×</button></div></div>
+          <div class="m-regions">
+            <button class="chip">Todas</button>
+            <button class="chip">Norte</button>
+            <button class="chip">Nordeste</button>
+            <button class="chip">Centro-Oeste</button>
+            <button class="chip">Sudeste</button>
+            <button class="chip">Sul</button>
+          </div>
+          <div class="filters-active">
+            <span>Mostrando <strong>3 de 27</strong> · busca <strong>"ma"</strong></span>
+            <button class="clear-all" style="margin-left:auto;">Limpar</button>
+          </div>
+          <div class="card-list">
+            <a class="state-card r-red"><div class="head"><h3><mark>Ma</mark>ranhão <span class="uf">MA</span></h3><span class="badge">⛔ Perigo</span></div><div class="lead">Chuva extrema, inundação, deslizamento</div></a>
+            <a class="state-card r-yellow"><div class="head"><h3><mark>Ma</mark>to Grosso <span class="uf">MT</span></h3><span class="badge">⚠ Atenção</span></div><div class="lead">Perigo potencial de queimada</div></a>
+            <a class="state-card r-green"><div class="head"><h3><mark>Ma</mark>to Grosso do Sul <span class="uf">MS</span></h3><span class="badge">✓ Sem alertas</span></div><div class="lead">Verificado há 8 min</div></a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- State 3: No results -->
+    <div>
+      <div class="state-label">3. Sem resultados</div>
+      <div class="phone">
+        <div class="status-bar"><span>14:32</span><span>5G  98%</span></div>
+        <div class="scroll">
+          <header class="m-head"><h1>ENSO Brasil</h1><div class="sub">Perigos por estado · há 8 min</div></header>
+          <div class="m-search"><div class="field focus"><span class="ico">🔍</span><input type="search" value="acre santo" aria-label="Buscar"><button class="clear">×</button></div></div>
+          <div class="m-regions">
+            <button class="chip">Todas</button>
+            <button class="chip">Norte</button>
+            <button class="chip">Nordeste</button>
+            <button class="chip">Centro-Oeste</button>
+            <button class="chip">Sudeste</button>
+            <button class="chip">Sul</button>
+          </div>
+          <div class="filters-active">
+            <span>Nenhum resultado para <strong>"acre santo"</strong></span>
+            <button class="clear-all" style="margin-left:auto;">Limpar</button>
+          </div>
+          <div class="empty-state">
+            <div class="icn">🔍</div>
+            <h4>Nenhum estado encontrado</h4>
+            <p>Verifique a grafia ou use a sigla (ex: <strong>SP</strong>, <strong>MG</strong>). Você também pode escolher uma região.</p>
+            <div class="actions">
+              <button>Limpar busca</button>
+              <button>Ver todos os 27</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- State 4: Multi-filter active (region + search) -->
+    <div>
+      <div class="state-label">4. Região + busca</div>
+      <div class="phone">
+        <div class="status-bar"><span>14:32</span><span>5G  98%</span></div>
+        <div class="scroll">
+          <header class="m-head"><h1>ENSO Brasil</h1><div class="sub">Perigos por estado · há 8 min</div></header>
+          <div class="m-search"><div class="field"><span class="ico">🔍</span><input type="search" value="ba" aria-label="Buscar"><button class="clear">×</button></div></div>
+          <div class="m-regions">
+            <button class="chip">Todas</button>
+            <button class="chip">Norte</button>
+            <button class="chip active">Nordeste <span class="x">×</span></button>
+            <button class="chip">Centro-Oeste</button>
+            <button class="chip">Sudeste</button>
+            <button class="chip">Sul</button>
+          </div>
+          <div class="filters-active">
+            <span>2 filtros · <strong>1 resultado</strong></span>
+            <button class="clear-all" style="margin-left:auto;">Limpar tudo</button>
+          </div>
+          <div class="card-list">
+            <a class="state-card r-orange"><div class="head"><h3><mark>Ba</mark>hia <span class="uf">BA</span></h3><span class="badge">⚠⚠ Alerta</span></div><div class="lead">Chuva intensa, deslizamento no sul</div></a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ============================ VARIANT B — AUTOCOMPLETE DROPDOWN ============================ -->
+<div class="pane-wrap" data-pane="B">
+  <div class="pane-label">
+    Variant B · Autocomplete dropdown
+    <small>Search abre dropdown com sugestões de estados (com swatch + nível de risco). Region chips ficam abaixo. Tap numa sugestão navega direto para `/estado/{uf}` — busca como atalho de navegação. Mais rápido para usuário que sabe o que quer.</small>
+  </div>
+
+  <div class="device-row">
+
+    <div>
+      <div class="state-label">1. Padrão · cards completos</div>
+      <div class="phone">
+        <div class="status-bar"><span>14:32</span><span>5G  98%</span></div>
+        <div class="scroll">
+          <header class="m-head"><h1>ENSO Brasil</h1><div class="sub">há 8 min</div></header>
+          <div class="m-search"><div class="field"><span class="ico">🔍</span><input type="search" placeholder="Buscar estado…"></div></div>
+          <div class="m-regions">
+            <button class="chip">Todas</button>
+            <button class="chip">Norte</button>
+            <button class="chip">Nordeste</button>
+            <button class="chip">Centro-Oeste</button>
+            <button class="chip">Sudeste</button>
+            <button class="chip">Sul</button>
+          </div>
+          <div class="card-list">
+            <a class="state-card r-red"><div class="head"><h3>Maranhão</h3><span class="badge">⛔ Perigo</span></div><div class="lead">Chuva extrema, inundação</div></a>
+            <a class="state-card r-orange"><div class="head"><h3>Bahia</h3><span class="badge">⚠⚠ Alerta</span></div><div class="lead">Chuva intensa, deslizamento</div></a>
+            <a class="state-card r-orange"><div class="head"><h3>Minas Gerais</h3><span class="badge">⚠⚠ Alerta</span></div><div class="lead">Chuva intensa</div></a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="state-label">2. Foco · sugestões iniciais</div>
+      <div class="phone">
+        <div class="status-bar"><span>14:32</span><span>5G  98%</span></div>
+        <div class="scroll">
+          <header class="m-head"><h1>ENSO Brasil</h1><div class="sub">há 8 min</div></header>
+          <div class="m-search"><div class="field focus"><span class="ico">🔍</span><input type="search" placeholder="Buscar estado…"><button class="clear" style="visibility:hidden">×</button></div></div>
+          <div class="autocomplete">
+            <div class="ac-section">Em perigo · 1</div>
+            <a class="ac-row kbd"><span class="swatch r-red"></span><span class="nm">Maranhão</span><span class="lvl">⛔ Perigo</span><span class="uf">MA</span></a>
+            <div class="ac-section">Em alerta · 3</div>
+            <a class="ac-row"><span class="swatch r-orange"></span><span class="nm">Bahia</span><span class="lvl">⚠⚠ Alerta</span><span class="uf">BA</span></a>
+            <a class="ac-row"><span class="swatch r-orange"></span><span class="nm">Minas Gerais</span><span class="lvl">⚠⚠ Alerta</span><span class="uf">MG</span></a>
+            <a class="ac-row"><span class="swatch r-orange"></span><span class="nm">Pernambuco</span><span class="lvl">⚠⚠ Alerta</span><span class="uf">PE</span></a>
+            <div class="ac-section">Em atenção · 3</div>
+            <a class="ac-row"><span class="swatch r-yellow"></span><span class="nm">São Paulo</span><span class="lvl">⚠ Atenção</span><span class="uf">SP</span></a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="state-label">3. Digitando · sugestões filtradas</div>
+      <div class="phone">
+        <div class="status-bar"><span>14:32</span><span>5G  98%</span></div>
+        <div class="scroll">
+          <header class="m-head"><h1>ENSO Brasil</h1><div class="sub">há 8 min</div></header>
+          <div class="m-search"><div class="field focus"><span class="ico">🔍</span><input type="search" value="mar"><button class="clear">×</button></div></div>
+          <div class="autocomplete">
+            <a class="ac-row kbd"><span class="swatch r-red"></span><span class="nm"><mark>Mar</mark>anhão</span><span class="lvl">⛔ Perigo</span><span class="uf">MA</span></a>
+            <a class="ac-row"><span class="swatch r-green"></span><span class="nm"><mark>Mar</mark>anha do Sul · vizinho</span><span class="uf">···</span></a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="state-label">4. Sem sugestões</div>
+      <div class="phone">
+        <div class="status-bar"><span>14:32</span><span>5G  98%</span></div>
+        <div class="scroll">
+          <header class="m-head"><h1>ENSO Brasil</h1><div class="sub">há 8 min</div></header>
+          <div class="m-search"><div class="field focus"><span class="ico">🔍</span><input type="search" value="acrre"><button class="clear">×</button></div></div>
+          <div class="autocomplete">
+            <div style="padding:18px 16px; text-align:center; color: var(--ink-3); font-size: 13px;">
+              <div style="font-size:22px; opacity:0.4; margin-bottom:6px;">🔍</div>
+              <strong style="color: var(--ink-1); font-weight: 500;">Nenhum estado encontrado</strong><br>
+              Verifique a grafia. Ex: <strong>Acre</strong>, <strong>AC</strong>.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ============================ VARIANT C — FILTER BUTTON → DRAWER ============================ -->
+<div class="pane-wrap" data-pane="C">
+  <div class="pane-label">
+    Variant C · Filter button → drawer
+    <small>Header reduzido com search livre + botão "Filtrar" que abre drawer com região <em>e</em> nível de risco. Bom quando a v1 evoluir para 4+ filtros (ex: tipo de perigo). Mais cliques para o caso simples — defer custo até precisar.</small>
+  </div>
+
+  <div class="device-row">
+
+    <div>
+      <div class="state-label">1. Padrão · sem filtros</div>
+      <div class="phone">
+        <div class="status-bar"><span>14:32</span><span>5G  98%</span></div>
+        <div class="scroll">
+          <header class="m-head"><h1>ENSO Brasil</h1><div class="sub">há 8 min</div></header>
+          <div class="filter-bar">
+            <input type="search" placeholder="Buscar estado…">
+            <button class="filter-btn">⚙ Filtrar</button>
+          </div>
+          <div class="m-counts">
+            <span class="pill red"><span class="swatch"></span>1</span>
+            <span class="pill orange"><span class="swatch"></span>3</span>
+            <span class="pill yellow"><span class="swatch"></span>3</span>
+            <span class="pill green"><span class="swatch"></span>20</span>
+          </div>
+          <div class="card-list">
+            <a class="state-card r-red"><div class="head"><h3>Maranhão</h3><span class="badge">⛔ Perigo</span></div><div class="lead">Chuva extrema, inundação</div></a>
+            <a class="state-card r-orange"><div class="head"><h3>Bahia</h3><span class="badge">⚠⚠ Alerta</span></div><div class="lead">Chuva intensa</div></a>
+            <a class="state-card r-orange"><div class="head"><h3>Minas Gerais</h3><span class="badge">⚠⚠ Alerta</span></div><div class="lead">Chuva intensa zona da mata</div></a>
+            <a class="state-card r-yellow"><div class="head"><h3>São Paulo</h3><span class="badge">⚠ Atenção</span></div><div class="lead">Onda de calor</div></a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="state-label">2. Drawer aberto · selecionando</div>
+      <div class="phone">
+        <div class="status-bar"><span>14:32</span><span>5G  98%</span></div>
+        <div class="scroll">
+          <header class="m-head"><h1>ENSO Brasil</h1><div class="sub">há 8 min</div></header>
+          <div class="filter-bar">
+            <input type="search" placeholder="Buscar estado…">
+            <button class="filter-btn">⚙ Filtrar</button>
+          </div>
+          <div class="m-counts" style="opacity:0.4">
+            <span class="pill red"><span class="swatch"></span>1</span>
+            <span class="pill orange"><span class="swatch"></span>3</span>
+            <span class="pill yellow"><span class="swatch"></span>3</span>
+            <span class="pill green"><span class="swatch"></span>20</span>
+          </div>
+          <div class="card-list" style="opacity:0.3">
+            <a class="state-card r-red"><div class="head"><h3>Maranhão</h3><span class="badge">⛔ Perigo</span></div></a>
+            <a class="state-card r-orange"><div class="head"><h3>Bahia</h3><span class="badge">⚠⚠ Alerta</span></div></a>
+          </div>
+          <div class="scrim">
+            <div class="drawer">
+              <div class="dh"><h2>Filtrar</h2><button class="close">×</button></div>
+              <div class="dsection">
+                <h3>Região</h3>
+                <div class="chip-grid">
+                  <button class="chip">Norte</button>
+                  <button class="chip active">Nordeste</button>
+                  <button class="chip">Centro-Oeste</button>
+                  <button class="chip">Sudeste</button>
+                  <button class="chip">Sul</button>
+                </div>
+              </div>
+              <div class="dsection">
+                <h3>Nível de risco</h3>
+                <div class="level-grid">
+                  <button class="lc l-red active"><span class="swatch"></span>Perigo</button>
+                  <button class="lc l-orange active"><span class="swatch"></span>Alerta</button>
+                  <button class="lc l-yellow"><span class="swatch"></span>Atenção</button>
+                  <button class="lc l-green"><span class="swatch"></span>Sem alertas</button>
+                </div>
+              </div>
+              <div class="actions">
+                <button>Limpar</button>
+                <button class="primary">Aplicar (3)</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="state-label">3. Filtros aplicados · resultado</div>
+      <div class="phone">
+        <div class="status-bar"><span>14:32</span><span>5G  98%</span></div>
+        <div class="scroll">
+          <header class="m-head"><h1>ENSO Brasil</h1><div class="sub">há 8 min</div></header>
+          <div class="filter-bar">
+            <input type="search" placeholder="Buscar estado…">
+            <button class="filter-btn">⚙ Filtrar <span class="badge">2</span></button>
+          </div>
+          <div class="filters-active">
+            <span><strong>3 resultados</strong> · Nordeste + Perigo/Alerta</span>
+            <button class="clear-all" style="margin-left:auto;">Limpar</button>
+          </div>
+          <div class="card-list">
+            <a class="state-card r-red"><div class="head"><h3>Maranhão</h3><span class="badge">⛔ Perigo</span></div><div class="lead">Chuva extrema, inundação</div></a>
+            <a class="state-card r-orange"><div class="head"><h3>Bahia</h3><span class="badge">⚠⚠ Alerta</span></div><div class="lead">Chuva intensa, deslizamento</div></a>
+            <a class="state-card r-orange"><div class="head"><h3>Pernambuco</h3><span class="badge">⚠⚠ Alerta</span></div><div class="lead">Chuva intensa agreste</div></a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="state-label">4. Sem resultados</div>
+      <div class="phone">
+        <div class="status-bar"><span>14:32</span><span>5G  98%</span></div>
+        <div class="scroll">
+          <header class="m-head"><h1>ENSO Brasil</h1><div class="sub">há 8 min</div></header>
+          <div class="filter-bar">
+            <input type="search" placeholder="Buscar estado…">
+            <button class="filter-btn">⚙ Filtrar <span class="badge">2</span></button>
+          </div>
+          <div class="filters-active">
+            <span>Sem resultados para os filtros atuais</span>
+            <button class="clear-all" style="margin-left:auto;">Limpar</button>
+          </div>
+          <div class="empty-state">
+            <div class="icn">🔍</div>
+            <h4>Nenhum estado bate com esses filtros</h4>
+            <p>Tente afrouxar a região, ou inclua mais níveis de risco.</p>
+            <div class="actions">
+              <button>Limpar filtros</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+</main>
+
+<div class="sketch-toolbar"><span style="color:var(--ink-3)">Sketch 006 · Search & filter</span></div>
+
+<script>
+  document.querySelectorAll('.variant-tab').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.variant-tab').forEach(b => { b.classList.remove('active'); b.setAttribute('aria-selected','false'); });
+      document.querySelectorAll('.pane-wrap').forEach(p => p.classList.remove('active'));
+      btn.classList.add('active'); btn.setAttribute('aria-selected','true');
+      const tab = btn.dataset.tab;
+      document.querySelector(`.pane-wrap[data-pane="${tab}"]`).classList.add('active');
+    });
+  });
+</script>
+
+</body>
+</html>

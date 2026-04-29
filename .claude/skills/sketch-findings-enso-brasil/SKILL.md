@@ -45,6 +45,7 @@ ENSO Brasil — public PT-BR climate hazard aggregator dashboard. Visual directi
 | Layout & Composition | `references/01-layout-composition.md` | Desktop = top-legend strip + 50/50 with map left. Mobile = generous cards with locked life-safety reading order. |
 | Edge States & Source Trust | `references/02-edge-states-source-trust.md` | Stale notices at top of page (banner). Verde = positive verification + redirect to other sources. Cinza = honest "go to the source" with linked official sites in mono-font. |
 | Tokens & Theme | `references/03-tokens-theme.md` | Full CSS custom-property system: surfaces, ink, hairlines, INMET-aligned risk colors, 8pt spacing scale, system-font stack. |
+| Page Architecture & States | `references/04-page-architecture-and-states.md` | `/estado/{uf}` two-column with permanent aside; tablet = constrained mobile-up (no separate layout); search = inline URL-params (zero JS); loading = SSR-instant + last-known fallback (never skeleton); total-failure floor mandatory. |
 
 ## Theme
 
@@ -56,6 +57,10 @@ Original sketch HTML files (with all variants preserved, winners marked ★) liv
 - `sources/001-dashboard-desktop-layout/index.html` — winner: Variant C
 - `sources/002-mobile-dashboard/index.html` — winner: Variant B (refined for life-safety)
 - `sources/003-edge-states/index.html` — winner: Variant C
+- `sources/004-state-detail-page/index.html` — winner: Variant C (two-column desktop / linear mobile)
+- `sources/005-tablet-viewport/index.html` — winner: Variant A (constrained mobile-up)
+- `sources/006-search-filter-states/index.html` — winner: Variant A (migration trigger logged to C drawer if filters grow)
+- `sources/007-loading-skeleton/index.html` — winners: Variant A (primary path) + Variant C (mandatory failure floor)
 </findings_index>
 
 <usage>
@@ -93,4 +98,13 @@ Auto-load whenever working on UI for ENSO Brasil — building components, pages,
 - 001-dashboard-desktop-layout
 - 002-mobile-dashboard
 - 003-edge-states
+- 004-state-detail-page
+- 005-tablet-viewport
+- 006-search-filter-states
+- 007-loading-skeleton
+
+## Sketch sessions wrapped
+
+- 2026-04-28 (initial: 001–003)
+- 2026-04-28 (frontier round: 004–007)
 </metadata>

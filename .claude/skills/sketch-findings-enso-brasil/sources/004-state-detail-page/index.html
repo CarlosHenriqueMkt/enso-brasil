@@ -1,0 +1,935 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sketch 004 — Estado /estado/{uf} · ENSO Brasil</title>
+<link rel="stylesheet" href="../themes/default.css">
+<style>
+  body { background: #efeeea; }
+  .stage { display: flex; flex-direction: column; gap: 28px; padding: 24px 16px 96px; align-items: center; }
+  .pane-wrap { display: none; flex-direction: column; gap: 18px; align-items: center; }
+  .pane-wrap.active { display: flex; }
+  .pane-label {
+    font-size: 13px; font-weight: 500; color: var(--ink-2);
+    letter-spacing: 0.02em; max-width: 1100px; text-align: center;
+  }
+  .pane-label small { display: block; margin-top: 4px; color: var(--ink-3); font-weight: 400; }
+
+  /* ===== Frame helpers ===== */
+  .device-row { display: flex; gap: 28px; align-items: flex-start; flex-wrap: wrap; justify-content: center; }
+  .device-label { font-size: 11.5px; color: var(--ink-3); letter-spacing: 0.05em; text-transform: uppercase; margin-bottom: 6px; text-align: center; }
+
+  .desktop {
+    width: 1100px;
+    max-width: calc(100vw - 32px);
+    background: var(--bg);
+    border: 1px solid var(--line-strong);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  .desktop .browser-bar {
+    background: var(--surface-muted);
+    border-bottom: 1px solid var(--line);
+    padding: 8px 12px;
+    display: flex; align-items: center; gap: 10px; font-size: 11.5px; color: var(--ink-3);
+  }
+  .desktop .browser-bar .dots { display: flex; gap: 5px; }
+  .desktop .browser-bar .dots span { width: 10px; height: 10px; border-radius: 50%; background: var(--line-strong); }
+  .desktop .browser-bar .url { font-family: var(--mono); background: var(--surface); padding: 3px 10px; border-radius: 999px; border: 1px solid var(--line); flex: 1; max-width: 460px; }
+
+  .phone {
+    width: 390px;
+    background: var(--bg);
+    border: 1px solid var(--line-strong);
+    border-radius: 28px;
+    overflow: hidden;
+  }
+  .phone .status-bar {
+    height: 28px; background: var(--surface);
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 16px; font-size: 11px; color: var(--ink-3);
+    border-bottom: 1px solid var(--line);
+  }
+
+  /* ===== Top banner (locked principle) ===== */
+  .top-banner {
+    padding: 11px 18px;
+    background: #fef0e1;
+    border-bottom: 1px solid var(--orange-border);
+    border-top: 3px solid var(--orange-border);
+    color: var(--orange-ink);
+    font-size: 13px; line-height: 1.5;
+  }
+  .top-banner strong { font-weight: 500; color: var(--ink-1); }
+  .top-banner a { color: var(--orange-ink); }
+  .phone .top-banner { padding: 10px 14px; font-size: 12.5px; }
+
+  /* ===== Header ===== */
+  .topbar {
+    background: var(--surface); border-bottom: 1px solid var(--line);
+    padding: 14px 24px;
+    display: flex; align-items: baseline; justify-content: space-between; gap: 16px;
+  }
+  .topbar h1 { font-size: 18px; font-weight: 500; }
+  .topbar h1 .sub { color: var(--ink-3); font-weight: 400; margin-left: 10px; font-size: 13px; }
+  .topbar .meta { color: var(--ink-3); font-size: 13px; }
+  .phone .topbar { padding: 12px 16px; }
+  .phone .topbar h1 { font-size: 15px; }
+  .phone .topbar h1 .sub { display: none; }
+
+  /* ===== Breadcrumb ===== */
+  .crumb {
+    background: var(--surface); border-bottom: 1px solid var(--line);
+    padding: 10px 24px;
+    font-size: 13px; color: var(--ink-3);
+  }
+  .crumb a { color: var(--ink-2); text-decoration: none; }
+  .crumb a:hover { text-decoration: underline; }
+  .crumb .sep { margin: 0 6px; color: var(--ink-4); }
+  .phone .crumb { padding: 8px 16px; font-size: 12.5px; }
+
+  /* ===== State hero ===== */
+  .hero {
+    background: var(--surface); padding: 28px 28px 22px;
+    border-bottom: 1px solid var(--line);
+  }
+  .hero .region { font-size: 12px; color: var(--ink-3); letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 6px; }
+  .hero h2 { font-size: 36px; font-weight: 500; letter-spacing: -0.015em; line-height: 1.1; }
+  .hero h2 .uf { color: var(--ink-3); font-weight: 400; margin-left: 10px; font-size: 24px; }
+  .hero .subline { font-size: 13px; color: var(--ink-3); margin-top: 8px; }
+  .phone .hero { padding: 18px 16px 16px; }
+  .phone .hero h2 { font-size: 26px; }
+  .phone .hero h2 .uf { font-size: 16px; }
+
+  /* ===== Status block ===== */
+  .status-block {
+    margin: 18px 28px;
+    padding: 18px 20px;
+    border: 1px solid var(--line);
+    border-left-width: 5px;
+    border-radius: 6px;
+  }
+  .status-block.s-red { border-left-color: var(--red-border); background: var(--red-bg); }
+  .status-block .lbl { font-size: 11.5px; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; color: var(--red-ink); margin-bottom: 4px; }
+  .status-block h3 { font-size: 22px; font-weight: 500; line-height: 1.25; margin-bottom: 8px; }
+  .status-block p { font-size: 14.5px; line-height: 1.55; color: var(--ink-1); }
+  .status-block .stats { display: flex; gap: 18px; margin-top: 14px; flex-wrap: wrap; }
+  .status-block .stat { font-size: 12.5px; color: var(--ink-2); }
+  .status-block .stat .num { display: block; font-size: 20px; font-weight: 500; color: var(--ink-1); line-height: 1.1; }
+  .phone .status-block { margin: 14px 14px; padding: 14px 16px; }
+  .phone .status-block h3 { font-size: 18px; }
+
+  /* ===== Action bar (share, methodology, etc.) ===== */
+  .action-bar {
+    margin: 14px 28px;
+    display: flex; gap: 8px; flex-wrap: wrap;
+  }
+  .action-bar a, .action-bar button {
+    flex: 0 1 auto;
+    padding: 9px 14px;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    background: var(--surface);
+    font: inherit; font-size: 13.5px; font-weight: 500; color: var(--ink-1);
+    text-decoration: none; cursor: pointer;
+    display: inline-flex; align-items: center; gap: 7px;
+  }
+  .action-bar .primary { background: var(--ink-1); color: var(--surface); border-color: var(--ink-1); }
+  .action-bar .ghost   { background: transparent; color: var(--ink-2); }
+  .phone .action-bar { margin: 12px 14px; }
+  .phone .action-bar a, .phone .action-bar button { flex: 1 1 calc(50% - 4px); justify-content: center; padding: 10px 12px; }
+
+  /* ===== Section H ===== */
+  .section-h {
+    margin: 24px 28px 12px;
+    font-size: 12px; font-weight: 500;
+    letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-3);
+    border-top: 1px solid var(--line); padding-top: 22px;
+  }
+  .section-h:first-of-type { border-top: 0; padding-top: 0; }
+  .phone .section-h { margin: 18px 14px 10px; padding-top: 16px; }
+
+  /* ===== Alert detail card ===== */
+  .alerts-list { margin: 0 28px 0; display: flex; flex-direction: column; gap: 12px; }
+  .alert-detail {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 16px 18px;
+  }
+  .alert-detail .hd { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 8px; }
+  .alert-detail .ti h4 { font-size: 16px; font-weight: 500; }
+  .alert-detail .ti .src { font-size: 12px; color: var(--ink-3); margin-top: 2px; }
+  .alert-detail p { font-size: 13.5px; color: var(--ink-1); line-height: 1.55; margin: 8px 0 10px; }
+  .alert-detail .facts {
+    display: grid; grid-template-columns: max-content 1fr; gap: 4px 14px;
+    font-size: 13px;
+    margin: 0 0 10px; padding: 10px 12px;
+    background: var(--surface-muted);
+    border-radius: 4px;
+  }
+  .alert-detail .facts dt { color: var(--ink-3); font-size: 11.5px; letter-spacing: 0.04em; text-transform: uppercase; padding-top: 2px; }
+  .alert-detail .facts dd { margin: 0; color: var(--ink-1); }
+  .alert-detail .meta-row {
+    display: flex; align-items: center; justify-content: space-between;
+    font-size: 12.5px; color: var(--ink-3);
+    border-top: 1px solid var(--line); padding-top: 10px;
+  }
+  .alert-detail .meta-row a { color: var(--ink-2); font-family: var(--mono); font-size: 11.5px; }
+  .phone .alerts-list { margin: 0 14px; }
+  .phone .alert-detail { padding: 14px; }
+
+  /* ===== Two-column desktop layout (variant C) ===== */
+  .twocol {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 320px;
+    gap: 32px;
+    padding: 0 28px;
+  }
+  .twocol .aside .aside-block {
+    margin-bottom: 22px;
+    padding: 14px 16px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+  }
+  .twocol .aside .aside-block h4 {
+    font-size: 11.5px; font-weight: 500; letter-spacing: 0.06em;
+    text-transform: uppercase; color: var(--ink-3);
+    margin-bottom: 10px;
+  }
+  .twocol .aside .src-link {
+    display: flex; justify-content: space-between; gap: 6px;
+    font-size: 13px; padding: 6px 0;
+    color: var(--ink-1); text-decoration: none;
+    border-bottom: 1px solid var(--line);
+  }
+  .twocol .aside .src-link:last-child { border-bottom: 0; }
+  .twocol .aside .src-link .domain { color: var(--ink-3); font-family: var(--mono); font-size: 11px; }
+  .twocol .aside .src-link.ok    .domain::before  { content: "✓ "; color: var(--green-border); }
+  .twocol .aside .src-link.stale .domain::before  { content: "⚠ "; color: var(--orange-border); }
+  .twocol .aside .neighbor-list {
+    display: flex; flex-direction: column; gap: 4px;
+    font-size: 13px;
+  }
+  .twocol .aside .neighbor-list a {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 6px 8px; border-radius: 4px;
+    text-decoration: none; color: var(--ink-1);
+  }
+  .twocol .aside .neighbor-list a:hover { background: var(--surface-muted); }
+  .twocol .aside .neighbor-list a .badge {
+    font-size: 10.5px; padding: 1px 6px; border-radius: 3px;
+    font-weight: 500;
+    border: 1px solid var(--line);
+  }
+  .twocol .aside .neighbor-list a .badge.r-red    { background: var(--red-bg);    color: var(--red-ink);    border-color: var(--red-border);    }
+  .twocol .aside .neighbor-list a .badge.r-orange { background: var(--orange-bg); color: var(--orange-ink); border-color: var(--orange-border); }
+  .twocol .aside .neighbor-list a .badge.r-yellow { background: var(--yellow-bg); color: var(--yellow-ink); border-color: var(--yellow-border); }
+  .twocol .aside .neighbor-list a .badge.r-green  { background: var(--green-bg);  color: var(--green-ink);  border-color: var(--green-border);  }
+
+  /* ===== Tabs (variant B) ===== */
+  .tabbar {
+    margin: 0 28px; padding-top: 4px;
+    border-bottom: 1px solid var(--line);
+    display: flex; gap: 0;
+  }
+  .tabbar button {
+    background: transparent; border: 0;
+    padding: 12px 16px;
+    font: inherit; font-size: 13.5px; font-weight: 500; color: var(--ink-3);
+    border-bottom: 2px solid transparent;
+    cursor: pointer;
+  }
+  .tabbar button.active { color: var(--ink-1); border-bottom-color: var(--ink-1); }
+  .tabbar button .count { color: var(--ink-3); font-weight: 400; margin-left: 4px; }
+  .phone .tabbar { margin: 0 14px; overflow-x: auto; }
+  .phone .tabbar button { padding: 10px 12px; font-size: 13px; }
+
+  /* ===== Methodology block ===== */
+  .method-block {
+    margin: 0 28px 22px;
+    padding: 16px 18px;
+    background: var(--surface-muted);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+  }
+  .method-block h4 { font-size: 14px; font-weight: 500; margin-bottom: 6px; }
+  .method-block p { font-size: 13px; color: var(--ink-2); line-height: 1.55; }
+  .method-block .formula-version { display: inline-block; font-family: var(--mono); font-size: 11.5px; background: var(--surface); padding: 2px 8px; border-radius: 4px; color: var(--ink-3); border: 1px solid var(--line); margin-top: 8px; }
+  .phone .method-block { margin: 0 14px 18px; }
+
+  /* ===== Sources block ===== */
+  .sources-block {
+    margin: 0 28px 22px;
+    padding: 0;
+  }
+  .sources-block .src-link {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 12px 16px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    margin-bottom: -1px;
+    text-decoration: none; color: var(--ink-1);
+  }
+  .sources-block .src-link:first-child { border-radius: 6px 6px 0 0; }
+  .sources-block .src-link:last-child { border-radius: 0 0 6px 6px; margin-bottom: 0; }
+  .sources-block .src-link .nm { font-size: 14px; font-weight: 500; }
+  .sources-block .src-link .domain { font-family: var(--mono); font-size: 11.5px; color: var(--ink-3); }
+  .sources-block .src-link.ok .nm::before    { content: "✓ "; color: var(--green-border); }
+  .sources-block .src-link.stale .nm::before { content: "⚠ "; color: var(--orange-border); }
+  .phone .sources-block { margin: 0 14px 18px; }
+
+  /* ===== Defesa civil card ===== */
+  .dc-card {
+    margin: 0 28px 22px;
+    padding: 16px 18px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    display: flex; align-items: flex-start; gap: 14px;
+  }
+  .dc-card .icn { font-size: 22px; line-height: 1; padding-top: 2px; }
+  .dc-card .body { flex: 1; }
+  .dc-card .body h4 { font-size: 14.5px; font-weight: 500; margin-bottom: 4px; }
+  .dc-card .body p { font-size: 13px; color: var(--ink-2); line-height: 1.5; margin-bottom: 10px; }
+  .dc-card .body a { font-family: var(--mono); font-size: 12.5px; color: var(--ink-1); }
+  .phone .dc-card { margin: 0 14px 18px; }
+
+  /* ===== Emergency strip (red state pages) ===== */
+  .emergency {
+    margin: 0 28px 22px;
+    padding: 14px 16px;
+    background: var(--red-bg);
+    border: 1px solid var(--red-border);
+    border-radius: 6px;
+    color: var(--red-ink);
+    font-size: 13.5px;
+    line-height: 1.5;
+    display: flex; align-items: flex-start; gap: 12px;
+  }
+  .emergency strong { color: var(--ink-1); font-weight: 500; }
+  .emergency .num {
+    display: inline-flex; align-items: center;
+    background: var(--surface); border: 1px solid var(--red-border);
+    color: var(--red-ink); font-weight: 500;
+    padding: 2px 8px; border-radius: 4px; font-family: var(--mono);
+    margin-right: 4px;
+  }
+  .phone .emergency { margin: 0 14px 18px; }
+
+  /* ===== Footer ===== */
+  .disclaimer {
+    border-top: 1px solid var(--line);
+    background: var(--surface);
+    padding: 14px 24px;
+    color: var(--ink-2);
+    font-size: 12.5px;
+    line-height: 1.5;
+  }
+  .disclaimer strong { color: var(--ink-1); font-weight: 500; }
+  .phone .disclaimer { padding: 12px 14px; font-size: 12px; }
+
+  /* ===== Variant C two-column collapse on phone ===== */
+  .phone .twocol { display: block; padding: 0; }
+  .phone .twocol .aside { margin: 0 14px; }
+</style>
+</head>
+<body>
+
+<a href="#main" class="skip">Pular para o conteúdo principal</a>
+
+<nav class="variants" role="tablist" aria-label="Variantes da página de estado">
+  <button class="variant-tab active" data-tab="A" role="tab" aria-selected="true">Variant A — Linear / long-form</button>
+  <button class="variant-tab" data-tab="B" role="tab" aria-selected="false">Variant B — Tabbed sections</button>
+  <button class="variant-tab winner" data-tab="C" role="tab" aria-selected="false">Variant C — Two-column desktop / linear mobile</button>
+</nav>
+
+<main id="main" class="stage">
+
+<!-- =============================== VARIANT A — LINEAR =============================== -->
+<div class="pane-wrap active" data-pane="A">
+  <div class="pane-label">
+    Variant A · Linear long-form
+    <small>Tudo num único scroll, sem tabs e sem aside. Top-down narrativo: status → ações → alertas → metodologia → fontes → Defesa Civil estadual → emergência. Para usuários que pousam estressados de WhatsApp e querem ler até o fim.</small>
+  </div>
+
+  <div class="device-row">
+    <div>
+      <div class="device-label">Desktop · /estado/ma</div>
+      <div class="desktop">
+        <div class="browser-bar">
+          <div class="dots"><span></span><span></span><span></span></div>
+          <div class="url">enso.com.br/estado/ma</div>
+        </div>
+        <div class="top-banner" role="status">
+          <strong>CEMADEN fora há 47 min.</strong> Estamos mostrando dados antigos dessa fonte. Acesse
+          <a href="https://alertas.cemaden.gov.br" rel="external">alertas.cemaden.gov.br</a> para verificar diretamente.
+        </div>
+        <header class="topbar">
+          <h1>ENSO Brasil <span class="sub">perigos climáticos por estado</span></h1>
+          <span class="meta">Atualizado às 14:32 · há 8 min</span>
+        </header>
+        <nav class="crumb"><a href="/">← Brasil</a><span class="sep">·</span> Nordeste <span class="sep">·</span> Maranhão</nav>
+        <section class="hero">
+          <div class="region">Nordeste · MA</div>
+          <h2>Maranhão <span class="uf">2026-04-28 · 14:32</span></h2>
+          <div class="subline">3 alertas oficiais ativos · 21 municípios afetados · pop. estimada 4.2M</div>
+        </section>
+
+        <div class="status-block s-red">
+          <div class="lbl">⛔ Perigo</div>
+          <h3>Chuva extrema, risco de inundação e deslizamento</h3>
+          <p>1 aviso de Grande Perigo emitido pelo INMET. Acumulado superior a 100 mm em 24 h previsto para o oeste e centro do estado, com ventos de até 100 km/h e descargas elétricas frequentes.</p>
+          <div class="stats">
+            <div class="stat"><span class="num">3</span>alertas ativos</div>
+            <div class="stat"><span class="num">21</span>municípios</div>
+            <div class="stat"><span class="num">31&nbsp;h</span>até expirar</div>
+          </div>
+        </div>
+
+        <div class="action-bar">
+          <a href="#" class="primary">📱 Compartilhar no WhatsApp</a>
+          <a href="#">🔗 Copiar link</a>
+          <a href="#" class="ghost">Como calculamos? ↓</a>
+        </div>
+
+        <div class="emergency">
+          <span aria-hidden="true">📞</span>
+          <span>
+            <strong>Em emergência, ligue:</strong>
+            <span class="num">199</span>Defesa Civil ·
+            <span class="num">193</span>Bombeiros ·
+            <span class="num">190</span>Polícia
+          </span>
+        </div>
+
+        <div class="section-h">Alertas ativos</div>
+        <div class="alerts-list">
+          <div class="alert-detail">
+            <div class="hd">
+              <div class="ti"><h4>Chuvas intensas</h4><div class="src">INMET · publicado por Centro Nacional de Meteorologia</div></div>
+              <span class="risk-pill risk-red">Grande Perigo</span>
+            </div>
+            <p>Acumulado superior a 100 mm em 24 horas, ventos de até 100 km/h e descargas elétricas frequentes. Risco de transbordamento em rios e córregos urbanos.</p>
+            <dl class="facts">
+              <dt>Afeta</dt><dd>Oeste e centro · São Luís, Imperatriz, Caxias, Bacabal, bacia do Mearim</dd>
+              <dt>Início</dt><dd>2026-04-28 às 06h00</dd>
+              <dt>Válido até</dt><dd>2026-04-29 às 22h00 (≈ 31 h)</dd>
+              <dt>Severidade</dt><dd>high → mapeada para Grande Perigo</dd>
+            </dl>
+            <div class="meta-row">
+              <a href="https://alertas2.inmet.gov.br/aviso/2026-04-1234" rel="external">alertas2.inmet.gov.br/aviso/2026-04-1234</a>
+              <span>Publicado há 12 min</span>
+            </div>
+          </div>
+
+          <div class="alert-detail">
+            <div class="hd">
+              <div class="ti"><h4>Risco de inundação</h4><div class="src">CEMADEN · MA-2026-04-0411</div></div>
+              <span class="risk-pill risk-orange">Alerta</span>
+            </div>
+            <p>Bacia do rio Mearim com risco de transbordamento; municípios ribeirinhos em atenção. Solo saturado por chuvas dos últimos 5 dias.</p>
+            <dl class="facts">
+              <dt>Afeta</dt><dd>Bacia do Mearim · Bacabal, Pedreiras, Lago da Pedra</dd>
+              <dt>Válido até</dt><dd>Indeterminado (revalidado a cada 12 h)</dd>
+              <dt>Severidade</dt><dd>moderate → Alerta</dd>
+            </dl>
+            <div class="meta-row">
+              <a href="https://alertas.cemaden.gov.br/MA-2026-04-0411" rel="external">alertas.cemaden.gov.br/MA-2026-04-0411</a>
+              <span>Publicado há 27 min</span>
+            </div>
+          </div>
+
+          <div class="alert-detail">
+            <div class="hd">
+              <div class="ti"><h4>Deslizamento</h4><div class="src">CEMADEN · MA-2026-04-0419</div></div>
+              <span class="risk-pill risk-orange">Alerta</span>
+            </div>
+            <p>Encostas saturadas em São Luís e Imperatriz após acumulado de 80 mm nas últimas 48 h. Áreas de risco mapeadas com probabilidade alta.</p>
+            <dl class="facts">
+              <dt>Afeta</dt><dd>São Luís (zonas Anil, Vila Embratel) · Imperatriz (Vila Cafeteira, Alto Bonito)</dd>
+              <dt>Válido até</dt><dd>Indeterminado</dd>
+              <dt>Severidade</dt><dd>moderate → Alerta</dd>
+            </dl>
+            <div class="meta-row">
+              <a href="https://alertas.cemaden.gov.br/MA-2026-04-0419" rel="external">alertas.cemaden.gov.br/MA-2026-04-0419</a>
+              <span>Publicado há 1 h</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="section-h">Como calculamos o nível de risco</div>
+        <div class="method-block">
+          <h4>Fórmula v0 — agregamos, não inventamos</h4>
+          <p>O nível de risco mostrado para o Maranhão (Perigo / vermelho) reflete diretamente o que as fontes oficiais estão dizendo. Como há um aviso ativo classificado como Grande Perigo (severidade <em>high</em>) pelo INMET, todo o estado é marcado como Perigo. Não criamos níveis próprios nem rebaixamos avisos oficiais.</p>
+          <span class="formula-version">formula_version: v0</span>
+        </div>
+
+        <div class="section-h">Fontes consultadas</div>
+        <div class="sources-block">
+          <a href="https://alertas2.inmet.gov.br" class="src-link ok" rel="external">
+            <span><span class="nm">INMET</span></span>
+            <span class="domain">alertas2.inmet.gov.br</span>
+          </a>
+          <a href="https://alertas.cemaden.gov.br" class="src-link stale" rel="external">
+            <span><span class="nm">CEMADEN <small style="color:var(--orange-ink)">· dados de há 47 min</small></span></span>
+            <span class="domain">alertas.cemaden.gov.br</span>
+          </a>
+          <a href="https://queimadas.dgi.inpe.br" class="src-link ok" rel="external">
+            <span><span class="nm">INPE Queimadas</span></span>
+            <span class="domain">queimadas.dgi.inpe.br</span>
+          </a>
+        </div>
+
+        <div class="section-h">Defesa Civil do Maranhão</div>
+        <div class="dc-card">
+          <div class="icn" aria-hidden="true">🏛</div>
+          <div class="body">
+            <h4>Coordenadoria Estadual de Proteção e Defesa Civil — MA</h4>
+            <p>Para acionar equipes locais, instruções específicas do estado, e canais de denúncia de áreas de risco no Maranhão, acesse o portal oficial.</p>
+            <a href="https://defesacivil.ma.gov.br" rel="external">defesacivil.ma.gov.br</a>
+          </div>
+        </div>
+
+        <footer class="disclaimer">
+          Este site agrega informações de fontes oficiais para facilitar o acesso. Em caso de emergência, ligue
+          <strong>199</strong> (Defesa Civil), <strong>193</strong> (Bombeiros) ou <strong>190</strong> (Polícia).
+          O ENSO Brasil não substitui sistemas oficiais de alerta.
+        </footer>
+      </div>
+    </div>
+
+    <div>
+      <div class="device-label">Mobile · /estado/ma</div>
+      <div class="phone">
+        <div class="status-bar"><span>14:32</span><span>5G  •••  98%</span></div>
+        <div class="top-banner"><strong>CEMADEN fora há 47 min.</strong> Acesse <a href="https://alertas.cemaden.gov.br" rel="external">alertas.cemaden.gov.br</a>.</div>
+        <header class="topbar"><h1>ENSO Brasil</h1></header>
+        <nav class="crumb"><a href="/">← Brasil</a> <span class="sep">·</span> Nordeste</nav>
+        <section class="hero">
+          <div class="region">Nordeste · MA</div>
+          <h2>Maranhão</h2>
+          <div class="subline">3 alertas · 21 municípios afetados · 14:32</div>
+        </section>
+        <div class="status-block s-red">
+          <div class="lbl">⛔ Perigo</div>
+          <h3>Chuva extrema, inundação e deslizamento</h3>
+          <p>Aviso de Grande Perigo do INMET. Acumulado &gt; 100 mm em 24 h.</p>
+          <div class="stats">
+            <div class="stat"><span class="num">3</span>alertas</div>
+            <div class="stat"><span class="num">21</span>cidades</div>
+            <div class="stat"><span class="num">31&nbsp;h</span>até expirar</div>
+          </div>
+        </div>
+        <div class="action-bar">
+          <a href="#" class="primary">📱 Compartilhar</a>
+          <a href="#">🔗 Copiar</a>
+        </div>
+        <div class="emergency">
+          <span aria-hidden="true">📞</span>
+          <span><strong>Emergência:</strong>
+            <span class="num">199</span> Defesa Civil ·
+            <span class="num">193</span> Bombeiros ·
+            <span class="num">190</span> Polícia
+          </span>
+        </div>
+        <div class="section-h">Alertas ativos</div>
+        <div class="alerts-list">
+          <div class="alert-detail">
+            <div class="hd">
+              <div class="ti"><h4>Chuvas intensas</h4><div class="src">INMET</div></div>
+              <span class="risk-pill risk-red">Grande Perigo</span>
+            </div>
+            <p>Acumulado &gt; 100 mm em 24 h, ventos até 100 km/h.</p>
+            <dl class="facts">
+              <dt>Afeta</dt><dd>Oeste e centro · São Luís, Imperatriz</dd>
+              <dt>Válido</dt><dd>Até quarta, 22h00</dd>
+            </dl>
+            <div class="meta-row">
+              <a href="#">alertas2.inmet.gov.br</a>
+              <span>há 12 min</span>
+            </div>
+          </div>
+          <div class="alert-detail">
+            <div class="hd">
+              <div class="ti"><h4>Risco de inundação</h4><div class="src">CEMADEN</div></div>
+              <span class="risk-pill risk-orange">Alerta</span>
+            </div>
+            <p>Bacia do Mearim com risco de transbordamento.</p>
+            <dl class="facts">
+              <dt>Afeta</dt><dd>Bacabal, Pedreiras</dd>
+            </dl>
+            <div class="meta-row">
+              <a href="#">alertas.cemaden.gov.br</a>
+              <span>há 27 min</span>
+            </div>
+          </div>
+          <div class="alert-detail">
+            <div class="hd">
+              <div class="ti"><h4>Deslizamento</h4><div class="src">CEMADEN</div></div>
+              <span class="risk-pill risk-orange">Alerta</span>
+            </div>
+            <p>Encostas saturadas em São Luís e Imperatriz.</p>
+            <div class="meta-row">
+              <a href="#">alertas.cemaden.gov.br</a>
+              <span>há 1 h</span>
+            </div>
+          </div>
+        </div>
+        <div class="section-h">Defesa Civil MA</div>
+        <div class="dc-card">
+          <div class="icn">🏛</div>
+          <div class="body">
+            <h4>Defesa Civil — MA</h4>
+            <p>Equipes locais e canais oficiais.</p>
+            <a href="#">defesacivil.ma.gov.br</a>
+          </div>
+        </div>
+        <footer class="disclaimer">
+          Em emergência: <strong>199</strong> Defesa Civil · <strong>193</strong> Bombeiros · <strong>190</strong> Polícia. Não substitui alertas oficiais.
+        </footer>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- =============================== VARIANT B — TABBED =============================== -->
+<div class="pane-wrap" data-pane="B">
+  <div class="pane-label">
+    Variant B · Tabbed sections
+    <small>Status + ações + emergência sempre visíveis no topo. Conteúdo segmentado em três abas: <strong>Alertas</strong> (default), <strong>Metodologia</strong>, <strong>Fontes & Defesa Civil</strong>. Bom quando o usuário sabe exatamente o que procura.</small>
+  </div>
+
+  <div class="device-row">
+    <div>
+      <div class="device-label">Desktop · /estado/ma</div>
+      <div class="desktop">
+        <div class="browser-bar">
+          <div class="dots"><span></span><span></span><span></span></div>
+          <div class="url">enso.com.br/estado/ma</div>
+        </div>
+        <div class="top-banner"><strong>CEMADEN fora há 47 min.</strong> Acesse <a href="#" rel="external">alertas.cemaden.gov.br</a> para verificar diretamente.</div>
+        <header class="topbar"><h1>ENSO Brasil <span class="sub">perigos climáticos por estado</span></h1><span class="meta">Atualizado há 8 min</span></header>
+        <nav class="crumb"><a href="/">← Brasil</a> <span class="sep">·</span> Nordeste <span class="sep">·</span> Maranhão</nav>
+
+        <section class="hero">
+          <div class="region">Nordeste · MA</div>
+          <h2>Maranhão</h2>
+        </section>
+
+        <div class="status-block s-red">
+          <div class="lbl">⛔ Perigo</div>
+          <h3>Chuva extrema, risco de inundação e deslizamento</h3>
+          <p>1 aviso de Grande Perigo do INMET. Acumulado superior a 100 mm em 24 h previsto para oeste e centro.</p>
+        </div>
+
+        <div class="action-bar">
+          <a href="#" class="primary">📱 Compartilhar no WhatsApp</a>
+          <a href="#">🔗 Copiar link</a>
+        </div>
+
+        <div class="emergency">
+          <span aria-hidden="true">📞</span>
+          <span><strong>Em emergência:</strong>
+            <span class="num">199</span>Defesa Civil · <span class="num">193</span>Bombeiros · <span class="num">190</span>Polícia
+          </span>
+        </div>
+
+        <nav class="tabbar" role="tablist">
+          <button class="active">Alertas <span class="count">3</span></button>
+          <button>Metodologia</button>
+          <button>Fontes & Defesa Civil</button>
+        </nav>
+
+        <div class="alerts-list" style="margin-top: 18px;">
+          <div class="alert-detail">
+            <div class="hd">
+              <div class="ti"><h4>Chuvas intensas</h4><div class="src">INMET · Aviso 2026-04-1234</div></div>
+              <span class="risk-pill risk-red">Grande Perigo</span>
+            </div>
+            <p>Acumulado superior a 100 mm em 24 horas, ventos de até 100 km/h e descargas elétricas frequentes.</p>
+            <dl class="facts">
+              <dt>Afeta</dt><dd>Oeste e centro · São Luís, Imperatriz, bacia do Mearim</dd>
+              <dt>Válido até</dt><dd>2026-04-29 às 22h00 (≈ 31 h)</dd>
+            </dl>
+            <div class="meta-row"><a href="#">alertas2.inmet.gov.br/aviso/2026-04-1234</a><span>há 12 min</span></div>
+          </div>
+          <div class="alert-detail">
+            <div class="hd">
+              <div class="ti"><h4>Risco de inundação</h4><div class="src">CEMADEN</div></div>
+              <span class="risk-pill risk-orange">Alerta</span>
+            </div>
+            <p>Bacia do rio Mearim com risco de transbordamento. Solo saturado.</p>
+            <div class="meta-row"><a href="#">alertas.cemaden.gov.br/MA-2026-04-0411</a><span>há 27 min</span></div>
+          </div>
+          <div class="alert-detail">
+            <div class="hd">
+              <div class="ti"><h4>Deslizamento</h4><div class="src">CEMADEN</div></div>
+              <span class="risk-pill risk-orange">Alerta</span>
+            </div>
+            <p>Encostas saturadas em São Luís e Imperatriz.</p>
+            <div class="meta-row"><a href="#">alertas.cemaden.gov.br/MA-2026-04-0419</a><span>há 1 h</span></div>
+          </div>
+        </div>
+
+        <footer class="disclaimer" style="margin-top: 24px;">
+          Este site agrega informações de fontes oficiais. Em caso de emergência, ligue
+          <strong>199</strong> Defesa Civil · <strong>193</strong> Bombeiros · <strong>190</strong> Polícia.
+        </footer>
+      </div>
+    </div>
+
+    <div>
+      <div class="device-label">Mobile · /estado/ma</div>
+      <div class="phone">
+        <div class="status-bar"><span>14:32</span><span>5G  •••  98%</span></div>
+        <div class="top-banner"><strong>CEMADEN fora há 47 min.</strong> <a href="#">alertas.cemaden.gov.br</a></div>
+        <header class="topbar"><h1>ENSO Brasil</h1></header>
+        <nav class="crumb"><a href="/">← Brasil</a></nav>
+        <section class="hero">
+          <div class="region">Nordeste · MA</div>
+          <h2>Maranhão</h2>
+        </section>
+        <div class="status-block s-red">
+          <div class="lbl">⛔ Perigo</div>
+          <h3>Chuva extrema, inundação, deslizamento</h3>
+          <p>Aviso de Grande Perigo do INMET.</p>
+        </div>
+        <div class="action-bar">
+          <a href="#" class="primary">Compartilhar</a>
+          <a href="#">Copiar link</a>
+        </div>
+        <div class="emergency">
+          <span aria-hidden="true">📞</span>
+          <span><strong>Emergência:</strong> <span class="num">199</span> Defesa Civil · <span class="num">193</span> Bombeiros · <span class="num">190</span> Polícia</span>
+        </div>
+        <nav class="tabbar"><button class="active">Alertas <span class="count">3</span></button><button>Metodologia</button><button>Fontes</button></nav>
+        <div class="alerts-list" style="margin-top: 14px;">
+          <div class="alert-detail">
+            <div class="hd"><div class="ti"><h4>Chuvas intensas</h4><div class="src">INMET</div></div><span class="risk-pill risk-red">Grande Perigo</span></div>
+            <p>&gt; 100 mm em 24 h, ventos até 100 km/h.</p>
+            <div class="meta-row"><a href="#">alertas2.inmet.gov.br</a><span>há 12 min</span></div>
+          </div>
+          <div class="alert-detail">
+            <div class="hd"><div class="ti"><h4>Inundação</h4><div class="src">CEMADEN</div></div><span class="risk-pill risk-orange">Alerta</span></div>
+            <p>Bacia do Mearim com risco.</p>
+            <div class="meta-row"><a href="#">alertas.cemaden.gov.br</a><span>há 27 min</span></div>
+          </div>
+          <div class="alert-detail">
+            <div class="hd"><div class="ti"><h4>Deslizamento</h4><div class="src">CEMADEN</div></div><span class="risk-pill risk-orange">Alerta</span></div>
+            <p>São Luís, Imperatriz.</p>
+            <div class="meta-row"><a href="#">alertas.cemaden.gov.br</a><span>há 1 h</span></div>
+          </div>
+        </div>
+        <footer class="disclaimer">
+          Em emergência: <strong>199</strong> Defesa Civil · <strong>193</strong> Bombeiros · <strong>190</strong> Polícia.
+        </footer>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- =============================== VARIANT C — TWO-COLUMN DESKTOP / LINEAR MOBILE =============================== -->
+<div class="pane-wrap" data-pane="C">
+  <div class="pane-label">
+    Variant C · Two-column desktop / linear mobile
+    <small>Desktop: alertas no canal principal, aside permanente com fontes (com domínios mono), Defesa Civil estadual, e estados vizinhos do Nordeste para navegação. Mobile: aside vira seções no fim do scroll. Espelha o padrão de duas colunas do dashboard 001.</small>
+  </div>
+
+  <div class="device-row">
+    <div>
+      <div class="device-label">Desktop · /estado/ma</div>
+      <div class="desktop">
+        <div class="browser-bar">
+          <div class="dots"><span></span><span></span><span></span></div>
+          <div class="url">enso.com.br/estado/ma</div>
+        </div>
+        <div class="top-banner"><strong>CEMADEN fora há 47 min.</strong> Acesse <a href="#" rel="external">alertas.cemaden.gov.br</a> para verificar diretamente.</div>
+        <header class="topbar"><h1>ENSO Brasil <span class="sub">perigos climáticos por estado</span></h1><span class="meta">Atualizado há 8 min</span></header>
+        <nav class="crumb"><a href="/">← Brasil</a> <span class="sep">·</span> Nordeste <span class="sep">·</span> Maranhão</nav>
+
+        <section class="hero">
+          <div class="region">Nordeste · MA</div>
+          <h2>Maranhão</h2>
+          <div class="subline">3 alertas oficiais ativos · 21 municípios · 4.2M habitantes</div>
+        </section>
+
+        <div class="twocol">
+          <div class="main">
+            <div class="status-block s-red" style="margin: 0 0 18px;">
+              <div class="lbl">⛔ Perigo</div>
+              <h3>Chuva extrema, risco de inundação e deslizamento</h3>
+              <p>1 aviso de Grande Perigo do INMET. Acumulado &gt; 100 mm em 24 h previsto para oeste e centro.</p>
+            </div>
+
+            <div class="action-bar" style="margin: 0 0 18px;">
+              <a href="#" class="primary">📱 Compartilhar no WhatsApp</a>
+              <a href="#">🔗 Copiar link</a>
+            </div>
+
+            <div class="emergency" style="margin: 0 0 18px;">
+              <span>📞</span>
+              <span><strong>Em emergência:</strong> <span class="num">199</span>Defesa Civil · <span class="num">193</span>Bombeiros · <span class="num">190</span>Polícia</span>
+            </div>
+
+            <div class="section-h" style="margin: 0 0 12px; padding-top: 0; border-top: 0;">Alertas ativos</div>
+            <div class="alerts-list" style="margin: 0;">
+              <div class="alert-detail">
+                <div class="hd"><div class="ti"><h4>Chuvas intensas</h4><div class="src">INMET</div></div><span class="risk-pill risk-red">Grande Perigo</span></div>
+                <p>Acumulado superior a 100 mm em 24 h, ventos até 100 km/h.</p>
+                <dl class="facts">
+                  <dt>Afeta</dt><dd>Oeste e centro · São Luís, Imperatriz, Bacabal</dd>
+                  <dt>Válido até</dt><dd>2026-04-29 às 22h00 (≈ 31 h)</dd>
+                </dl>
+                <div class="meta-row"><a href="#">alertas2.inmet.gov.br/aviso/2026-04-1234</a><span>há 12 min</span></div>
+              </div>
+              <div class="alert-detail">
+                <div class="hd"><div class="ti"><h4>Risco de inundação</h4><div class="src">CEMADEN</div></div><span class="risk-pill risk-orange">Alerta</span></div>
+                <p>Bacia do rio Mearim com risco de transbordamento.</p>
+                <div class="meta-row"><a href="#">alertas.cemaden.gov.br/MA-2026-04-0411</a><span>há 27 min</span></div>
+              </div>
+              <div class="alert-detail">
+                <div class="hd"><div class="ti"><h4>Deslizamento</h4><div class="src">CEMADEN</div></div><span class="risk-pill risk-orange">Alerta</span></div>
+                <p>Encostas saturadas em São Luís e Imperatriz.</p>
+                <div class="meta-row"><a href="#">alertas.cemaden.gov.br/MA-2026-04-0419</a><span>há 1 h</span></div>
+              </div>
+            </div>
+
+            <div class="method-block" style="margin: 22px 0 0;">
+              <h4>Como calculamos</h4>
+              <p>Maranhão está em Perigo porque o INMET emitiu um aviso de severidade <em>high</em> ativo. Não inventamos o nível, espelhamos a fonte oficial.</p>
+              <span class="formula-version">formula_version: v0</span>
+            </div>
+          </div>
+
+          <aside class="aside">
+            <div class="aside-block">
+              <h4>Fontes consultadas</h4>
+              <a href="#" class="src-link ok">
+                <span>INMET</span><span class="domain">alertas2.inmet.gov.br</span>
+              </a>
+              <a href="#" class="src-link stale">
+                <span>CEMADEN</span><span class="domain">alertas.cemaden.gov.br</span>
+              </a>
+              <a href="#" class="src-link ok">
+                <span>INPE Queimadas</span><span class="domain">queimadas.dgi.inpe.br</span>
+              </a>
+            </div>
+            <div class="aside-block">
+              <h4>Defesa Civil — MA</h4>
+              <p style="font-size:13px; color:var(--ink-2); line-height:1.5; margin-bottom:8px;">Coordenadoria estadual. Para acionar equipes locais, denunciar áreas de risco, e instruções específicas.</p>
+              <a href="#" style="font-family: var(--mono); font-size: 12px; color: var(--ink-1);">defesacivil.ma.gov.br →</a>
+            </div>
+            <div class="aside-block">
+              <h4>Outros estados · Nordeste</h4>
+              <div class="neighbor-list">
+                <a href="#"><span>Bahia</span><span class="badge r-orange">Alerta</span></a>
+                <a href="#"><span>Pernambuco</span><span class="badge r-orange">Alerta</span></a>
+                <a href="#"><span>Ceará</span><span class="badge r-green">OK</span></a>
+                <a href="#"><span>Piauí</span><span class="badge r-green">OK</span></a>
+                <a href="#"><span>Rio Grande do Norte</span><span class="badge r-green">OK</span></a>
+                <a href="#"><span>Paraíba</span><span class="badge r-green">OK</span></a>
+                <a href="#"><span>Alagoas</span><span class="badge r-green">OK</span></a>
+                <a href="#"><span>Sergipe</span><span class="badge r-green">OK</span></a>
+              </div>
+            </div>
+          </aside>
+        </div>
+
+        <footer class="disclaimer" style="margin-top: 28px;">
+          Este site agrega informações de fontes oficiais. Em caso de emergência, ligue
+          <strong>199</strong> Defesa Civil · <strong>193</strong> Bombeiros · <strong>190</strong> Polícia.
+        </footer>
+      </div>
+    </div>
+
+    <div>
+      <div class="device-label">Mobile · /estado/ma</div>
+      <div class="phone">
+        <div class="status-bar"><span>14:32</span><span>5G  •••  98%</span></div>
+        <div class="top-banner"><strong>CEMADEN fora há 47 min.</strong> <a href="#">alertas.cemaden.gov.br</a></div>
+        <header class="topbar"><h1>ENSO Brasil</h1></header>
+        <nav class="crumb"><a href="/">← Brasil</a></nav>
+        <section class="hero">
+          <div class="region">Nordeste · MA</div>
+          <h2>Maranhão</h2>
+          <div class="subline">3 alertas · 21 municípios</div>
+        </section>
+        <div class="status-block s-red">
+          <div class="lbl">⛔ Perigo</div>
+          <h3>Chuva extrema, inundação e deslizamento</h3>
+          <p>Aviso de Grande Perigo do INMET.</p>
+        </div>
+        <div class="action-bar">
+          <a href="#" class="primary">Compartilhar</a>
+          <a href="#">Copiar link</a>
+        </div>
+        <div class="emergency">
+          <span>📞</span>
+          <span><strong>Emergência:</strong> <span class="num">199</span> Defesa Civil · <span class="num">193</span> Bombeiros · <span class="num">190</span> Polícia</span>
+        </div>
+        <div class="section-h">Alertas ativos · 3</div>
+        <div class="alerts-list">
+          <div class="alert-detail">
+            <div class="hd"><div class="ti"><h4>Chuvas intensas</h4><div class="src">INMET</div></div><span class="risk-pill risk-red">Grande Perigo</span></div>
+            <p>&gt; 100 mm em 24 h.</p>
+            <div class="meta-row"><a href="#">alertas2.inmet.gov.br</a><span>há 12 min</span></div>
+          </div>
+          <div class="alert-detail">
+            <div class="hd"><div class="ti"><h4>Inundação</h4><div class="src">CEMADEN</div></div><span class="risk-pill risk-orange">Alerta</span></div>
+            <p>Bacia do Mearim.</p>
+            <div class="meta-row"><a href="#">alertas.cemaden.gov.br</a><span>há 27 min</span></div>
+          </div>
+          <div class="alert-detail">
+            <div class="hd"><div class="ti"><h4>Deslizamento</h4><div class="src">CEMADEN</div></div><span class="risk-pill risk-orange">Alerta</span></div>
+            <p>São Luís, Imperatriz.</p>
+            <div class="meta-row"><a href="#">alertas.cemaden.gov.br</a><span>há 1 h</span></div>
+          </div>
+        </div>
+        <div class="section-h">Fontes</div>
+        <div class="sources-block">
+          <a href="#" class="src-link ok"><span class="nm">INMET</span><span class="domain">alertas2.inmet.gov.br</span></a>
+          <a href="#" class="src-link stale"><span class="nm">CEMADEN</span><span class="domain">alertas.cemaden.gov.br</span></a>
+        </div>
+        <div class="section-h">Defesa Civil MA</div>
+        <div class="dc-card">
+          <div class="icn">🏛</div>
+          <div class="body"><h4>Defesa Civil — MA</h4><a href="#">defesacivil.ma.gov.br</a></div>
+        </div>
+        <div class="section-h">Outros estados · Nordeste</div>
+        <div class="twocol"><div></div><aside class="aside">
+          <div class="aside-block" style="border:0; padding:0; margin:0;">
+            <div class="neighbor-list">
+              <a href="#"><span>Bahia</span><span class="badge r-orange">Alerta</span></a>
+              <a href="#"><span>Pernambuco</span><span class="badge r-orange">Alerta</span></a>
+              <a href="#"><span>Ceará</span><span class="badge r-green">OK</span></a>
+              <a href="#"><span>Piauí</span><span class="badge r-green">OK</span></a>
+            </div>
+          </div>
+        </aside></div>
+        <footer class="disclaimer">Em emergência: <strong>199</strong> Defesa Civil · <strong>193</strong> Bombeiros · <strong>190</strong> Polícia.</footer>
+      </div>
+    </div>
+  </div>
+</div>
+
+</main>
+
+<div class="sketch-toolbar"><span style="color:var(--ink-3)">Sketch 004 · /estado/{uf}</span></div>
+
+<script>
+  document.querySelectorAll('.variant-tab').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.variant-tab').forEach(b => { b.classList.remove('active'); b.setAttribute('aria-selected','false'); });
+      document.querySelectorAll('.pane-wrap').forEach(p => p.classList.remove('active'));
+      btn.classList.add('active'); btn.setAttribute('aria-selected','true');
+      const tab = btn.dataset.tab;
+      document.querySelector(`.pane-wrap[data-pane="${tab}"]`).classList.add('active');
+    });
+  });
+</script>
+
+</body>
+</html>
