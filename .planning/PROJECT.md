@@ -82,7 +82,7 @@ If only this works, the project has shipped.
 
 | Decision | Rationale | Outcome |
 |----------|-----------|---------|
-| Next.js 15.5.x (App Router) over Nest.js — pinned, NOT 16.x | Free tiers running Nest (Render/Fly) have cold starts; Next.js consolidates frontend + API + cron. 16.x `'use cache'` directive does not yet integrate cleanly with `next-intl` | Locked |
+| Next.js latest stable (16.x line) — App Router, over Nest.js | Free tiers running Nest (Render/Fly) have cold starts; Next.js consolidates frontend + API + cron. **Locked-decision reversed during Phase 1 discuss-phase (2026-04-30):** original 15.5.x pin existed to avoid `'use cache'`/next-intl interop issues; next-intl was removed during P1 SPEC, so the constraint is moot. Now tracking 16.x stable. | Locked (reversed) |
 | **GitHub Actions cron, NOT Vercel Cron**, for 15-min ingestion | Vercel Hobby Cron is once-per-day max in 2026. Public OSS repo = unlimited GH Actions minutes. GH Actions hits a token-protected `/api/ingest` endpoint on Vercel | Locked (research delta) |
 | Vercel free tier as primary host (frontend + API routes) | Zero budget; mature platform | Locked |
 | **Upstash Redis, NOT Vercel KV**, for snapshot cache | Vercel KV no longer exists (auto-migrated Dec 2024). Upstash free: 500K cmds/mo, 256 MB | Locked (research delta) |

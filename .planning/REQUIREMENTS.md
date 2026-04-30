@@ -11,7 +11,7 @@ REQ-IDs are atomic and testable. Each maps to exactly one phase in `ROADMAP.md`.
 ### Foundation & Quality (FOUND)
 
 - [ ] **FOUND-01**: Public GitHub repo with MIT LICENSE, README (PT-BR primary, EN secondary), CONTRIBUTING.md, CODE_OF_CONDUCT.md from first commit
-- [ ] **FOUND-02**: Next.js 15.5.x App Router scaffolding with TypeScript strict, Tailwind v4, ESLint, Prettier, Husky pre-commit
+- [ ] **FOUND-02**: Next.js latest stable (16.x line) App Router scaffolding with TypeScript strict, Tailwind v4, ESLint, Prettier, Husky pre-commit (15.5.x pin reversed in P1 CONTEXT D-13 — original block was next-intl interop, now moot)
 - [ ] ~~**FOUND-03**~~: REMOVED. Project is PT-BR only; no `next-intl`, no locale routing. Decision reversed during Phase 1 SPEC.
 - [ ] **FOUND-04**: GitHub Actions CI runs typecheck, lint, Vitest, Playwright on every PR; caching enabled
 - [ ] **FOUND-05**: Mandatory disclaimer SSR-rendered in root layout (not client JS) — visible on every page even with JS disabled. Disclaimer must include all three emergency contacts **paired with agency names**: **199 Defesa Civil · 193 Bombeiros · 190 Polícia**. Never display the bare numbers — the number alone is incomplete information

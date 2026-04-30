@@ -9,11 +9,11 @@
 
 ## Phase Goal
 
-Ship a public, accessible, MIT-licensed Next.js 15.5.x skeleton on Vercel — disclaimer + LGPD page render server-side, CI passes on every PR, no data flow yet. The next phase (Data Foundation) plugs into this shell.
+Ship a public, accessible, MIT-licensed Next.js (latest stable 16.x line) skeleton on Vercel — disclaimer + LGPD page render server-side, CI passes on every PR, no data flow yet. The next phase (Data Foundation) plugs into this shell.
 
 ## Locked decisions inherited from PROJECT.md
 
-- Next.js 15.5.x App Router (NOT 16.x)
+- Next.js latest stable (16.x line) App Router — pin reversed in 01-CONTEXT.md D-13 (original 15.5.x pin existed for next-intl interop, now removed)
 - TypeScript strict
 - Tailwind v4 (Oxide engine)
 - React 19.x
@@ -32,11 +32,11 @@ Ship a public, accessible, MIT-licensed Next.js 15.5.x skeleton on Vercel — di
 - **Target state:** Repo public on GitHub at `github.com/CarlosHenriqueMkt/enso-brasil`. Files at root: `LICENSE` (MIT), `README.md` (PT-BR primary), `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`, `.gitignore` (already exists).
 - **Acceptance:** `git clone` of the public URL succeeds for an unauthenticated user; all four files exist and are non-empty; LICENSE contains MIT text with `2026` and the project name.
 
-### REQ-S1.02 — Next.js 15.5.x App Router scaffolding
+### REQ-S1.02 — Next.js latest stable (16.x line) App Router scaffolding
 
-- **Current state:** No `package.json`, no `app/` directory, no Next.js install.
-- **Target state:** `package.json` declares `next@~15.5.0` (NOT 16.x), `react@^19`, `react-dom@^19`, `typescript@^5`. `app/` directory with `layout.tsx`, `page.tsx`, `not-found.tsx`, `error.tsx`, `loading.tsx`. `next.config.ts` configured with `reactStrictMode: true` and image optimization defaults.
-- **Acceptance:** `npm install` succeeds; `npm run build` completes without errors; the production build serves `/` and `/privacidade` over `next start`.
+- **Current state:** No `package.json`, no `src/app/` directory, no Next.js install.
+- **Target state:** `package.json` declares `next@^16` (latest stable), `react@^19`, `react-dom@^19`, `typescript@^5`. `src/app/` directory with `layout.tsx`, `page.tsx`, `not-found.tsx`, `error.tsx`, `loading.tsx`. `next.config.ts` configured with `reactStrictMode: true`, default output (no `standalone`), no `images.domains` yet. Package manager: pnpm. Node 24 LTS pinned (`.nvmrc`, `engines.node >= 24`, `packageManager: pnpm@<latest>`).
+- **Acceptance:** `pnpm install` succeeds; `pnpm build` completes without errors; the production build serves `/` and `/privacidade` over `pnpm start` (`next start`).
 
 ### REQ-S1.03 — TypeScript strict + path aliases
 
@@ -53,7 +53,7 @@ Ship a public, accessible, MIT-licensed Next.js 15.5.x skeleton on Vercel — di
 ### REQ-S1.05 — Lint, format, pre-commit hooks
 
 - **Current state:** No ESLint, Prettier, or Husky.
-- **Target state:** ESLint with `eslint-config-next` and TS rules. Prettier with project config. Husky pre-commit runs `lint-staged` (eslint --fix + prettier --write + secret scan via simple regex for `[A-Z_]+_KEY|TOKEN|SECRET`).
+- **Target state:** ESLint with `eslint-config-next` and TS rules. Prettier with project config. Husky pre-commit runs `lint-staged` (eslint --fix + prettier --write) plus a separate `gitleaks protect --staged` step. Same `gitleaks` scan also runs in GitHub Actions CI on every PR (defense in depth — see CONTEXT D-04).
 - **Acceptance:** Committing a file with `console.log` triggers ESLint warning (config-driven); committing a file containing `const SECRET_TOKEN = "abc"` is blocked by the pre-commit hook.
 
 ### REQ-S1.06 — CI lean pipeline
@@ -102,7 +102,7 @@ Ship a public, accessible, MIT-licensed Next.js 15.5.x skeleton on Vercel — di
 ## In Scope (this phase ships)
 
 - Public GitHub repo + MIT LICENSE + README (PT-BR) + CONTRIBUTING + CODE_OF_CONDUCT
-- Next.js 15.5.x App Router scaffolding (TS strict, Tailwind v4, React 19)
+- Next.js latest stable (16.x line) App Router scaffolding (TS strict, Tailwind v4, React 19, pnpm, Node 24 LTS)
 - Theme tokens applied via `@theme` (sketch-findings palette + spacing + radii + system fonts)
 - Root layout with SSR disclaimer footer (199/193/190 with agency names)
 - `/privacidade` page in PT-BR draft completo
@@ -134,11 +134,11 @@ Phase 1 is DONE when **every** box checks:
 
 - [ ] `git clone https://github.com/CarlosHenriqueMkt/enso-brasil` works for unauthenticated users
 - [ ] `LICENSE`, `README.md`, `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md` exist and are non-empty
-- [ ] `npm install && npm run build` completes without errors on a fresh clone
+- [ ] `pnpm install && pnpm build` completes without errors on a fresh clone
 - [ ] `npx tsc --noEmit` exits 0
-- [ ] `npm run lint` exits 0
-- [ ] `npm run test` (Vitest) exits 0
-- [ ] `npx playwright test` (smoke) exits 0
+- [ ] `pnpm lint` exits 0
+- [ ] `pnpm test` (Vitest) exits 0
+- [ ] `pnpm playwright test` (smoke) exits 0
 - [ ] CI workflow passes on a PR within 4 minutes
 - [ ] `curl http://localhost:3000/` HTML body contains "199 Defesa Civil", "193 Bombeiros", "190 Polícia"
 - [ ] `curl http://localhost:3000/privacidade` HTML body contains the 7 LGPD sections in PT-BR

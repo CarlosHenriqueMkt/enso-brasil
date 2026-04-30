@@ -2,21 +2,23 @@
 
 **Project:** ENSO Brasil — public Brazilian climate hazard aggregator dashboard
 **Current milestone:** v1 — Per-state hazard dashboard
-**Status:** Initialized · ready to plan Phase 1
-**Last updated:** 2026-04-28
+**Status:** Phase 1 context gathered · ready to plan
+**Last updated:** 2026-04-30
 
 ## Current Phase
 
-**Next:** Phase 1 — Skeleton & OSS Foundation (SPEC locked, ambiguity 0.15)
-**Command to run:** `/gsd-discuss-phase 1` — picks up SPEC.md automatically and focuses on implementation decisions only
+**Next:** Phase 1 — Skeleton & OSS Foundation (SPEC locked + CONTEXT captured)
+**Command to run:** `/gsd-plan-phase 1` — produce PLAN.md from SPEC + CONTEXT
 
 **Project-level decision change** (locked 2026-04-28 during SPEC): **i18n removed entirely.** Project is PT-BR only. `next-intl` dropped from stack. M12 (ES/EN translations) deleted from roadmap. Translation utilities for foreign-language ingestion (NOAA, NASA) become an ingestion-pipeline concern, decided when M5 lands.
+
+**Project-level decision REVERSAL** (locked 2026-04-30 during P1 discuss-phase, see `.planning/phases/01-skeleton-oss-foundation/01-CONTEXT.md` D-13): **Next.js 15.5.x pin reversed → latest stable (16.x line).** Original 16.x block was next-intl interop; with next-intl removed, the constraint is moot. Rippled to PROJECT.md, REQUIREMENTS.md, SPEC.md, CLAUDE.md.
 
 ## Phase Progression
 
 | # | Phase | Status |
 |---|-------|--------|
-| 1 | Skeleton & OSS Foundation | 📋 SPEC locked at `phases/01-skeleton-oss-foundation/01-SPEC.md` |
+| 1 | Skeleton & OSS Foundation | 📋 SPEC + CONTEXT locked at `phases/01-skeleton-oss-foundation/` — ready for `/gsd-plan-phase 1` |
 | 2 | Data Foundation | ⏳ pending |
 | 3 | Pure Risk Engine | ⏳ pending |
 | 4 | First Two Adapters (CEMADEN + INMET) | ⏳ pending |

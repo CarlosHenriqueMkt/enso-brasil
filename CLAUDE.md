@@ -33,7 +33,7 @@ Always start with `.planning/STATE.md` to know the current phase, then `.plannin
 
 ## Locked decisions (do not relitigate without `/gsd-new-milestone`)
 
-- Stack: Next.js 15.5.x + TypeScript strict + Tailwind v4 + react-simple-maps. **NO `next-intl` — PT-BR only, no i18n routing.** Translation utilities live in ingestion pipeline (deferred to M5+).
+- Stack: Next.js latest stable (16.x line, locked-decision reversed in P1 CONTEXT — original 16.x block was next-intl interop, now moot since next-intl is removed) + TypeScript strict + Tailwind v4 + react-simple-maps. **NO `next-intl` — PT-BR only, no i18n routing.** Translation utilities live in ingestion pipeline (deferred to M5+).
 - Hosting: Vercel free tier (Functions only — **NOT** Vercel Cron, **NOT** Vercel KV, **NOT** Vercel Postgres)
 - Cron: **GitHub Actions** every 15 min → token-protected `/api/ingest`
 - Cache: **Upstash Redis** (`@upstash/redis`)
