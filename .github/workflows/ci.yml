@@ -8,21 +8,44 @@ on:
 jobs:
   ci:
     runs-on: ubuntu-latest
-    timeout-minutes: 6
+    timeout-minutes: 8
+
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d test"
+          --health-interval 2s
+          --health-timeout 3s
+          --health-retries 10
+
+    env:
+      DATABASE_URL: postgres://postgres:postgres@localhost:5432/test
+      DATABASE_URL_TEST: postgres://postgres:postgres@localhost:5432/test
+
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v5
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
           node-version: 24
           cache: pnpm
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+
+      - name: Apply migrations to test DB
+        run: pnpm db:migrate
 
       - name: Typecheck
         run: pnpm exec tsc --noEmit
@@ -33,7 +56,7 @@ jobs:
       - name: Knip (unused exports / dead deps)
         run: pnpm exec knip
 
-      - name: Unit tests (Vitest)
+      - name: Unit + integration tests (Vitest)
         run: pnpm test
 
       - name: Install Playwright browsers
@@ -43,6 +66,6 @@ jobs:
         run: pnpm exec playwright test
 
       - name: Gitleaks scan
-        uses: gitleaks/gitleaks-action@v2
+        uses: gitleaks/gitleaks-action@v2.3.9
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
