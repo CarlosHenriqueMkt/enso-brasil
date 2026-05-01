@@ -3,7 +3,7 @@
  *
  * Uses drizzle-orm/neon-http + @neondatabase/serverless `neon()` HTTP fetcher.
  * Per-request — NO connection pool. Edge runtime has no `ws` module, so the
- * neon-serverless WebSocket Pool path is unavailable here.
+ * neon-serverless WebSocket pooled path is unavailable here.
  *
  * IMPORTANT: neon-http does NOT support transactions (RESEARCH Q1). Any code
  * path needing `db.transaction()` MUST import from `./node` instead.

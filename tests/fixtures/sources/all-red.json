@@ -1,0 +1,488 @@
+[
+  {
+    "source_key": "stub",
+    "hazard_kind": "queimada",
+    "state_uf": "AC",
+    "severity": "red",
+    "headline": "Alerta máximo de queimada em AC",
+    "body": "Stub fixture all-red — teste de stress, não use em produção.",
+    "source_url": "https://stub.example/ac/queimada",
+    "fetched_at": "2026-05-01T00:00:00.000Z",
+    "valid_from": "2026-05-01T00:00:00.000Z",
+    "valid_until": "2026-05-02T00:00:00.000Z",
+    "payload_hash": "126b1c1494eb4aef557ef38173df69e95946516ced12fb344fbe7ce35ea58dc0",
+    "raw": {
+      "stub": true,
+      "uf": "AC",
+      "scenario": "all-red"
+    }
+  },
+  {
+    "source_key": "stub",
+    "hazard_kind": "queimada",
+    "state_uf": "AL",
+    "severity": "red",
+    "headline": "Alerta máximo de queimada em AL",
+    "body": "Stub fixture all-red — teste de stress, não use em produção.",
+    "source_url": "https://stub.example/al/queimada",
+    "fetched_at": "2026-05-01T00:00:00.000Z",
+    "valid_from": "2026-05-01T00:00:00.000Z",
+    "valid_until": "2026-05-02T00:00:00.000Z",
+    "payload_hash": "2e6470f9014056f8a54ad5d0b396aea9c65e45c820b6a1a542c176b688785e70",
+    "raw": {
+      "stub": true,
+      "uf": "AL",
+      "scenario": "all-red"
+    }
+  },
+  {
+    "source_key": "stub",
+    "hazard_kind": "queimada",
+    "state_uf": "AP",
+    "severity": "red",
+    "headline": "Alerta máximo de queimada em AP",
+    "body": "Stub fixture all-red — teste de stress, não use em produção.",
+    "source_url": "https://stub.example/ap/queimada",
+    "fetched_at": "2026-05-01T00:00:00.000Z",
+    "valid_from": "2026-05-01T00:00:00.000Z",
+    "valid_until": "2026-05-02T00:00:00.000Z",
+    "payload_hash": "ca17c988996b4391fe52b55ae5f92684514c70e97192610989451969ecb3217b",
+    "raw": {
+      "stub": true,
+      "uf": "AP",
+      "scenario": "all-red"
+    }
+  },
+  {
+    "source_key": "stub",
+    "hazard_kind": "queimada",
+    "state_uf": "AM",
+    "severity": "red",
+    "headline": "Alerta máximo de queimada em AM",
+    "body": "Stub fixture all-red — teste de stress, não use em produção.",
+    "source_url": "https://stub.example/am/queimada",
+    "fetched_at": "2026-05-01T00:00:00.000Z",
+    "valid_from": "2026-05-01T00:00:00.000Z",
+    "valid_until": "2026-05-02T00:00:00.000Z",
+    "payload_hash": "0e17082c3b4fd0c01d69da85f59d33852f3b12de47e8f135f7dae78dbee458ce",
+    "raw": {
+      "stub": true,
+      "uf": "AM",
+      "scenario": "all-red"
+    }
+  },
+  {
+    "source_key": "stub",
+    "hazard_kind": "queimada",
+    "state_uf": "BA",
+    "severity": "red",
+    "headline": "Alerta máximo de queimada em BA",
+    "body": "Stub fixture all-red — teste de stress, não use em produção.",
+    "source_url": "https://stub.example/ba/queimada",
+    "fetched_at": "2026-05-01T00:00:00.000Z",
+    "valid_from": "2026-05-01T00:00:00.000Z",
+    "valid_until": "2026-05-02T00:00:00.000Z",
+    "payload_hash": "fecbd2bcf050de9df20c5a324eda2e609791a72a38e9a4b815b38b30215fbd11",
+    "raw": {
+      "stub": true,
+      "uf": "BA",
+      "scenario": "all-red"
+    }
+  },
+  {
+    "source_key": "stub",
+    "hazard_kind": "queimada",
+    "state_uf": "CE",
+    "severity": "red",
+    "headline": "Alerta máximo de queimada em CE",
+    "body": "Stub fixture all-red — teste de stress, não use em produção.",
+    "source_url": "https://stub.example/ce/queimada",
+    "fetched_at": "2026-05-01T00:00:00.000Z",
+    "valid_from": "2026-05-01T00:00:00.000Z",
+    "valid_until": "2026-05-02T00:00:00.000Z",
+    "payload_hash": "d464def33fc8813c741897b7ccf33fa4fbfb95a0a9c30a74b63f4aeb0caf6e25",
+    "raw": {
+      "stub": true,
+      "uf": "CE",
+      "scenario": "all-red"
+    }
+  },
+  {
+    "source_key": "stub",
+    "hazard_kind": "queimada",
+    "state_uf": "DF",
+    "severity": "red",
+    "headline": "Alerta máximo de queimada em DF",
+    "body": "Stub fixture all-red — teste de stress, não use em produção.",
+    "source_url": "https://stub.example/df/queimada",
+    "fetched_at": "2026-05-01T00:00:00.000Z",
+    "valid_from": "2026-05-01T00:00:00.000Z",
+    "valid_until": "2026-05-02T00:00:00.000Z",
+    "payload_hash": "caf4cbe190f033f57960c168cbbf4d8ed8dc3af85feafef3818788a7624e8d4b",
+    "raw": {
+      "stub": true,
+      "uf": "DF",
+      "scenario": "all-red"
+    }
+  },
+  {
+    "source_key": "stub",
+    "hazard_kind": "queimada",
+    "state_uf": "ES",
+    "severity": "red",
+    "headline": "Alerta máximo de queimada em ES",
+    "body": "Stub fixture all-red — teste de stress, não use em produção.",
+    "source_url": "https://stub.example/es/queimada",
+    "fetched_at": "2026-05-01T00:00:00.000Z",
+    "valid_from": "2026-05-01T00:00:00.000Z",
+    "valid_until": "2026-05-02T00:00:00.000Z",
+    "payload_hash": "11ad77af500c0e387f2b0f8eaaab2417ed60c5db75df89295f6041258e11a9a2",
+    "raw": {
+      "stub": true,
+      "uf": "ES",
+      "scenario": "all-red"
+    }
+  },
+  {
+    "source_key": "stub",
+    "hazard_kind": "queimada",
+    "state_uf": "GO",
+    "severity": "red",
+    "headline": "Alerta máximo de queimada em GO",
+    "body": "Stub fixture all-red — teste de stress, não use em produção.",
+    "source_url": "https://stub.example/go/queimada",
+    "fetched_at": "2026-05-01T00:00:00.000Z",
+    "valid_from": "2026-05-01T00:00:00.000Z",
+    "valid_until": "2026-05-02T00:00:00.000Z",
+    "payload_hash": "e0060d4dcd00d0cafd5d53e9c7f2bf335f88f6793bce3ddedf8a84454733c39f",
+    "raw": {
+      "stub": true,
+      "uf": "GO",
+      "scenario": "all-red"
+    }
+  },
+  {
+    "source_key": "stub",
+    "hazard_kind": "queimada",
+    "state_uf": "MA",
+    "severity": "red",
+    "headline": "Alerta máximo de queimada em MA",
+    "body": "Stub fixture all-red — teste de stress, não use em produção.",
+    "source_url": "https://stub.example/ma/queimada",
+    "fetched_at": "2026-05-01T00:00:00.000Z",
+    "valid_from": "2026-05-01T00:00:00.000Z",
+    "valid_until": "2026-05-02T00:00:00.000Z",
+    "payload_hash": "5e546fb55a1173471a0ceb27cf2ee69b891c6e40082062a29e86c27a68a95b61",
+    "raw": {
+      "stub": true,
+      "uf": "MA",
+      "scenario": "all-red"
+    }
+  },
+  {
+    "source_key": "stub",
+    "hazard_kind": "queimada",
+    "state_uf": "MT",
+    "severity": "red",
+    "headline": "Alerta máximo de queimada em MT",
+    "body": "Stub fixture all-red — teste de stress, não use em produção.",
+    "source_url": "https://stub.example/mt/queimada",
+    "fetched_at": "2026-05-01T00:00:00.000Z",
+    "valid_from": "2026-05-01T00:00:00.000Z",
+    "valid_until": "2026-05-02T00:00:00.000Z",
+    "payload_hash": "377c5f62aba3d3a8b37801f234ca7ff55740d252783d84c6b63374d002fc474d",
+    "raw": {
+      "stub": true,
+      "uf": "MT",
+      "scenario": "all-red"
+    }
+  },
+  {
+    "source_key": "stub",
+    "hazard_kind": "queimada",
+    "state_uf": "MS",
+    "severity": "red",
+    "headline": "Alerta máximo de queimada em MS",
+    "body": "Stub fixture all-red — teste de stress, não use em produção.",
+    "source_url": "https://stub.example/ms/queimada",
+    "fetched_at": "2026-05-01T00:00:00.000Z",
+    "valid_from": "2026-05-01T00:00:00.000Z",
+    "valid_until": "2026-05-02T00:00:00.000Z",
+    "payload_hash": "937daad465e3b9ad2292e240a6da3614587a397a8d9f7366d1edacd4094503bd",
+    "raw": {
+      "stub": true,
+      "uf": "MS",
+      "scenario": "all-red"
+    }
+  },
+  {
+    "source_key": "stub",
+    "hazard_kind": "queimada",
+    "state_uf": "MG",
+    "severity": "red",
+    "headline": "Alerta máximo de queimada em MG",
+    "body": "Stub fixture all-red — teste de stress, não use em produção.",
+    "source_url": "https://stub.example/mg/queimada",
+    "fetched_at": "2026-05-01T00:00:00.000Z",
+    "valid_from": "2026-05-01T00:00:00.000Z",
+    "valid_until": "2026-05-02T00:00:00.000Z",
+    "payload_hash": "824394a698ad7a702e99a154164c901d0202eb49ad3475d1463b60da41e08e38",
+    "raw": {
+      "stub": true,
+      "uf": "MG",
+      "scenario": "all-red"
+    }
+  },
+  {
+    "source_key": "stub",
+    "hazard_kind": "queimada",
+    "state_uf": "PA",
+    "severity": "red",
+    "headline": "Alerta máximo de queimada em PA",
+    "body": "Stub fixture all-red — teste de stress, não use em produção.",
+    "source_url": "https://stub.example/pa/queimada",
+    "fetched_at": "2026-05-01T00:00:00.000Z",
+    "valid_from": "2026-05-01T00:00:00.000Z",
+    "valid_until": "2026-05-02T00:00:00.000Z",
+    "payload_hash": "761def3b232b32198ba2b0c6a53a70051e1514bc973d028f6ce2844cb8766fb1",
+    "raw": {
+      "stub": true,
+      "uf": "PA",
+      "scenario": "all-red"
+    }
+  },
+  {
+    "source_key": "stub",
+    "hazard_kind": "queimada",
+    "state_uf": "PB",
+    "severity": "red",
+    "headline": "Alerta máximo de queimada em PB",
+    "body": "Stub fixture all-red — teste de stress, não use em produção.",
+    "source_url": "https://stub.example/pb/queimada",
+    "fetched_at": "2026-05-01T00:00:00.000Z",
+    "valid_from": "2026-05-01T00:00:00.000Z",
+    "valid_until": "2026-05-02T00:00:00.000Z",
+    "payload_hash": "3bb9ed1d30e018fe71e5c25751debda88596245d7c9e04b3a8ade59e2fc75b82",
+    "raw": {
+      "stub": true,
+      "uf": "PB",
+      "scenario": "all-red"
+    }
+  },
+  {
+    "source_key": "stub",
+    "hazard_kind": "queimada",
+    "state_uf": "PR",
+    "severity": "red",
+    "headline": "Alerta máximo de queimada em PR",
+    "body": "Stub fixture all-red — teste de stress, não use em produção.",
+    "source_url": "https://stub.example/pr/queimada",
+    "fetched_at": "2026-05-01T00:00:00.000Z",
+    "valid_from": "2026-05-01T00:00:00.000Z",
+    "valid_until": "2026-05-02T00:00:00.000Z",
+    "payload_hash": "df10de0dd0df940e96a113d9db323ef79b05db60653aa72eb762f47752a2c8bc",
+    "raw": {
+      "stub": true,
+      "uf": "PR",
+      "scenario": "all-red"
+    }
+  },
+  {
+    "source_key": "stub",
+    "hazard_kind": "queimada",
+    "state_uf": "PE",
+    "severity": "red",
+    "headline": "Alerta máximo de queimada em PE",
+    "body": "Stub fixture all-red — teste de stress, não use em produção.",
+    "source_url": "https://stub.example/pe/queimada",
+    "fetched_at": "2026-05-01T00:00:00.000Z",
+    "valid_from": "2026-05-01T00:00:00.000Z",
+    "valid_until": "2026-05-02T00:00:00.000Z",
+    "payload_hash": "f153cf3736259121a433cb0b3f2ead9d84d16aeed20c4ff9ed1e9c3b2c7ec481",
+    "raw": {
+      "stub": true,
+      "uf": "PE",
+      "scenario": "all-red"
+    }
+  },
+  {
+    "source_key": "stub",
+    "hazard_kind": "queimada",
+    "state_uf": "PI",
+    "severity": "red",
+    "headline": "Alerta máximo de queimada em PI",
+    "body": "Stub fixture all-red — teste de stress, não use em produção.",
+    "source_url": "https://stub.example/pi/queimada",
+    "fetched_at": "2026-05-01T00:00:00.000Z",
+    "valid_from": "2026-05-01T00:00:00.000Z",
+    "valid_until": "2026-05-02T00:00:00.000Z",
+    "payload_hash": "d3e1857c8ccdc9f068885ba23aabf0ab73165c3da175985b9fe31227c9cb674f",
+    "raw": {
+      "stub": true,
+      "uf": "PI",
+      "scenario": "all-red"
+    }
+  },
+  {
+    "source_key": "stub",
+    "hazard_kind": "queimada",
+    "state_uf": "RJ",
+    "severity": "red",
+    "headline": "Alerta máximo de queimada em RJ",
+    "body": "Stub fixture all-red — teste de stress, não use em produção.",
+    "source_url": "https://stub.example/rj/queimada",
+    "fetched_at": "2026-05-01T00:00:00.000Z",
+    "valid_from": "2026-05-01T00:00:00.000Z",
+    "valid_until": "2026-05-02T00:00:00.000Z",
+    "payload_hash": "ae2755c427fe25a5c97491d934aa7bf98c161659c50ff304abb7c1a7b191e89c",
+    "raw": {
+      "stub": true,
+      "uf": "RJ",
+      "scenario": "all-red"
+    }
+  },
+  {
+    "source_key": "stub",
+    "hazard_kind": "queimada",
+    "state_uf": "RN",
+    "severity": "red",
+    "headline": "Alerta máximo de queimada em RN",
+    "body": "Stub fixture all-red — teste de stress, não use em produção.",
+    "source_url": "https://stub.example/rn/queimada",
+    "fetched_at": "2026-05-01T00:00:00.000Z",
+    "valid_from": "2026-05-01T00:00:00.000Z",
+    "valid_until": "2026-05-02T00:00:00.000Z",
+    "payload_hash": "b7bea7ac7368d82dba8c6e438d48a749e178942e9caac421f386402d9c56403b",
+    "raw": {
+      "stub": true,
+      "uf": "RN",
+      "scenario": "all-red"
+    }
+  },
+  {
+    "source_key": "stub",
+    "hazard_kind": "queimada",
+    "state_uf": "RS",
+    "severity": "red",
+    "headline": "Alerta máximo de queimada em RS",
+    "body": "Stub fixture all-red — teste de stress, não use em produção.",
+    "source_url": "https://stub.example/rs/queimada",
+    "fetched_at": "2026-05-01T00:00:00.000Z",
+    "valid_from": "2026-05-01T00:00:00.000Z",
+    "valid_until": "2026-05-02T00:00:00.000Z",
+    "payload_hash": "450ffcb45815dbc3ad2583931375aae39c638692124182cbf18114ca6743d3d7",
+    "raw": {
+      "stub": true,
+      "uf": "RS",
+      "scenario": "all-red"
+    }
+  },
+  {
+    "source_key": "stub",
+    "hazard_kind": "queimada",
+    "state_uf": "RO",
+    "severity": "red",
+    "headline": "Alerta máximo de queimada em RO",
+    "body": "Stub fixture all-red — teste de stress, não use em produção.",
+    "source_url": "https://stub.example/ro/queimada",
+    "fetched_at": "2026-05-01T00:00:00.000Z",
+    "valid_from": "2026-05-01T00:00:00.000Z",
+    "valid_until": "2026-05-02T00:00:00.000Z",
+    "payload_hash": "9098b16f18d8b3b44a13a4390aaec41da8c5f710a762061f615db03f64b2775e",
+    "raw": {
+      "stub": true,
+      "uf": "RO",
+      "scenario": "all-red"
+    }
+  },
+  {
+    "source_key": "stub",
+    "hazard_kind": "queimada",
+    "state_uf": "RR",
+    "severity": "red",
+    "headline": "Alerta máximo de queimada em RR",
+    "body": "Stub fixture all-red — teste de stress, não use em produção.",
+    "source_url": "https://stub.example/rr/queimada",
+    "fetched_at": "2026-05-01T00:00:00.000Z",
+    "valid_from": "2026-05-01T00:00:00.000Z",
+    "valid_until": "2026-05-02T00:00:00.000Z",
+    "payload_hash": "a7f6c7f9defc6ff262255539d4abe990370f3f19e2e8ea1fe01e466de0ae5855",
+    "raw": {
+      "stub": true,
+      "uf": "RR",
+      "scenario": "all-red"
+    }
+  },
+  {
+    "source_key": "stub",
+    "hazard_kind": "queimada",
+    "state_uf": "SC",
+    "severity": "red",
+    "headline": "Alerta máximo de queimada em SC",
+    "body": "Stub fixture all-red — teste de stress, não use em produção.",
+    "source_url": "https://stub.example/sc/queimada",
+    "fetched_at": "2026-05-01T00:00:00.000Z",
+    "valid_from": "2026-05-01T00:00:00.000Z",
+    "valid_until": "2026-05-02T00:00:00.000Z",
+    "payload_hash": "7fbca9f5f75cd203c4e7b5509224b57ae08d6f94e18a12edf046959fcf0fa0b2",
+    "raw": {
+      "stub": true,
+      "uf": "SC",
+      "scenario": "all-red"
+    }
+  },
+  {
+    "source_key": "stub",
+    "hazard_kind": "queimada",
+    "state_uf": "SP",
+    "severity": "red",
+    "headline": "Alerta máximo de queimada em SP",
+    "body": "Stub fixture all-red — teste de stress, não use em produção.",
+    "source_url": "https://stub.example/sp/queimada",
+    "fetched_at": "2026-05-01T00:00:00.000Z",
+    "valid_from": "2026-05-01T00:00:00.000Z",
+    "valid_until": "2026-05-02T00:00:00.000Z",
+    "payload_hash": "feaa420c4c7835d5a99cdc91077b3237c95ab99ba4b43209e226b6f4fb268fc0",
+    "raw": {
+      "stub": true,
+      "uf": "SP",
+      "scenario": "all-red"
+    }
+  },
+  {
+    "source_key": "stub",
+    "hazard_kind": "queimada",
+    "state_uf": "SE",
+    "severity": "red",
+    "headline": "Alerta máximo de queimada em SE",
+    "body": "Stub fixture all-red — teste de stress, não use em produção.",
+    "source_url": "https://stub.example/se/queimada",
+    "fetched_at": "2026-05-01T00:00:00.000Z",
+    "valid_from": "2026-05-01T00:00:00.000Z",
+    "valid_until": "2026-05-02T00:00:00.000Z",
+    "payload_hash": "8141f93bf148016cb035323ee4f40de5869aa29712596afbef7d976cf73c20c8",
+    "raw": {
+      "stub": true,
+      "uf": "SE",
+      "scenario": "all-red"
+    }
+  },
+  {
+    "source_key": "stub",
+    "hazard_kind": "queimada",
+    "state_uf": "TO",
+    "severity": "red",
+    "headline": "Alerta máximo de queimada em TO",
+    "body": "Stub fixture all-red — teste de stress, não use em produção.",
+    "source_url": "https://stub.example/to/queimada",
+    "fetched_at": "2026-05-01T00:00:00.000Z",
+    "valid_from": "2026-05-01T00:00:00.000Z",
+    "valid_until": "2026-05-02T00:00:00.000Z",
+    "payload_hash": "38ef1e4a3e5e94483d9352168f73c1da6fe0a15c0f190a8b0fdb907d0bfa1198",
+    "raw": {
+      "stub": true,
+      "uf": "TO",
+      "scenario": "all-red"
+    }
+  }
+]
