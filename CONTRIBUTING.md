@@ -25,6 +25,51 @@ pnpm test
 pnpm exec playwright test
 ```
 
+## Como rodar testes
+
+Testes unitários rodam sem dependências externas (`pnpm test`). Os testes de integração (Drizzle + Postgres) precisam de uma instância local do Postgres — eles se auto-pulam (`describe.skipIf`) quando `DATABASE_URL_TEST` não está definido.
+
+### Setup local (com Docker)
+
+1. Suba o container de teste (porta 5433, ephemeral, sem volumes):
+
+   ```bash
+   docker compose -f docker-compose.test.yml up -d
+   ```
+
+2. Exporte a URL do banco de teste:
+
+   ```bash
+   export DATABASE_URL_TEST=postgres://postgres:postgres@localhost:5433/test
+   export DATABASE_URL=$DATABASE_URL_TEST
+   ```
+
+3. Aplique as migrações (idempotente, pode rodar quantas vezes precisar):
+
+   ```bash
+   pnpm db:migrate
+   ```
+
+4. Rode os testes (unit + integração):
+
+   ```bash
+   pnpm test
+   ```
+
+5. Quando terminar, derrube o container:
+
+   ```bash
+   docker compose -f docker-compose.test.yml down
+   ```
+
+### Sem Docker
+
+Sem Docker rodando, `pnpm test` ainda funciona — apenas os testes de integração (`describe.skipIf(!process.env.DATABASE_URL_TEST)`) serão pulados. Os testes unitários cobrem ~80% do código.
+
+### CI
+
+A CI usa um GH Actions `services:` block (mesma imagem `postgres:17-alpine`) — não precisa rodar docker-compose dentro do runner. O passo `pnpm db:migrate` aplica o schema no container de serviço antes do vitest rodar. Veja [`.github/workflows/ci.yml`](./.github/workflows/ci.yml).
+
 ## Padrões de código
 
 - **TypeScript strict** (`noUncheckedIndexedAccess`, `noImplicitOverride`).
