@@ -1,11 +1,6 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { UpstashRedisMock } from "../../../tests/setup/upstash-mock";
-import {
-  getSnapshot,
-  setSnapshot,
-  __setRedisForTest,
-  SNAPSHOT_KEY,
-} from "./upstash";
+import { getSnapshot, setSnapshot, __setRedisForTest, SNAPSHOT_KEY } from "./upstash";
 
 describe("upstash snapshot cache (REQ-S2.02 — no-TTL public-safety)", () => {
   let mock: UpstashRedisMock;

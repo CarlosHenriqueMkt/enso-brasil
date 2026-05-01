@@ -33,14 +33,8 @@ export const alerts = pgTable(
     raw: jsonb("raw").notNull(),
   },
   (t) => ({
-    stateFetchedIdx: index("alerts_state_fetched_idx").on(
-      t.stateUf,
-      t.fetchedAt.desc(),
-    ),
-    sourceHashUq: uniqueIndex("alerts_source_payload_hash_uq").on(
-      t.sourceKey,
-      t.payloadHash,
-    ),
+    stateFetchedIdx: index("alerts_state_fetched_idx").on(t.stateUf, t.fetchedAt.desc()),
+    sourceHashUq: uniqueIndex("alerts_source_payload_hash_uq").on(t.sourceKey, t.payloadHash),
     validUntilIdx: index("alerts_valid_until_idx").on(t.validUntil),
   }),
 );
@@ -55,9 +49,7 @@ export const sourcesHealth = pgTable("sources_health", {
   lastSuccessAt: timestamp("last_success_at", { withTimezone: true }),
   lastError: text("last_error"),
   consecutiveFailures: integer("consecutive_failures").notNull().default(0),
-  payloadHashDriftCount: integer("payload_hash_drift_count")
-    .notNull()
-    .default(0),
+  payloadHashDriftCount: integer("payload_hash_drift_count").notNull().default(0),
 });
 
 /**

@@ -23,17 +23,13 @@ async function main() {
   const pool = new Pool({ connectionString: url });
   const db = drizzle(pool);
 
-  console.log(
-    JSON.stringify({ event: "migrate.start", url: redactUrl(url) }),
-  );
+  console.log(JSON.stringify({ event: "migrate.start", url: redactUrl(url) }));
   await migrate(db, { migrationsFolder: "./drizzle/migrations" });
   console.log(JSON.stringify({ event: "migrate.done" }));
   await pool.end();
 }
 
 main().catch((err) => {
-  console.error(
-    JSON.stringify({ event: "migrate.error", error: String(err) }),
-  );
+  console.error(JSON.stringify({ event: "migrate.error", error: String(err) }));
   process.exit(1);
 });
