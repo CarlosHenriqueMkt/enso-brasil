@@ -1,0 +1,30 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended"],
+  "schedule": ["before 6am on monday"],
+  "timezone": "America/Sao_Paulo",
+  "prConcurrentLimit": 5,
+  "labels": ["dependencies"],
+  "packageRules": [
+    {
+      "groupName": "lint tooling",
+      "matchPackageNames": ["eslint", "prettier", "lint-staged", "husky", "knip"],
+      "matchPackagePatterns": ["^eslint-", "^@typescript-eslint/"]
+    },
+    {
+      "groupName": "test tooling",
+      "matchPackageNames": ["vitest", "@vitejs/plugin-react", "jsdom", "@playwright/test"]
+    },
+    {
+      "groupName": "framework-major",
+      "matchPackageNames": ["next", "react", "react-dom"],
+      "matchUpdateTypes": ["major"],
+      "labels": ["framework-major", "needs-review"]
+    },
+    {
+      "groupName": "framework-minor",
+      "matchPackageNames": ["next", "react", "react-dom"],
+      "matchUpdateTypes": ["minor", "patch"]
+    }
+  ]
+}
