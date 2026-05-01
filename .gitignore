@@ -9,10 +9,14 @@ out/
 build/
 dist/
 
-# Environment
+# Environment (P2 — D-04 secret hygiene)
 .env
 .env.local
+.env.*.local
 .env*.local
+
+# Drizzle-kit local cache (P2)
+drizzle/.cache/
 
 # Logs
 *.log
