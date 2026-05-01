@@ -1,26 +1,31 @@
 /**
  * Node-runtime DB client.
  *
- * Uses drizzle-orm/neon-serverless + @neondatabase/serverless `Pool` (WebSocket).
+ * Uses drizzle-orm/node-postgres + `pg` Pool. Standard postgres protocol over
+ * TCP — works against both vanilla PG (CI test container) and Neon (production
+ * over their TCP gateway). The neon-serverless WebSocket driver is reserved for
+ * edge routes only (src/db/edge.ts uses neon-http for HTTP fetch fan-out).
+ *
  * Module-level pool reused across warm Vercel function invocations within the
  * same container. Hot-reload safe via globalThis singleton (Next dev re-evals
  * modules; pool would otherwise leak on every reload).
  *
- * Required for transactional writes — neon-http does NOT support transactions.
+ * Supports transactional writes (neon-http does NOT — that's why edge routes
+ * are read-only).
  *
- * Consumers: `/api/ingest`, `/api/archive`, migration runner (`pnpm db:migrate`).
+ * Consumers: `/api/ingest`, `/api/archive`.
  */
-import { Pool } from "@neondatabase/serverless";
-import { drizzle } from "drizzle-orm/neon-serverless";
+import pg from "pg";
+import { drizzle } from "drizzle-orm/node-postgres";
 import * as schema from "./schema";
 
-const globalForPool = globalThis as unknown as { __ensoPool?: Pool };
+const globalForPool = globalThis as unknown as { __ensoPool?: pg.Pool };
 
-function getPool(): Pool {
+function getPool(): pg.Pool {
   const url = process.env.DATABASE_URL;
   if (!url) throw new Error("DATABASE_URL is not set (node)");
   if (!globalForPool.__ensoPool) {
-    globalForPool.__ensoPool = new Pool({ connectionString: url });
+    globalForPool.__ensoPool = new pg.Pool({ connectionString: url });
   }
   return globalForPool.__ensoPool;
 }
