@@ -62,9 +62,6 @@ importers:
       drizzle-kit:
         specifier: ^0.31.10
         version: 0.31.10
-      drizzle-zod:
-        specifier: ^0.8.3
-        version: 0.8.3(drizzle-orm@0.45.2(@neondatabase/serverless@1.1.0)(@types/pg@8.20.0)(@upstash/redis@1.37.0)(pg@8.20.0))(zod@4.4.1)
       eslint:
         specifier: ^9
         version: 9.39.4(jiti@2.6.1)
@@ -98,9 +95,6 @@ importers:
       tailwindcss:
         specifier: ^4
         version: 4.2.4
-      tsx:
-        specifier: ^4
-        version: 4.21.0
       typescript:
         specifier: ^5
         version: 5.9.3
@@ -3176,15 +3170,6 @@ packages:
         optional: true
       sqlite3:
         optional: true
-
-  drizzle-zod@0.8.3:
-    resolution:
-      {
-        integrity: sha512-66yVOuvGhKJnTdiqj1/Xaaz9/qzOdRJADpDa68enqS6g3t0kpNkwNYjUuaeXgZfO/UWuIM9HIhSlJ6C5ZraMww==,
-      }
-    peerDependencies:
-      drizzle-orm: ">=0.36.0"
-      zod: ^3.25.0 || ^4.0.0
 
   dunder-proto@1.0.1:
     resolution:
@@ -7278,11 +7263,6 @@ snapshots:
       "@types/pg": 8.20.0
       "@upstash/redis": 1.37.0
       pg: 8.20.0
-
-  drizzle-zod@0.8.3(drizzle-orm@0.45.2(@neondatabase/serverless@1.1.0)(@types/pg@8.20.0)(@upstash/redis@1.37.0)(pg@8.20.0))(zod@4.4.1):
-    dependencies:
-      drizzle-orm: 0.45.2(@neondatabase/serverless@1.1.0)(@types/pg@8.20.0)(@upstash/redis@1.37.0)(pg@8.20.0)
-      zod: 4.4.1
 
   dunder-proto@1.0.1:
     dependencies:
