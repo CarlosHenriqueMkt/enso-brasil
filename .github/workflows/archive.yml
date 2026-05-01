@@ -1,0 +1,28 @@
+name: Daily archive — /api/archive
+
+on:
+  schedule:
+    # 06:00 UTC = 03:00 America/Sao_Paulo (BRT, -03:00). REQ-S2.11.
+    - cron: "0 6 * * *"
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  archive:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: POST /api/archive with retry
+        env:
+          INGEST_TOKEN: ${{ secrets.INGEST_TOKEN }}
+          VERCEL_URL: ${{ secrets.VERCEL_URL }}
+        run: |
+          curl -fsSL \
+            --retry 3 --retry-delay 5 --retry-all-errors \
+            --max-time 60 \
+            -X POST \
+            -H "Authorization: Bearer ${INGEST_TOKEN}" \
+            -H "Content-Type: application/json" \
+            "${VERCEL_URL}/api/archive"
