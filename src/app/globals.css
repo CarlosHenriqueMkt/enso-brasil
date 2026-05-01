@@ -1,1 +1,76 @@
 @import "tailwindcss";
+
+/*
+ * ENSO Brasil — design tokens.
+ * Source of truth: .claude/skills/sketch-findings-enso-brasil/references/03-tokens-theme.md
+ * Risk palette is INMET-aligned (5 levels including `unknown` → gray).
+ *
+ * WCAG note (Pitfall 3): yellow border is the DARKENED #d4a017 — Tailwind's
+ * default `yellow-500` (#eab308) fails WCAG AA on white (2.34:1 contrast).
+ * NEVER pair white text with yellow background — black ink on yellow always.
+ */
+@theme {
+  /* Surfaces */
+  --color-bg: #fafaf8;
+  --color-surface: #ffffff;
+  --color-ink-1: #111111;
+  --color-ink-2: #555555;
+  --color-hairline: #e5e5e0;
+
+  /* INMET-aligned 5-level risk palette (bg / border triplets) */
+  --color-risk-green-bg:  #e7f3e8;
+  --color-risk-green-bd:  #2e7d32;
+  --color-risk-yellow-bg: #fff7d6;
+  --color-risk-yellow-bd: #d4a017;  /* darkened — bespoke; NEVER white text on yellow */
+  --color-risk-orange-bg: #ffe7cc;
+  --color-risk-orange-bd: #e76f00;
+  --color-risk-red-bg:    #fde2e2;
+  --color-risk-red-bd:    #c62828;
+  --color-risk-gray-bg:   #ececec;
+  --color-risk-gray-bd:   #757575;
+
+  /* 8pt spacing scale (Tailwind v4 generates p-1..p-N from this base) */
+  --spacing: 0.5rem;
+
+  /* Radii */
+  --radius-sm: 2px;
+  --radius-md: 4px;
+  --radius-lg: 6px;
+
+  /* System fonts only — NO external font files (3G performance budget) */
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+}
+
+/* Reduced motion (REQ-S1.09 a11y shell) */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Skip link visibility on focus (REQ-S1.09) */
+.skip-link {
+  position: absolute;
+  left: -9999px;
+}
+.skip-link:focus-visible {
+  left: 0.5rem;
+  top: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  background: var(--color-surface);
+  color: var(--color-ink-1);
+  border: 1px solid var(--color-hairline);
+  border-radius: var(--radius-md);
+  z-index: 100;
+}
+
+html {
+  background: var(--color-bg);
+  color: var(--color-ink-1);
+  font-family: var(--font-sans);
+}
