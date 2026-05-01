@@ -11,15 +11,15 @@
 
 ## Phase Map
 
-| # | Phase | Goal | Requirements | Success criteria |
-|---|-------|------|--------------|------------------|
-| 1 | **Skeleton & OSS Foundation** | Public repo, scaffolded Next.js app, CI green, accessibility shell, disclaimer + privacy live · SPEC locked at `phases/01-skeleton-oss-foundation/01-SPEC.md` | FOUND-01,02,04..10 (FOUND-03 removed) | 4 |
-| 2 | **Data Foundation** | Postgres + Upstash + ofetch + adapter contract + cron skeleton wired end-to-end with no real source yet | DATA-01..09 | 4 |
-| 3 | **Pure Risk Engine** | `calculateRiskLevel()` shipped with `unknown` level, 100% test coverage, plain-language explanations, versioned snapshot shape | RISK-01..10 | 4 |
-| 4 | **First Two Adapters** | CEMADEN + INMET adapters live; full ingest → normalize → store → snapshot → cache → serve flow working | ADAPT-01, ADAPT-02, ADAPT-04 | 5 |
-| 5 | **Dashboard UI** | Map + cards + per-state route + share + filter + `/texto` route live; WCAG AA passes | DASH-01..10, A11Y-01..06 | 5 |
-| 6 | **Hardening + 3rd Source** | INPE Queimadas or NASA FIRMS integrated; perf budget met; canary deploy; observability minimal viable | ADAPT-03, A11Y-05 (re-verify), DATA-09 (re-verify) | 4 |
-| 7 | **Launch** | Domain live, OG cards verified across WhatsApp/Twitter/LinkedIn, README final, Plausible wired, outreach sent | DEPLOY-01..06 | 4 |
+| #   | Phase                            | Goal                                                                                                                                                                                | Requirements                                       | Success criteria |
+| --- | -------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------- | ---------------- |
+| 1   | **Skeleton & OSS Foundation** ✅ | Public repo, scaffolded Next.js app, CI green, accessibility shell, disclaimer + privacy live · SPEC locked at `phases/01-skeleton-oss-foundation/01-SPEC.md` · VERIFIED 2026-05-01 | FOUND-01,02,04..10 (FOUND-03 removed)              | 4/4 ✓            |
+| 2   | **Data Foundation**              | Postgres + Upstash + ofetch + adapter contract + cron skeleton wired end-to-end with no real source yet                                                                             | DATA-01..09                                        | 4                |
+| 3   | **Pure Risk Engine**             | `calculateRiskLevel()` shipped with `unknown` level, 100% test coverage, plain-language explanations, versioned snapshot shape                                                      | RISK-01..10                                        | 4                |
+| 4   | **First Two Adapters**           | CEMADEN + INMET adapters live; full ingest → normalize → store → snapshot → cache → serve flow working                                                                              | ADAPT-01, ADAPT-02, ADAPT-04                       | 5                |
+| 5   | **Dashboard UI**                 | Map + cards + per-state route + share + filter + `/texto` route live; WCAG AA passes                                                                                                | DASH-01..10, A11Y-01..06                           | 5                |
+| 6   | **Hardening + 3rd Source**       | INPE Queimadas or NASA FIRMS integrated; perf budget met; canary deploy; observability minimal viable                                                                               | ADAPT-03, A11Y-05 (re-verify), DATA-09 (re-verify) | 4                |
+| 7   | **Launch**                       | Domain live, OG cards verified across WhatsApp/Twitter/LinkedIn, README final, Plausible wired, outreach sent                                                                       | DEPLOY-01..06                                      | 4                |
 
 **Total:** 7 phases · 45 v1 requirements mapped · all v1 covered ✓
 
@@ -31,15 +31,26 @@
 
 **Goal:** A public, accessible, MIT-licensed Next.js skeleton that already feels like ENSO Brasil — disclaimer visible, privacy page live, CI green — but no data flow yet.
 
-**Requirements:** FOUND-01, FOUND-02, FOUND-04, FOUND-05, FOUND-06, FOUND-07, FOUND-08, FOUND-09, FOUND-10, FOUND-11 *(FOUND-03 removed — no i18n)*
+**Requirements:** FOUND-01, FOUND-02, FOUND-04, FOUND-05, FOUND-06, FOUND-07, FOUND-08, FOUND-09, FOUND-10, FOUND-11 _(FOUND-03 removed — no i18n)_
 
 **Success criteria:**
+
 1. Public GitHub repo with MIT LICENSE, README (PT-BR primary), CONTRIBUTING, CODE_OF_CONDUCT visible at root
 2. `npm run build` succeeds; `/` and `/privacidade` render server-side without errors
 3. GitHub Actions CI runs typecheck, lint, Vitest, Playwright smoke on PR; passes on main
 4. Visiting `/` and `/privacidade` with JavaScript disabled still shows disclaimer text in the rendered HTML
 
 **Depends on:** none (this is the entry phase)
+
+**Plans:** 5 plans
+
+Plans:
+
+- [ ] 01-01-scaffold-PLAN.md — Next 16 + TS strict + Tailwind v4 + pnpm scaffold
+- [ ] 01-02-tooling-and-tests-PLAN.md — Lint/format/pre-commit + Vitest/Playwright + Wave-0 test stubs
+- [ ] 01-03-theme-and-strings-PLAN.md — @theme tokens + messages.ts + SourceLink
+- [ ] 01-04-oss-files-PLAN.md — LICENSE + README PT-BR + governance files + Renovate
+- [ ] 01-05-pages-and-ci-PLAN.md — SSR layout + /privacidade + CI workflow + human checkpoint
 
 ---
 
@@ -50,6 +61,7 @@
 **Requirements:** DATA-01, DATA-02, DATA-03, DATA-04, DATA-05, DATA-06, DATA-07, DATA-08, DATA-09
 
 **Success criteria:**
+
 1. Drizzle migration creates `alerts`, `sources_health`, `snapshot_cache` tables in Neon dev branch with the right indexes
 2. GitHub Actions cron workflow runs every 15 min on `main`; calls token-protected `/api/ingest`; logs success
 3. A stub `SourceAdapter` returning fake `Alert[]` for 3 states gets persisted to Postgres, dedup runs, snapshot is computed (with placeholder risk = `unknown` until P3 lands), cached in Upstash, retrievable via `/api/states`
@@ -66,6 +78,7 @@
 **Requirements:** RISK-01, RISK-02, RISK-03, RISK-04, RISK-05, RISK-06, RISK-07, RISK-08, RISK-09, RISK-10
 
 **Success criteria:**
+
 1. `src/lib/risk/calculate.ts` exports `calculateRiskLevel(alerts: Alert[]): RiskLevel` with no imports outside `./types` — verifiable via dependency-cruiser rule in CI
 2. Vitest suite covers all 5 levels (`green`, `yellow`, `orange`, `red`, `unknown`), dedup rule, 24h validity window, source-staleness `unknown` rule, both `low`-default and `moderate`-default paths — 100% line + branch coverage
 3. Snapshot output includes `formula_version: "v0"` and follows the additive-only contract documented in `.planning/research/SUMMARY.md`
@@ -82,6 +95,7 @@
 **Requirements:** ADAPT-01, ADAPT-02, ADAPT-04
 
 **Success criteria:**
+
 1. CEMADEN adapter fetches the Painel de Alertas backing endpoint, schema-validates with zod, normalizes to `Alert[]`; payload-hash anomaly detection logs schema drift
 2. INMET adapter parses Alert-AS **CAP XML** correctly (verified against captured real samples) and normalizes to `Alert[]` with proper attribution + sourceUrl
 3. Golden-file fixtures of real responses checked into `tests/fixtures/sources/` for both sources; adapter contract tests fail if response shape changes
@@ -99,6 +113,7 @@
 **Requirements:** DASH-01, DASH-02, DASH-03, DASH-04, DASH-05, DASH-06, DASH-07, DASH-08, DASH-09, DASH-10, A11Y-01, A11Y-02, A11Y-03, A11Y-04, A11Y-05, A11Y-06
 
 **Success criteria:**
+
 1. Home `/` renders all 27 states with current risk level, badges (color + icon + label), source attribution, last-update timestamp; data comes from Upstash snapshot served via Edge runtime
 2. `/estado/{uf}` route works for all 27 UFs with per-state OG/Twitter cards rendering correctly when pasted into WhatsApp web preview
 3. Mobile cards layout works at 360px width; map appears below as secondary; region filter chips work
@@ -116,6 +131,7 @@
 **Requirements:** ADAPT-03, plus re-verification of A11Y-05, DATA-09
 
 **Success criteria:**
+
 1. INPE Queimadas adapter (preferred) OR NASA FIRMS adapter (country-level single call) integrated; map flow shows fire alerts where applicable; dedup correctly distinguishes "queimada" from "incêndio"
 2. 7-day soak run on staging confirms: Upstash commands < 80% of monthly free tier · Neon compute hrs < 80% · Vercel function invocations < 80% · GH Actions minutes well under public-OSS limit
 3. Daily Postgres archive snapshot job (DATA-09) runs and retains last 30 days; archived rows are queryable
@@ -132,6 +148,7 @@
 **Requirements:** DEPLOY-01, DEPLOY-02, DEPLOY-03, DEPLOY-04, DEPLOY-05, DEPLOY-06
 
 **Success criteria:**
+
 1. Site live on a stable public domain (Vercel `*.vercel.app` subdomain or `enso.com.br`-style domain); HTTPS auto, redirect from `www`
 2. README in PT-BR (primary) + EN (secondary) covers: what, why, fórmula explained inline, sources, known limitations, how to contribute, how to run locally, deployment notes
 3. Sharing the home URL and at least 3 state URLs in WhatsApp / Twitter / LinkedIn produces correct OG previews; Plausible records visits without cookies
