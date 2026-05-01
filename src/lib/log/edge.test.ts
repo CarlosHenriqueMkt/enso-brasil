@@ -46,7 +46,10 @@ describe("edge logger", () => {
 
   it("edge.ts does not import pino", async () => {
     const { readFileSync } = await import("node:fs");
-    const src = readFileSync(new URL("./edge.ts", import.meta.url), "utf8");
+    const { resolve, dirname } = await import("node:path");
+    const { fileURLToPath } = await import("node:url");
+    const here = dirname(fileURLToPath(import.meta.url));
+    const src = readFileSync(resolve(here, "edge.ts"), "utf8");
     expect(src).not.toMatch(/from\s+["']pino["']/);
   });
 });
