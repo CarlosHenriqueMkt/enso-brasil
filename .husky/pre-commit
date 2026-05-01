@@ -1,0 +1,8 @@
+# Windows: ensure gitleaks (installed via winget) is on PATH for the Git Bash hook env.
+# No-op on macOS/Linux where gitleaks is on PATH already.
+if [ -d "/c/Users/User/AppData/Local/Microsoft/WinGet/Packages/Gitleaks.Gitleaks_Microsoft.Winget.Source_8wekyb3d8bbwe" ]; then
+  export PATH="$PATH:/c/Users/User/AppData/Local/Microsoft/WinGet/Packages/Gitleaks.Gitleaks_Microsoft.Winget.Source_8wekyb3d8bbwe"
+fi
+
+pnpm exec lint-staged
+gitleaks protect --staged --redact --verbose

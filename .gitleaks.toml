@@ -1,0 +1,11 @@
+# Extend gitleaks default ruleset (without [extend], a custom config REPLACES defaults).
+[extend]
+useDefault = true
+
+# Allowlist below scopes-out planning docs that document example secret SHAPES (not real secrets).
+[allowlist]
+  description = "Planning documents may reference example secret shapes for documentation"
+  paths = [
+    '''.planning/.*\.md$''',
+    '''.*\.example$''',
+  ]
