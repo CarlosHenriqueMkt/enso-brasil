@@ -1,22 +1,32 @@
 import { describe, it, expect, vi } from "vitest";
 
+type WriteFn = typeof process.stdout.write;
+
+function patchStdout(writes: string[]): WriteFn {
+  const orig = process.stdout.write.bind(process.stdout);
+  (process.stdout as unknown as { write: WriteFn }).write = ((chunk: unknown) => {
+    writes.push(typeof chunk === "string" ? chunk : String(chunk));
+    return true;
+  }) as WriteFn;
+  return orig;
+}
+
+function restoreStdout(orig: WriteFn): void {
+  (process.stdout as unknown as { write: WriteFn }).write = orig;
+}
+
 describe("node logger", () => {
   it("emits JSON containing event + fields", async () => {
     const writes: string[] = [];
-    const origWrite = process.stdout.write.bind(process.stdout);
-    // @ts-expect-error monkey-patch
-    process.stdout.write = (chunk: string) => {
-      writes.push(typeof chunk === "string" ? chunk : chunk.toString());
-      return true;
-    };
+    const orig = patchStdout(writes);
     try {
       vi.resetModules();
-      process.env.NODE_ENV = "production";
+      vi.stubEnv("NODE_ENV", "production");
       const { logger } = await import("./node");
       logger.info("test.event", { runId: "abc-123" });
     } finally {
-      // @ts-expect-error restore
-      process.stdout.write = origWrite;
+      restoreStdout(orig);
+      vi.unstubAllEnvs();
     }
     const line = writes.find((l) => l.includes("test.event"));
     expect(line).toBeDefined();
@@ -26,20 +36,15 @@ describe("node logger", () => {
 
   it("redacts token/secret/password fields", async () => {
     const writes: string[] = [];
-    const origWrite = process.stdout.write.bind(process.stdout);
-    // @ts-expect-error monkey-patch
-    process.stdout.write = (chunk: string) => {
-      writes.push(typeof chunk === "string" ? chunk : chunk.toString());
-      return true;
-    };
+    const orig = patchStdout(writes);
     try {
       vi.resetModules();
-      process.env.NODE_ENV = "production";
+      vi.stubEnv("NODE_ENV", "production");
       const { logger } = await import("./node");
       logger.info("redact.test", { token: "abc", nested: { password: "xyz", ok: 1 } });
     } finally {
-      // @ts-expect-error restore
-      process.stdout.write = origWrite;
+      restoreStdout(orig);
+      vi.unstubAllEnvs();
     }
     const line = writes.find((l) => l.includes("redact.test"));
     expect(line).toBeDefined();
