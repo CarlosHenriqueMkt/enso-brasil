@@ -76,18 +76,24 @@ Integration points new to P2:
 - **Why:** OSS-collaboration-first (zero cloud secrets needed for fork PRs), full PG feature parity (no pglite gaps), reliable CI without burning Neon free quota.
 - **Trade-off accepted:** ~10s CI startup overhead for the service container. Acceptable inside the 6-min CI budget.
 
-### D-03 Logging strategy
+### D-03 Logging strategy (amended post-research)
 
-**Choice:** `pino` + `pino-pretty` (dev only).
+**Choice:** Dual-runtime split — `pino` for Node, `console.log(JSON.stringify(...))` helper for edge.
 
-- `src/lib/log.ts` exports `logger` (pino instance configured with structured JSON output to stdout).
-- Default level `info` in production, `debug` locally via `LOG_LEVEL` env.
-- Redaction config: auto-strip `INGEST_TOKEN`, `DATABASE_URL`, `UPSTASH_REDIS_REST_TOKEN`, and any field path matching `*.token`, `*.secret`, `*.password`.
-- Dev script (`pnpm dev`) pipes through `pino-pretty` for human-readable output: `next dev | pino-pretty`. (Or use `pino-pretty` as a dev-only transport.)
-- Vercel captures stdout natively; structured JSON is parseable by Vercel's log explorer + sets foundation for P6 GlitchTip/Sentry forwarder.
-- Every API route emits at minimum: `{ event, runId, durationMs }`. Errors carry `{ event, error: pino.stdSerializers.err(e) }`.
-- **Why:** structured-logging is mandatory for public-safety incident triage; pino is fastest Node JSON logger; redaction prevents secret leak via accidental log; +1 dep cost is negligible.
-- **Anti-pattern explicitly rejected:** plain `console.log` strings (loses machine-grep at the worst possible moment — during a real incident).
+**Background:** RESEARCH.md flagged two pino-specific issues with Next 16:
+
+1. Pino uses Node `worker_threads` + `pino/file` → **edge runtime incompatible** (no fs/threads in V8 isolate)
+2. Pino + Next 16 + Turbopack has known bundling bugs (vercel/next.js#86099, #84766) requiring `next.config.ts` opt-out
+
+**Implementation:**
+
+- `src/lib/log/node.ts` — pino instance for Node runtime routes (`/api/ingest`, `/api/archive`) and migration runner. Structured JSON to stdout, level `info` prod / `debug` local via `LOG_LEVEL`, redaction config auto-strips `INGEST_TOKEN`, `DATABASE_URL`, `UPSTASH_REDIS_REST_TOKEN`, and paths `*.token`, `*.secret`, `*.password`. Dev pipe through `pino-pretty`.
+- `src/lib/log/edge.ts` — minimal JSON helper for edge routes (`/api/states`, `/api/health`): `function log(level, event, fields) { console.log(JSON.stringify({ ts: Date.now(), level, event, ...redact(fields) })); }`. ~30 LOC. Hand-rolled redaction for the same field-path list as pino. No deps.
+- Both modules expose the same surface: `logger.info(event, fields)`, `logger.error(event, err, fields)`, etc. Routes import the right module for their runtime — there is no shared `src/lib/log/index.ts` (avoids accidental edge import of pino).
+- `next.config.ts` adds `serverExternalPackages: ['pino', 'pino-pretty', 'thread-stream', 'real-require']` — required to stop Turbopack from bundling pino's worker code.
+- Every API route emits at minimum `{ event, runId, durationMs }`. Errors carry `{ event, error: serializedErr }`.
+- **Why:** structured-logging is mandatory for public-safety incident triage; pino in Node where it works (richer features, redaction, perf); cheap-mode in edge where pino can't run (correctness > consistency); serverExternalPackages opt-out is the documented Next 16 fix for the Turbopack bundling bug.
+- **Anti-pattern explicitly rejected:** plain `console.log(string)` (loses machine-grep at the worst possible moment); importing pino in edge routes (will silently fail at deploy).
 
 ### D-04 `revalidatePath` wiring under placeholder `unknown`
 
