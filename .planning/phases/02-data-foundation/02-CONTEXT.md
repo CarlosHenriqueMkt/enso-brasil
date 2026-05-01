@@ -95,6 +95,27 @@ Integration points new to P2:
 - **Why:** structured-logging is mandatory for public-safety incident triage; pino in Node where it works (richer features, redaction, perf); cheap-mode in edge where pino can't run (correctness > consistency); serverExternalPackages opt-out is the documented Next 16 fix for the Turbopack bundling bug.
 - **Anti-pattern explicitly rejected:** plain `console.log(string)` (loses machine-grep at the worst possible moment); importing pino in edge routes (will silently fail at deploy).
 
+**Fallback Plan B — drop pino if Turbopack opt-out proves unreliable:**
+
+Trigger conditions (any of):
+
+- `pnpm build` or `pnpm dev` fails with pino-related Turbopack errors after `serverExternalPackages` is set
+- Vercel preview deploy fails to start with pino in the Node runtime bundle
+- Repeated minor-version Next 16.x bumps regress the opt-out workaround
+
+If triggered:
+
+1. Remove `pino`, `pino-pretty` from `package.json` devDeps + deps
+2. Remove `serverExternalPackages` line from `next.config.ts`
+3. Delete `src/lib/log/node.ts`; promote `src/lib/log/edge.ts` to `src/lib/log.ts` (used by both runtimes)
+4. Hand-roll redaction in the JSON helper for the same field-path list (already planned in `src/lib/log/edge.ts` — just becomes the only path)
+5. Update README + CONTRIBUTING if anything references pino
+6. Add a short ADR-style note to this CONTEXT.md documenting the trigger that fired and the date of the fallback
+
+Cost of fallback: ~30 minutes refactor, lose pino's auto-redaction (hand-roll equivalent already planned for edge), lose pino ecosystem plug-and-play (P6 GlitchTip forwarder needs slightly more work). Eliminates Turbopack risk completely.
+
+Decision principle: don't fight the bundler. If Plan A becomes whack-a-mole during P2 execution, switch to Plan B without ceremony.
+
 ### D-04 `revalidatePath` wiring under placeholder `unknown`
 
 **Choice:** Wire diffing + revalidatePath calls now; behaves as a no-op until P3 lands real risk levels.
