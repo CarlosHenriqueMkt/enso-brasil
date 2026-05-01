@@ -2,13 +2,13 @@
 
 **Project:** ENSO Brasil — public Brazilian climate hazard aggregator dashboard
 **Current milestone:** v1 — Per-state hazard dashboard
-**Status:** Phase 2 SPEC + CONTEXT locked · ready to plan
+**Status:** Phase 2 plans ready (11 plans, 7 waves, plan-check PASS) · ready to execute
 **Last updated:** 2026-05-01
 
 ## Current Phase
 
-**Next:** Phase 2 — Data Foundation (SPEC + CONTEXT captured)
-**Command to run:** `/gsd-plan-phase 2` — produce per-task PLANs from SPEC + CONTEXT
+**Next:** Phase 2 — Data Foundation (SPEC + CONTEXT + RESEARCH + 11 PLANs locked)
+**Command to run:** `/gsd-execute-phase 2` — execute 7 waves with auto-spawned executors (Wave 7 has human gate)
 
 **Phase 1 verdict:** PASS — 4/4 ROADMAP success criteria, 11/11 REQ-S1.\*, 8/8 locked decisions. Verification at `.planning/phases/01-skeleton-oss-foundation/01-VERIFICATION.md`. Repo public at `https://github.com/CarlosHenriqueMkt/enso-brasil`. CI green, branch ruleset 15829967 active.
 
@@ -18,15 +18,15 @@
 
 ## Phase Progression
 
-| #   | Phase                                | Status                                                         |
-| --- | ------------------------------------ | -------------------------------------------------------------- |
-| 1   | Skeleton & OSS Foundation            | ✅ complete + verified (CI green, repo public, ruleset active) |
-| 2   | Data Foundation                      | 📋 SPEC + CONTEXT locked — ready for `/gsd-plan-phase 2`       |
-| 3   | Pure Risk Engine                     | ⏳ pending                                                     |
-| 4   | First Two Adapters (CEMADEN + INMET) | ⏳ pending                                                     |
-| 5   | Dashboard UI                         | ⏳ pending                                                     |
-| 6   | Hardening + 3rd Source               | ⏳ pending                                                     |
-| 7   | Launch                               | ⏳ pending                                                     |
+| #   | Phase                                | Status                                                                  |
+| --- | ------------------------------------ | ----------------------------------------------------------------------- |
+| 1   | Skeleton & OSS Foundation            | ✅ complete + verified (CI green, repo public, ruleset active)          |
+| 2   | Data Foundation                      | 📋 11 PLANs locked (plan-check PASS) — ready for `/gsd-execute-phase 2` |
+| 3   | Pure Risk Engine                     | ⏳ pending                                                              |
+| 4   | First Two Adapters (CEMADEN + INMET) | ⏳ pending                                                              |
+| 5   | Dashboard UI                         | ⏳ pending                                                              |
+| 6   | Hardening + 3rd Source               | ⏳ pending                                                              |
+| 7   | Launch                               | ⏳ pending                                                              |
 
 ## Key Artifacts
 
