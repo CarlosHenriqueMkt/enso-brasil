@@ -2,13 +2,13 @@
 
 **Project:** ENSO Brasil — public Brazilian climate hazard aggregator dashboard
 **Current milestone:** v1 — Per-state hazard dashboard
-**Status:** Phase 1 complete + verified · ready for Phase 2
+**Status:** Phase 2 SPEC + CONTEXT locked · ready to plan
 **Last updated:** 2026-05-01
 
 ## Current Phase
 
-**Next:** Phase 2 — Data Foundation (Postgres + Upstash + ofetch + adapter contract + cron skeleton)
-**Command to run:** `/gsd-discuss-phase 2`
+**Next:** Phase 2 — Data Foundation (SPEC + CONTEXT captured)
+**Command to run:** `/gsd-plan-phase 2` — produce per-task PLANs from SPEC + CONTEXT
 
 **Phase 1 verdict:** PASS — 4/4 ROADMAP success criteria, 11/11 REQ-S1.\*, 8/8 locked decisions. Verification at `.planning/phases/01-skeleton-oss-foundation/01-VERIFICATION.md`. Repo public at `https://github.com/CarlosHenriqueMkt/enso-brasil`. CI green, branch ruleset 15829967 active.
 
@@ -21,7 +21,7 @@
 | #   | Phase                                | Status                                                         |
 | --- | ------------------------------------ | -------------------------------------------------------------- |
 | 1   | Skeleton & OSS Foundation            | ✅ complete + verified (CI green, repo public, ruleset active) |
-| 2   | Data Foundation                      | 📋 ready for `/gsd-discuss-phase 2`                            |
+| 2   | Data Foundation                      | 📋 SPEC + CONTEXT locked — ready for `/gsd-plan-phase 2`       |
 | 3   | Pure Risk Engine                     | ⏳ pending                                                     |
 | 4   | First Two Adapters (CEMADEN + INMET) | ⏳ pending                                                     |
 | 5   | Dashboard UI                         | ⏳ pending                                                     |
