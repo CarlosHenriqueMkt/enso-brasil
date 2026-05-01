@@ -67,6 +67,22 @@ Plans:
 3. A stub `SourceAdapter` returning fake `Alert[]` for 3 states gets persisted to Postgres, dedup runs, snapshot is computed (with placeholder risk = `unknown` until P3 lands), cached in Upstash, retrievable via `/api/states`
 4. `/api/health` returns per-source `lastSuccessfulFetch` timestamps; pre-commit secret scan blocks any committed credentials
 
+**Plans:** 11 plans
+
+Plans:
+
+- [ ] 02-01-deps-and-config-PLAN.md — install all P2 deps at pinned versions, drizzle.config.ts, next.config.ts pino opt-out, .env.example with 4 env vars
+- [ ] 02-02-db-schema-and-migrations-PLAN.md — Drizzle schema (alerts/sources_health/snapshot_cache) + 0001 migration + dual-runtime drivers (edge.ts/node.ts) + migrate.ts runner
+- [ ] 02-03-cache-and-http-PLAN.md — Upstash no-TTL cache wrapper + ofetch retry/timeout wrapper + in-memory mock + 9 unit tests
+- [ ] 02-04-loggers-PLAN.md — pino Node logger with redaction + edge JSON helper (no pino) + ESLint no-restricted-imports guard (D-03)
+- [ ] 02-05-source-adapter-and-stub-PLAN.md — SourceAdapter interface + Alert zod schema + payload_hash util + stub adapter + fixtures + registry-isolation grep gate
+- [ ] 02-06-api-schemas-and-diff-PLAN.md — UF27/StateSnapshotSchema/HealthReportSchema/StateSnapshotsResponseSchema (length 27) + diffSnapshot util (D-04)
+- [ ] 02-07-api-states-health-PLAN.md — /api/states + /api/health edge routes (neon-http) + registry-meta drift detector + contract tests
+- [ ] 02-08-api-ingest-PLAN.md — /api/ingest Node route (8-step orchestration: allSettled → zod → dedup → insert → snapshot → setSnapshot+write-through → diff+revalidatePath) + verifyBearerToken (constant-time) + 8 integration tests
+- [ ] 02-09-cron-and-archive-PLAN.md — .github/workflows/cron.yml (every 15 min) + archive.yml (daily 03:00 BRT) + 0002 migration (snapshot_archive) + /api/archive Node route with 30-day prune
+- [ ] 02-10-test-infra-docker-pg-PLAN.md — docker-compose.test.yml (postgres:17-alpine) + tests/setup/db.ts + vitest.config.ts setupFiles + ci.yml services + GH Actions version bumps + CONTRIBUTING entry
+- [ ] 02-11-vercel-provision-and-deploy-PLAN.md — HUMAN GATES: provision Neon + Upstash + Vercel + GH secrets + first deploy smoke validation + README "Como deployar"
+
 **Depends on:** Phase 1
 
 ---
