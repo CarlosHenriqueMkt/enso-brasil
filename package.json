@@ -1,0 +1,33 @@
+{
+  "name": "enso-brasil",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Agregador público de alertas climáticos no Brasil.",
+  "license": "MIT",
+  "engines": {
+    "node": ">=24"
+  },
+  "packageManager": "pnpm@10.28.0",
+  "scripts": {
+    "dev": "next dev --turbopack",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "next": "^16",
+    "react": "^19",
+    "react-dom": "^19"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "^22",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^9",
+    "eslint-config-next": "^16",
+    "@eslint/eslintrc": "^3",
+    "tailwindcss": "^4",
+    "typescript": "^5"
+  }
+}

@@ -33,3 +33,7 @@ test-results/
 
 # Vercel
 .vercel
+
+# TypeScript incremental
+*.tsbuildinfo
+tsconfig.tsbuildinfo
