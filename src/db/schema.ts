@@ -8,6 +8,8 @@ import {
   integer,
   index,
   uniqueIndex,
+  date,
+  primaryKey,
 } from "drizzle-orm/pg-core";
 
 /**
@@ -63,9 +65,27 @@ export const snapshotCache = pgTable("snapshot_cache", {
   formulaVersion: text("formula_version").notNull(),
 });
 
+/**
+ * REQ-S2.11 — snapshot_archive table (daily archive of snapshot_cache).
+ * Composite PK (date, snapshot_key). 30-day retention enforced by /api/archive
+ * cron job (plan 02-09). Body shape mirrors snapshotCache.body (StateSnapshot[]).
+ */
+export const snapshotArchive = pgTable(
+  "snapshot_archive",
+  {
+    date: date("date").notNull(),
+    snapshotKey: text("snapshot_key").notNull(),
+    body: jsonb("body").notNull(),
+    formulaVersion: text("formula_version").notNull(),
+  },
+  (t) => ({ pk: primaryKey({ columns: [t.date, t.snapshotKey] }) }),
+);
+
 export type Alert = typeof alerts.$inferSelect;
 export type NewAlert = typeof alerts.$inferInsert;
 export type SourceHealth = typeof sourcesHealth.$inferSelect;
 export type NewSourceHealth = typeof sourcesHealth.$inferInsert;
 export type SnapshotCacheRow = typeof snapshotCache.$inferSelect;
 export type NewSnapshotCacheRow = typeof snapshotCache.$inferInsert;
+export type SnapshotArchiveRow = typeof snapshotArchive.$inferSelect;
+export type NewSnapshotArchiveRow = typeof snapshotArchive.$inferInsert;
