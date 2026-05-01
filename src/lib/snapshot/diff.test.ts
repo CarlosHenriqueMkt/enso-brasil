@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import { diffSnapshot } from "./diff";
 import { UF27, type StateSnapshot } from "../api/schemas";
 
-const snap = (uf: string, risk: StateSnapshot["risk"] = "unknown"): StateSnapshot => ({
+const snap = (uf: StateSnapshot["uf"], risk: StateSnapshot["risk"] = "unknown"): StateSnapshot => ({
   uf,
   risk,
   riskReason: "x",
