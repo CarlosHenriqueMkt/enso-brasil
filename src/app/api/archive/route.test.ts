@@ -25,7 +25,10 @@ describe.skipIf(skip)("POST /api/archive (integration)", () => {
     routeMod = await import("./route");
   });
 
-  beforeEach(async () => {
+  // Helper run AT START of each test body so it executes AFTER the global
+  // setup file's TRUNCATE beforeEach (vitest v4 runs setup-file hooks LAST,
+  // after test-file beforeEach hooks — so a beforeEach-based seed gets wiped).
+  async function seedSnapshotCache() {
     process.env.INGEST_TOKEN = "test-token-abc";
     await dbMod.db.delete(schemaMod.snapshotArchive);
     await dbMod.db.delete(schemaMod.snapshotCache);
@@ -35,6 +38,10 @@ describe.skipIf(skip)("POST /api/archive (integration)", () => {
       computedAt: new Date(),
       formulaVersion: "v0-placeholder",
     });
+  }
+
+  beforeEach(() => {
+    process.env.INGEST_TOKEN = "test-token-abc";
   });
 
   it("rejects without auth → 401", async () => {
@@ -43,6 +50,7 @@ describe.skipIf(skip)("POST /api/archive (integration)", () => {
   });
 
   it("produces archive row dated today on first call", async () => {
+    await seedSnapshotCache();
     const res = await routeMod.POST(
       new Request("http://x.test/api/archive", {
         method: "POST",
@@ -57,6 +65,7 @@ describe.skipIf(skip)("POST /api/archive (integration)", () => {
   });
 
   it("idempotent on second call same day (ON CONFLICT DO UPDATE)", async () => {
+    await seedSnapshotCache();
     const auth = { authorization: "Bearer test-token-abc" };
     await routeMod.POST(
       new Request("http://x.test/api/archive", { method: "POST", headers: auth }),
@@ -69,6 +78,7 @@ describe.skipIf(skip)("POST /api/archive (integration)", () => {
   });
 
   it("prunes archive rows older than 30 days", async () => {
+    await seedSnapshotCache();
     const oldDate = new Date(Date.now() - 31 * 24 * 3600 * 1000).toISOString().slice(0, 10);
     await dbMod.db.insert(schemaMod.snapshotArchive).values({
       date: oldDate,
