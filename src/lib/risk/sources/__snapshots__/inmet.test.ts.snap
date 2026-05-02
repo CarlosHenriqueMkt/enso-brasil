@@ -1,0 +1,15 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`INMET severity mapping (RISK-04, RISK-10) > exposes the locked v0.1 SEVERITY_TABLE 1`] = `
+{
+  "Aviso": "moderate",
+  "Aviso de Perigo": "high",
+  "Extreme": "extreme",
+  "Grande Perigo": "extreme",
+  "Minor": "low",
+  "Moderate": "moderate",
+  "Perigo": "high",
+  "Perigo Potencial": "moderate",
+  "Severe": "high",
+}
+`;
