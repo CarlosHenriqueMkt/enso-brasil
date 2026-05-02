@@ -41,3 +41,6 @@ test-results/
 # TypeScript incremental
 *.tsbuildinfo
 tsconfig.tsbuildinfo
+
+.vercel
+.env*.local
