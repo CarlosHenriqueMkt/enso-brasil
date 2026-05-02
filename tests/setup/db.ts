@@ -16,11 +16,10 @@
  * Truncation list must be kept in sync with `src/db/schema.ts`. Add new tables
  * here when the schema grows.
  */
-import { sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/node-postgres";
 import { migrate } from "drizzle-orm/node-postgres/migrator";
 import pg from "pg";
-import { afterAll, beforeAll, beforeEach } from "vitest";
+import { afterAll, beforeAll } from "vitest";
 
 const url = process.env.DATABASE_URL_TEST ?? process.env.DATABASE_URL;
 
@@ -32,14 +31,8 @@ beforeAll(async () => {
   pool = new pg.Pool({ connectionString: url });
   const db = drizzle(pool);
   await migrate(db, { migrationsFolder: "./drizzle/migrations" });
-});
-
-beforeEach(async () => {
-  if (!pool) return;
-  const db = drizzle(pool);
-  await db.execute(
-    sql`TRUNCATE TABLE alerts, sources_health, snapshot_cache, snapshot_archive RESTART IDENTITY CASCADE`,
-  );
+  await pool.end();
+  pool = null;
 });
 
 afterAll(async () => {
