@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { AlertSchema, computePayloadHash } from "./schema";
+import { AlertSchema } from "./schema";
+import { computePayloadHash } from "./hash";
 
 const valid = {
   source_key: "stub",

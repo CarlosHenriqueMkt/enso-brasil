@@ -77,7 +77,8 @@ export const AlertSchema = z.object({
 export type Alert = z.infer<typeof AlertSchema>;
 export const AlertArraySchema = AlertSchema.array();
 
-// computePayloadHash moved to ./hash.ts so this module stays edge-safe
-// (no node:crypto). Edge-bound consumers (risk engine) re-export Alert
-// from here without pulling in the Node hash dependency.
-export { computePayloadHash } from "./hash";
+// computePayloadHash lives in ./hash.ts (Node-only — uses node:crypto).
+// schema.ts is edge-safe (zod only). Import the hash function directly
+// from "@/lib/sources/hash" in Node contexts (api routes, tests).
+// Re-exporting here would force bundlers to pull node:crypto into edge
+// modules that only need types from this file.
