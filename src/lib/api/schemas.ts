@@ -45,9 +45,12 @@ export type UF = (typeof UF27)[number];
  * Risk levels — five values including `unknown` for placeholder/stale state.
  * Maps 1:1 to messages.severity keys (green/yellow/orange/red/gray).
  * Note: 'gray' is the message key for risk='unknown' (PT-BR copy lookup).
+ *
+ * Canonical SoT lives in `@/lib/sources/schema` (D-01). Re-exported here
+ * for API-layer ergonomics — do NOT redeclare locally.
  */
-export const RISK_LEVELS = ["green", "yellow", "orange", "red", "unknown"] as const;
-export type RiskLevel = (typeof RISK_LEVELS)[number];
+export { RISK_LEVELS, type RiskLevel } from "@/lib/sources/schema";
+import { RISK_LEVELS } from "@/lib/sources/schema";
 
 export const RiskLevelSchema = z.enum(RISK_LEVELS);
 
