@@ -15,8 +15,16 @@ export const HAZARD_KINDS = [
   "seca",
 ] as const;
 
-/** Severity levels — must match `messages.severity` keys (PT-BR SoT). */
-export const SEVERITIES = ["green", "yellow", "orange", "red", "unknown"] as const;
+/**
+ * Per-alert severity levels (Severity dimension — RISK-03).
+ * D-01: SEVERITIES = per-alert severity (low..extreme); RISK_LEVELS = state-level computed (green..unknown).
+ */
+export const SEVERITIES = ["low", "moderate", "high", "extreme"] as const;
+export type Severity = (typeof SEVERITIES)[number];
+
+/** State-level computed RiskLevel set (RISK-02). Canonical SoT — re-exported by api/schemas.ts. */
+export const RISK_LEVELS = ["green", "yellow", "orange", "red", "unknown"] as const;
+export type RiskLevel = (typeof RISK_LEVELS)[number];
 
 /**
  * Provisional UF27 enum. Plan 02-06 will own the canonical UF27 export
