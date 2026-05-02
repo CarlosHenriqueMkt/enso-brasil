@@ -128,4 +128,26 @@ describe("generateExplanation (RISK-09) — 6 acceptance cases", () => {
     const out = generateExplanation("yellow", [a]);
     expect(out).toContain("noaa-future"); // raw key passes through
   });
+
+  it("attribution dedupes same-source duplicates within a group", () => {
+    // Two alerts same (hazard_kind, state_uf, source_key), overlapping windows → 1 dedup group
+    // with 2 attribution entries from same source. Source name must appear once, not twice.
+    const alerts = [
+      mkAlert({
+        severity: "moderate",
+        source_key: "inmet",
+        hazard_kind: "enchente",
+        fetched_at: iso(0),
+      }),
+      mkAlert({
+        severity: "moderate",
+        source_key: "inmet",
+        hazard_kind: "enchente",
+        fetched_at: iso(10),
+      }),
+    ];
+    const out = generateExplanation("orange", alerts);
+    expect(out).toBe("2 alertas ativos. Pior: Alerta do INMET para enchente");
+    expect(out.match(/INMET/g)?.length).toBe(1); // not "INMET + INMET"
+  });
 });

@@ -15,16 +15,8 @@ import type { Alert, RiskLevel } from "./types";
 import { compareWorst, dedupForCalc } from "./dedup";
 import { SEVERITY_LABEL, HAZARD_LABEL, SOURCE_LABEL } from "./vocab";
 
-function pluralAlertas(n: number): string {
-  return n === 1 ? "1 alerta" : `${n} alertas`;
-}
-
 function sourceName(key: string): string {
   return (SOURCE_LABEL as Record<string, string>)[key] ?? key;
-}
-
-function hazardName(kind: Alert["hazard_kind"]): string {
-  return (HAZARD_LABEL as Record<string, string>)[kind] ?? kind;
 }
 
 /**
@@ -60,10 +52,10 @@ export function generateExplanation(level: RiskLevel, alerts: readonly Alert[]):
   const worstGroup = [...groups].sort((a, b) => compareWorst(a.survivor, b.survivor))[0]!;
   const { worst, sources } = attributionFragment(worstGroup.attribution);
   const sevPT = SEVERITY_LABEL[worst.severity];
-  const hazPT = hazardName(worst.hazard_kind);
+  const hazPT = HAZARD_LABEL[worst.hazard_kind];
 
   if (alerts.length === 1) {
     return `1 alerta de ${sevPT} do ${sources} para ${hazPT}`;
   }
-  return `${pluralAlertas(alerts.length)} ativos. Pior: ${sevPT} do ${sources} para ${hazPT}`;
+  return `${alerts.length} alertas ativos. Pior: ${sevPT} do ${sources} para ${hazPT}`;
 }
