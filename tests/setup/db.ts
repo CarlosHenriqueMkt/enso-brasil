@@ -1,40 +1,17 @@
 /**
- * Vitest global setup hook for integration tests against a real Postgres.
+ * Vitest per-worker setup hook.
  *
- * Behavior:
- * - If `DATABASE_URL_TEST` (or fallback `DATABASE_URL`) is set: connect to the
- *   test DB, apply drizzle migrations once before the suite, and TRUNCATE all
- *   test tables before each test for isolation.
- * - If unset: no-op. Integration tests gate themselves via
- *   `describe.skipIf(!process.env.DATABASE_URL_TEST)` and skip cleanly.
+ * Migrations are applied ONCE in `tests/setup/global.ts` (vitest globalSetup)
+ * before any worker starts, to avoid concurrent `CREATE SCHEMA drizzle` races.
  *
- * Driver: `drizzle-orm/node-postgres` + `pg` Pool. Vanilla Postgres speaks the
- * pg wire protocol natively; `@neondatabase/serverless` would require WebSocket
- * (incompatible with localhost vanilla PG). App routes still use neon driver
- * in production via `src/db/{node,edge}.ts`; this file is test-infra only.
+ * This per-worker hook only propagates DATABASE_URL_TEST → DATABASE_URL so
+ * route code reading process.env.DATABASE_URL sees the test DB. Test files
+ * own their own row cleanup (TRUNCATE in beforeEach) so suites stay isolated.
  *
- * Truncation list must be kept in sync with `src/db/schema.ts`. Add new tables
- * here when the schema grows.
+ * Integration suites self-skip via `describe.skipIf(!process.env.DATABASE_URL_TEST)`
+ * when the env var is unset.
  */
-import { drizzle } from "drizzle-orm/node-postgres";
-import { migrate } from "drizzle-orm/node-postgres/migrator";
-import pg from "pg";
-import { afterAll, beforeAll } from "vitest";
-
 const url = process.env.DATABASE_URL_TEST ?? process.env.DATABASE_URL;
-
-let pool: pg.Pool | null = null;
-
-beforeAll(async () => {
-  if (!url) return; // Integration suites self-skip via describe.skipIf
+if (url) {
   process.env.DATABASE_URL = url;
-  pool = new pg.Pool({ connectionString: url });
-  const db = drizzle(pool);
-  await migrate(db, { migrationsFolder: "./drizzle/migrations" });
-  await pool.end();
-  pool = null;
-});
-
-afterAll(async () => {
-  await pool?.end();
-});
+}

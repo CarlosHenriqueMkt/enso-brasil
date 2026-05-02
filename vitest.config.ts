@@ -15,6 +15,7 @@ export default defineConfig({
     environment: "jsdom",
     globals: true,
     pool: "forks",
+    globalSetup: ["./tests/setup/global.ts"],
     setupFiles: ["./tests/setup/db.ts"],
     exclude: ["**/node_modules/**", "**/tests/e2e/**", "**/.next/**"],
   },
