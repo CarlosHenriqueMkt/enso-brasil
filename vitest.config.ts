@@ -21,7 +21,11 @@ export default defineConfig({
     coverage: {
       provider: "v8",
       include: ["src/lib/risk/**/*.ts"],
-      exclude: ["src/lib/risk/**/*.test.ts", "src/lib/risk/types.ts"],
+      exclude: [
+        "src/lib/risk/**/*.test.ts",
+        "src/lib/risk/**/*.type-test.ts",
+        "src/lib/risk/types.ts",
+      ],
       thresholds: {
         lines: 100,
         branches: 100,
