@@ -2,13 +2,15 @@
 
 **Project:** ENSO Brasil — public Brazilian climate hazard aggregator dashboard
 **Current milestone:** v1 — Per-state hazard dashboard
-**Status:** Phase 2 SHIPPED · production live at https://www.ensobrasil.com.br · ready for Phase 3
+**Status:** Phase 3 SPEC + CONTEXT locked · ready for `/gsd-plan-phase 3`
 **Last updated:** 2026-05-02
 
 ## Current Phase
 
 **Next:** Phase 3 — Pure Risk Engine (replaces `formulaVersion: "v0-placeholder"` with documented v0.1 risk function)
-**Command to run:** `/gsd-spec-phase 3` then `/gsd-discuss-phase 3` then `/gsd-plan-phase 3`
+**Command to run:** `/gsd-plan-phase 3`
+
+**Phase 3 progress:** SPEC.md (10 RISK-IDs, ambiguity 0.08) + CONTEXT.md (4 decisions: D-01 Alert.severity schema fix, D-02 messages.ts vocab extension, D-03 dep-cruiser + scoped vitest coverage + ESLint guard, D-04 deterministic dedup tie-break) committed. Critical issue surfaced: P2 conflated Severity with RiskLevel in `src/lib/sources/schema.ts` — D-01 resolves in P3.
 
 **Phase 2 verdict:** SHIPPED — 11/11 plans complete, all REQ-S2.\* met, production deploy verified end-to-end. Cron workflow green, Neon + Upstash provisioned, DNS live (`ensobrasil.com.br` + `www.ensobrasil.com.br`). Smoke matrix in `.planning/phases/02-data-foundation/02-11-SUMMARY.md`. Two CI fix sprints documented in `02-10-SUMMARY-supplement.md` (driver swap neon-http→node-postgres for tests, drizzle-orm dual-instance dedupe, vitest globalSetup race fix).
 
