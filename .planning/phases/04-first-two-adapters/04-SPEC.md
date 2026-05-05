@@ -81,6 +81,7 @@ Phase 2 shipped the full ingest → normalize → store → snapshot → cache �
 - Per-state CEMADEN fan-out — design must use single national-scope call (free-tier headroom); 27× HTTP/15min is anti-pattern
 - Auto-refresh of fixtures via CI / nightly GH Actions — explicitly rejected (auto-acceptance of drift = silent safety regression)
 - Backwards-compat wrapper to keep stub running alongside real adapters — atomic swap is required (Q4=c)
+- Drift sentinel workflow (72h-gated GH Actions monitoring upstream schema changes) — **deferred to Phase 6 (Hardening)** per discuss-phase decision; tracked in [#4](https://github.com/CarlosHenriqueMkt/enso-brasil/issues/4). Phase 4 ships Canal 1 (manual `pnpm fixtures:refresh:*`) + Canal 3 (contract tests in CI). Canal 2 (proactive sentinel) is defense-in-depth and dilutes P4 scope.
 
 **Conditional fallback (irreducible core, locked Q6=a):** If CEMADEN endpoint research blocks within Phase 4 (endpoint inaccessible, requires unavailable auth, or schema is not zod-validatable within reasonable effort), Phase 4 ships INMET-only — `registry.ts = [inmetAdapter]`, stub still removed, CEMADEN deferred to Phase 5 or 6. The registry pattern allows late append without orchestrator changes.
 
