@@ -2,13 +2,17 @@
 
 **Project:** ENSO Brasil — public Brazilian climate hazard aggregator dashboard
 **Current milestone:** v1 — Per-state hazard dashboard
-**Status:** Phase 3 EXECUTED · ready for `/gsd-verify-work 3`
-**Last updated:** 2026-05-02
+**Status:** Phase 3 SHIPPED · ready for Phase 4
+**Last updated:** 2026-05-04
 
 ## Current Phase
 
-**Next:** Phase 3 — Pure Risk Engine — verification (UAT)
-**Command to run:** `/gsd-verify-work 3`
+**Next:** Phase 4 — First Two Adapters (CEMADEN + INMET)
+**Command to run:** `/gsd-spec-phase 4` (or `/gsd-discuss-phase 4` if SPEC stays simple)
+
+**Phase 3 verdict:** SHIPPED — PR #1 squash-merged to main as `8137afda` on 2026-05-04. UAT 14/14, security audit PASS (12/12 ASVS L2), coverage 100/100/100/100 across `src/lib/risk/**`. dep-cruiser RISK-01 isolation rule active in CI. Branch `phase-3-risk-engine` deleted on remote.
+
+**Repo policy locked 2026-05-04 (PR #2):** Squash-only merges. Merge commit + rebase disabled at repo settings + ruleset 15829967. Auto-delete branches on merge. Solo-dev uses `--admin` bypass after CI green.
 
 **Phase 3 progress:** All 13 plans executed. 28+ atomic commits on `phase-3-risk-engine`. Coverage 100/100/100/100 across `src/lib/risk/**` (8 modules: types, calculate, dedup, snapshot, explanation, vocab, sources/cemaden, sources/inmet). dep-cruiser RISK-01 isolation rule passes. ESLint risk override active. PT-BR README addendum shipped. `src/app/api/**` untouched (P4 owns wiring). Recovery note: Wave 0 parallel run hit lint-staged race; switched to sequential mid-execution. Final coverage gate fix (4bc1540) inlined dead branches in explanation.ts to restore 100% branches.
 
@@ -26,8 +30,8 @@
 | --- | ------------------------------------ | --------------------------------------------------------------- |
 | 1   | Skeleton & OSS Foundation            | ✅ complete + verified (CI green, repo public, ruleset active)  |
 | 2   | Data Foundation                      | ✅ shipped — production live, cron green, all 11 plans complete |
-| 3   | Pure Risk Engine                     | ✅ executed — coverage 100/100/100/100, ready for verify-work   |
-| 4   | First Two Adapters (CEMADEN + INMET) | ⏳ pending                                                      |
+| 3   | Pure Risk Engine                     | ✅ shipped — PR #1 squash-merged 2026-05-04 (`8137afda`)        |
+| 4   | First Two Adapters (CEMADEN + INMET) | ⏳ next                                                         |
 | 5   | Dashboard UI                         | ⏳ pending                                                      |
 | 6   | Hardening + 3rd Source               | ⏳ pending                                                      |
 | 7   | Launch                               | ⏳ pending                                                      |
