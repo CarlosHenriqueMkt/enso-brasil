@@ -1,5 +1,5 @@
 {
   "$schema": "https://unpkg.com/knip@6/schema.json",
-  "ignore": [".claude/**", ".planning/**"],
+  "ignore": [".claude/**", ".planning/**", "**/*.type-test.ts"],
   "ignoreDependencies": []
 }
