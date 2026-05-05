@@ -90,6 +90,27 @@ Instale o gitleaks antes do primeiro commit:
 
 A CI também roda gitleaks em cada PR (defesa em profundidade — D-04).
 
+## Estratégia de merge
+
+PRs são integrados em `main` exclusivamente via **squash merge**. Os outros métodos (merge commit, rebase) estão desabilitados nas configurações do repositório e no ruleset.
+
+Por quê:
+
+- **Histórico limpo em `main`**: cada PR vira um commit. `git log main` mostra features e fixes, não passos intermediários (`fix(03): drop dead branch`, `test(03): add 13 cases`).
+- **Reverter uma feature inteira é um `git revert <sha>` só.**
+- **`git bisect` rápido**: cada commit em `main` é um estado coerente, com CI verde.
+- O detalhe completo (commits atômicos do branch) fica preservado para sempre dentro do PR.
+
+A mensagem do squash deve seguir Conventional Commits e referenciar o número do PR:
+
+```
+feat(03): Pure Risk Engine v0 (#1)
+
+<corpo opcional explicando o porquê e o que mudou>
+```
+
+Branch do PR é deletada automaticamente após merge.
+
 ## Branch protection
 
 Branch `main` está protegida (D-09): exige 1 aprovação de PR, todos os checks de CI verdes, histórico linear (sem merge commits), sem force-push e sem self-approval.
