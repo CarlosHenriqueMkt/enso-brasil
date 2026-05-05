@@ -120,6 +120,17 @@ Plans:
 
 **Depends on:** Phase 3
 
+**Plans:** 6 plans
+
+Plans:
+
+- [ ] 04-01-PLAN-fast-xml-parser-dep.md — Pin fast-xml-parser 5.3.0 + shared CAP parser module (Wave 0)
+- [ ] 04-02-PLAN-cemaden-schema-and-adapter.md — CEMADEN adapter factory + zod schema + unit tests (Wave 1)
+- [ ] 04-03-PLAN-inmet-schema-and-adapter.md — INMET two-step adapter + CAP parsing + pt-BR selection (Wave 1)
+- [ ] 04-04-PLAN-fixture-refresh-script.md — pnpm fixtures:refresh:cemaden/inmet + structural-diff util (Wave 1)
+- [ ] 04-05-PLAN-contract-tests-and-real-fixtures.md — Capture real fixtures + contract tests + cross-source isolation (Wave 2)
+- [ ] 04-06-PLAN-atomic-cutover.md — Atomic stub-removal + registry rewrite + preview smoke (Wave 3)
+
 ---
 
 ### Phase 5 — Dashboard UI
