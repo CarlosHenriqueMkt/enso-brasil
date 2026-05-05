@@ -191,3 +191,26 @@ If CEMADEN research blocks (endpoint inaccessible, auth unavailable, schema not 
 _Phase: 04-first-two-adapters_
 _Context captured: 2026-05-05_
 _Next step: `/gsd-plan-phase 4` (research phase will fire first per workflow.research config)_
+
+---
+
+## Decision Update (2026-05-05): Path C — INMET-only
+
+CEMADEN dropped from Phase 4. **Path C** activates the SPEC's locked Q6=a fallback (see `04-SPEC.md` line 86).
+
+**Rationale:** Live discovery on 2026-05-05 confirmed CEMADEN's only documented public REST API (`https://sws.cemaden.gov.br/PED/api/ui/`, Swagger 2.0) is **PED — Plataforma de Entrega de Dados** — observational data only (PCDs, accumulated rainfall, weather stations). 15 paths, zero alert/aviso/risco endpoints. JWT-protected. Deriving alerts from raw rainfall crosses ENSO Brasil's aggregator-vs-authority line (CLAUDE.md anti-features).
+
+CEMADEN authoritative alerts live behind `painelalertas.cemaden.gov.br` SPA. Backend is undocumented; DevTools fieldwork exceeds Phase 4's scope budget.
+
+**Impact on Phase 4:**
+
+- **CEMADEN adapter, schema, contract test:** deferred to **Phase 5** (carry-over).
+- **PED swagger** saved at `.planning/phases/04-first-two-adapters/04-cemaden-PED-swagger.json` for Phase 5 reference. **Do not delete.**
+- **Phase 4 = INMET adapter + inline-stub CEMADEN for cross-source tests only.** No real CEMADEN code in `src/`.
+- **Plan set:** 5 plans (04-01, 04-03, 04-04, 04-05, 04-06). Plan 04-02 deleted. Renumbering NOT performed — gaps preserve traceability with prior CONTEXT.md plan-table references.
+- **Registry:** `[inmetAdapter]` only. Orchestrator uses `Promise.allSettled([inmetAdapter])` (futures-proof for P5 append).
+- **Stub still removed atomically** in 04-06.
+
+**Cross-source isolation (REQ-7) preservation:** Plan 04-05's cross-source isolation test uses an **inline `cemadenStub` factory inside the test file** that always throws `SourceError({code: "schema_invalid"})`. This proves the `Promise.allSettled` isolation contract without landing real CEMADEN code in `src/`. When CEMADEN ships in P5, the inline stub is replaced by the real adapter.
+
+**Tracking note:** Add to `.planning/STATE.md` Risk Watch: "CEMADEN authoritative alerts feed undocumented; PED API ≠ alerts; carry to P5."
