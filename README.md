@@ -22,6 +22,60 @@ O risco por estado é computado a partir dos alertas ativos publicados pelas fon
 
 Veja o contrato completo em [risk-formula-v0.md](./risk-formula-v0.md).
 
+## Como calculamos o risco — v0
+
+O risco de cada estado é calculado a partir dos alertas oficiais ativos
+recebidos das fontes integradas. A versão atual da fórmula é **v0** — o
+contrato completo está em [`risk-formula-v0.md`](./risk-formula-v0.md).
+
+**Em resumo, para cada estado:**
+
+1. **Coletamos** os alertas das fontes oficiais (CEMADEN, INMET) a cada 15 minutos.
+2. **Filtramos** os que ainda estão ativos (validade explícita, ou janela de 24 h
+   se a fonte não informou prazo).
+3. **Mapeamos** a severidade declarada por cada fonte para uma escala interna
+   (`low | moderate | high | extreme`). Termos desconhecidos viram `moderate`
+   por precaução — nunca silenciamos um alerta como baixo.
+4. **Combinamos** alertas duplicados do mesmo tipo de evento no mesmo estado
+   quando os períodos de validade se sobrepõem. O alerta mais severo "vence",
+   mas todos os emissores ficam registrados.
+5. **Classificamos** o estado em uma das 5 faixas:
+   `Sem alertas` | `Atenção` | `Alerta` | `Perigo` | `Dados indisponíveis`.
+6. **Override de defasagem:** se todas as fontes integradas estão com mais
+   de 1 hora sem atualização, o estado vai para `Dados indisponíveis` —
+   nunca afirmamos `Sem alertas` quando não temos certeza.
+
+### Exemplo (Minas Gerais)
+
+Suponha que recebemos dois alertas para MG no mesmo intervalo, ambos
+classificados como `moderate` na escala interna, ambos para o mesmo tipo
+de evento (`enchente`):
+
+- **INMET** — Aviso de Perigo (enchente) → severidade interna `moderate`
+- **CEMADEN** — Alerta (enchente) → severidade interna `moderate`
+
+Como o tipo de evento e o estado coincidem e os períodos se sobrepõem,
+o motor combina os dois em um único alerta efetivo, mantendo ambas as
+fontes na atribuição. Com severidade combinada `moderate`, o estado é
+classificado como **Alerta** (laranja).
+
+A explicação gerada automaticamente em PT-BR seria:
+
+> "2 alertas ativos. Pior: Alerta do INMET + CEMADEN para enchente"
+
+Esta frase única é o que aparece no card do estado, no `/texto`
+(rota acessível) e em qualquer notificação futura — uma só fonte,
+sem divergência entre superfícies.
+
+### Limitações conhecidas (v0)
+
+- Apenas duas fontes integradas neste milestone (CEMADEN, INMET).
+  INPE Queimadas e NASA FIRMS chegam em fases futuras.
+- Granularidade estadual; não calculamos risco por município ainda.
+- O motor não faz previsão — apenas espelha alertas oficiais ativos.
+- Versionamos a fórmula (`v0`, futuras `v1`, `v2`...) para que mudanças
+  de algoritmo fiquem rastreáveis no banco e na UI.
+
 ## Fontes oficiais
 
 - CEMADEN — `cemaden.gov.br`

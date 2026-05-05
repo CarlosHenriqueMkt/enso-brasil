@@ -10,6 +10,10 @@
  * same container. Hot-reload safe via globalThis singleton (Next dev re-evals
  * modules; pool would otherwise leak on every reload).
  *
+ * Lazy via Proxy: `process.env.DATABASE_URL` is read on first method access,
+ * not at module load. Required so Next.js page-data collection (which
+ * evaluates route modules at build time without runtime env) does not throw.
+ *
  * Supports transactional writes (neon-http does NOT — that's why edge routes
  * are read-only).
  *
@@ -21,6 +25,8 @@ import * as schema from "./schema";
 
 const globalForPool = globalThis as unknown as { __ensoPool?: pg.Pool };
 
+type NodeDrizzle = ReturnType<typeof drizzle<typeof schema>>;
+
 function getPool(): pg.Pool {
   const url = process.env.DATABASE_URL;
   if (!url) throw new Error("DATABASE_URL is not set (node)");
@@ -30,5 +36,18 @@ function getPool(): pg.Pool {
   return globalForPool.__ensoPool;
 }
 
-export const db = drizzle(getPool(), { schema });
-export type NodeDB = typeof db;
+let _db: NodeDrizzle | null = null;
+
+function getDb(): NodeDrizzle {
+  if (_db) return _db;
+  _db = drizzle(getPool(), { schema });
+  return _db;
+}
+
+export const db = new Proxy({} as NodeDrizzle, {
+  get(_target, prop, receiver) {
+    return Reflect.get(getDb(), prop, receiver);
+  },
+});
+
+export type NodeDB = NodeDrizzle;

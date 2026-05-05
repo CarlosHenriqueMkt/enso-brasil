@@ -32,3 +32,44 @@ describe("messages module", () => {
     },
   );
 });
+
+describe("messages.risk (RISK-09 vocab SoT)", () => {
+  it.skipIf(!existsSync(messagesPath))(
+    "exposes severity / hazard / source maps with locked PT-BR labels",
+    async () => {
+      const { messages } = await import("./messages");
+      // Severity (per-alert)
+      expect(messages.risk.severity).toEqual({
+        low: "Atenção",
+        moderate: "Alerta",
+        high: "Perigo",
+        extreme: "Perigo extremo",
+      });
+      // Hazard noun phrases — keys must match HAZARD_KINDS verbatim
+      expect(messages.risk.hazard).toEqual({
+        queimada: "queimada",
+        enchente: "enchente",
+        estiagem: "estiagem",
+        incendio: "incêndio",
+        inundacao: "inundação",
+        seca: "seca",
+      });
+      // Source attribution
+      expect(messages.risk.source).toEqual({
+        cemaden: "CEMADEN",
+        inmet: "INMET",
+        stub: "Stub",
+      });
+    },
+  );
+
+  it.skipIf(!existsSync(messagesPath))(
+    "preserves existing messages.severity (state-level RiskLevel labels)",
+    async () => {
+      const { messages } = await import("./messages");
+      // Sanity: green/gray must still resolve to locked PT-BR labels per PROJECT.md
+      expect(messages.severity.green).toBe("Sem alertas");
+      expect(messages.severity.gray).toBe("Dados indisponíveis");
+    },
+  );
+});

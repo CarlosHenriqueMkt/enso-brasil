@@ -53,11 +53,14 @@ jobs:
       - name: Lint
         run: pnpm lint
 
+      - name: Dep-cruise (risk engine isolation)
+        run: pnpm depcruise
+
       - name: Knip (unused exports / dead deps)
         run: pnpm knip
 
-      - name: Unit + integration tests (Vitest)
-        run: pnpm test
+      - name: Unit + integration tests (Vitest) + coverage
+        run: pnpm test:coverage
 
       - name: Install Playwright browsers
         run: pnpm exec playwright install --with-deps chromium

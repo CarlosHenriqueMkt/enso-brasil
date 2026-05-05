@@ -48,4 +48,28 @@ export const messages = {
     contactUrl: "https://www.linkedin.com/in/carloshenriquerp/",
     contactName: "Carlos Henrique (mantenedor)",
   },
+  risk: {
+    /** Per-alert severity labels (verbatim CEMADEN/INMET vocabulary, RISK-09). */
+    severity: {
+      low: "Atenção",
+      moderate: "Alerta",
+      high: "Perigo",
+      extreme: "Perigo extremo",
+    },
+    /** Hazard noun phrases for explanation prose. Keys mirror HAZARD_KINDS exactly. */
+    hazard: {
+      queimada: "queimada",
+      enchente: "enchente",
+      estiagem: "estiagem",
+      incendio: "incêndio",
+      inundacao: "inundação",
+      seca: "seca",
+    },
+    /** Source display names for explanation prose attribution. */
+    source: {
+      cemaden: "CEMADEN",
+      inmet: "INMET",
+      stub: "Stub",
+    },
+  },
 } as const;

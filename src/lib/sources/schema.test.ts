@@ -1,11 +1,12 @@
 import { describe, it, expect } from "vitest";
-import { AlertSchema, computePayloadHash } from "./schema";
+import { AlertSchema } from "./schema";
+import { computePayloadHash } from "./hash";
 
 const valid = {
   source_key: "stub",
   hazard_kind: "queimada" as const,
   state_uf: "SP" as const,
-  severity: "yellow" as const,
+  severity: "moderate" as const,
   headline: "Foco de queimada detectado",
   body: "Long body",
   source_url: "https://example.test/x",
@@ -49,7 +50,7 @@ describe("computePayloadHash", () => {
   });
   it("differs when a normalized field changes", () => {
     const a = computePayloadHash(base);
-    const b = computePayloadHash({ ...base, severity: "red" });
+    const b = computePayloadHash({ ...base, severity: "extreme" });
     expect(a).not.toBe(b);
   });
   it("ignores `raw` field for stability", () => {

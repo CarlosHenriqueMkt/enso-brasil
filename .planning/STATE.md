@@ -2,13 +2,15 @@
 
 **Project:** ENSO Brasil — public Brazilian climate hazard aggregator dashboard
 **Current milestone:** v1 — Per-state hazard dashboard
-**Status:** Phase 2 SHIPPED · production live at https://www.ensobrasil.com.br · ready for Phase 3
+**Status:** Phase 3 EXECUTED · ready for `/gsd-verify-work 3`
 **Last updated:** 2026-05-02
 
 ## Current Phase
 
-**Next:** Phase 3 — Pure Risk Engine (replaces `formulaVersion: "v0-placeholder"` with documented v0.1 risk function)
-**Command to run:** `/gsd-spec-phase 3` then `/gsd-discuss-phase 3` then `/gsd-plan-phase 3`
+**Next:** Phase 3 — Pure Risk Engine — verification (UAT)
+**Command to run:** `/gsd-verify-work 3`
+
+**Phase 3 progress:** All 13 plans executed. 28+ atomic commits on `phase-3-risk-engine`. Coverage 100/100/100/100 across `src/lib/risk/**` (8 modules: types, calculate, dedup, snapshot, explanation, vocab, sources/cemaden, sources/inmet). dep-cruiser RISK-01 isolation rule passes. ESLint risk override active. PT-BR README addendum shipped. `src/app/api/**` untouched (P4 owns wiring). Recovery note: Wave 0 parallel run hit lint-staged race; switched to sequential mid-execution. Final coverage gate fix (4bc1540) inlined dead branches in explanation.ts to restore 100% branches.
 
 **Phase 2 verdict:** SHIPPED — 11/11 plans complete, all REQ-S2.\* met, production deploy verified end-to-end. Cron workflow green, Neon + Upstash provisioned, DNS live (`ensobrasil.com.br` + `www.ensobrasil.com.br`). Smoke matrix in `.planning/phases/02-data-foundation/02-11-SUMMARY.md`. Two CI fix sprints documented in `02-10-SUMMARY-supplement.md` (driver swap neon-http→node-postgres for tests, drizzle-orm dual-instance dedupe, vitest globalSetup race fix).
 
@@ -24,7 +26,7 @@
 | --- | ------------------------------------ | --------------------------------------------------------------- |
 | 1   | Skeleton & OSS Foundation            | ✅ complete + verified (CI green, repo public, ruleset active)  |
 | 2   | Data Foundation                      | ✅ shipped — production live, cron green, all 11 plans complete |
-| 3   | Pure Risk Engine                     | 📋 next — start with `/gsd-spec-phase 3`                        |
+| 3   | Pure Risk Engine                     | ✅ executed — coverage 100/100/100/100, ready for verify-work   |
 | 4   | First Two Adapters (CEMADEN + INMET) | ⏳ pending                                                      |
 | 5   | Dashboard UI                         | ⏳ pending                                                      |
 | 6   | Hardening + 3rd Source               | ⏳ pending                                                      |

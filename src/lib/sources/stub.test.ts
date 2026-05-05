@@ -22,7 +22,7 @@ describe("stubAdapter", () => {
     process.env.STUB_FIXTURE_PATH = "tests/fixtures/sources/all-red.json";
     const out = await stubAdapter.fetch();
     expect(out.length).toBe(27);
-    expect(out.every((a) => a.severity === "red")).toBe(true);
+    expect(out.every((a) => a.severity === "extreme")).toBe(true);
   });
 
   it("invalid fixture path throws", async () => {

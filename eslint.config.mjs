@@ -40,4 +40,45 @@ export default [
       ],
     },
   },
+  // BLOCK A — production code under src/lib/risk/ (edge-safe; pure)
+  {
+    files: ["src/lib/risk/**/*.ts"],
+    ignores: ["src/lib/risk/**/*.test.ts", "src/lib/risk/**/*.type-test.ts"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          paths: [
+            { name: "pino", message: "Pure module — no logging in risk engine." },
+            { name: "@/lib/log", message: "Pure module — no logging in risk engine." },
+            { name: "fs", message: "Edge-safe — no Node built-ins in risk engine." },
+            { name: "path", message: "Edge-safe — no Node built-ins in risk engine." },
+            { name: "crypto", message: "Edge-safe — no Node built-ins in risk engine." },
+            { name: "os", message: "Edge-safe — no Node built-ins in risk engine." },
+          ],
+          patterns: [
+            {
+              group: ["node:*"],
+              message: "Edge-safe — no node:* imports in risk engine.",
+            },
+            {
+              group: ["pino-*", "@/lib/log/*", "fs/*", "node:fs/*"],
+              message: "Edge-safe — no Node built-ins / no logging in risk engine.",
+            },
+          ],
+        },
+      ],
+    },
+  },
+  // BLOCK B — test files under src/lib/risk/: re-allow node:* + Node built-ins.
+  //   Tests run only in Node (Vitest pool=forks); Node imports here do not leak
+  //   into the edge-safe production graph.
+  {
+    files: ["src/lib/risk/**/*.test.ts", "src/lib/risk/**/*.type-test.ts"],
+    rules: {
+      // Disable the restriction set above. ESLint flat-config cascades:
+      // later override wins for matching files.
+      "no-restricted-imports": "off",
+    },
+  },
 ];
