@@ -24,6 +24,14 @@ export interface HttpGetOptions extends Omit<FetchOptions<"json">, "method" | "r
   retries?: number;
 }
 
+export interface HttpGetTextOptions extends Omit<
+  FetchOptions<"text">,
+  "method" | "retry" | "timeout" | "responseType"
+> {
+  timeoutMs?: number;
+  retries?: number;
+}
+
 export class HttpError extends Error {
   readonly status?: number;
   readonly url: string;
@@ -70,6 +78,55 @@ export async function httpGet<R = unknown>(url: string, opts: HttpGetOptions = {
         responseType: "json",
         timeout: timeoutMs,
         retry: 0, // we own the retry loop
+      });
+      return result;
+    } catch (err) {
+      lastErr = err;
+      const status =
+        (err as { response?: { status?: number }; statusCode?: number }).response?.status ??
+        (err as { statusCode?: number }).statusCode;
+
+      const retryable =
+        isRetryableStatus(status) || (status === undefined && isRetryableError(err));
+      const isLast = attempt === maxAttempts - 1;
+
+      if (!retryable || isLast) {
+        throw new HttpError(
+          status !== undefined
+            ? `GET ${url} failed with status ${status}`
+            : `GET ${url} failed: ${(err as Error).message ?? String(err)}`,
+          { url, status, cause: err },
+        );
+      }
+
+      const backoff = RETRY_BACKOFF_MS[attempt] ?? RETRY_BACKOFF_MS[RETRY_BACKOFF_MS.length - 1];
+      await new Promise<void>((resolve) => setTimeout(resolve, backoff));
+    }
+  }
+
+  throw new HttpError("unreachable", { url, cause: lastErr });
+}
+
+/**
+ * GET a text resource (e.g. CAP XML) with the same retry/timeout policy as
+ * `httpGet`. Phase 4 added this for the INMET adapter — CAP feeds return
+ * `application/xml`, not JSON, so the JSON-only `httpGet` cannot be reused.
+ *
+ * Throws `HttpError` after final attempt. 4xx responses fail fast (no retry).
+ */
+export async function httpGetText(url: string, opts: HttpGetTextOptions = {}): Promise<string> {
+  const { timeoutMs = DEFAULT_TIMEOUT_MS, retries = DEFAULT_RETRIES, ...rest } = opts;
+  const maxAttempts = retries + 1;
+  let lastErr: unknown;
+
+  for (let attempt = 0; attempt < maxAttempts; attempt++) {
+    try {
+      const result = await ofetch<string, "text">(url, {
+        ...rest,
+        method: "GET",
+        responseType: "text",
+        timeout: timeoutMs,
+        retry: 0,
       });
       return result;
     } catch (err) {
