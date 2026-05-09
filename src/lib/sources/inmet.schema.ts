@@ -8,9 +8,9 @@
  *   document fetched from `INMET_CAP_DETAIL(id)`. The Wave 0 parser config
  *   forces `alert.info` to an array (one entry per `xml:lang`).
  *
- * Both helpers throw via the canonical `sourceError(...)` factory — never
- * `new SourceError(...)` and never via `class extends Error` (W-1 invariant
- * locked by 04-CONTEXT taxonomy).
+ * Both helpers throw via the canonical `sourceError` factory only — never
+ * via Error subclasses or direct constructor calls (W-1 invariant locked
+ * by 04-CONTEXT taxonomy).
  */
 
 import { z } from "zod";
