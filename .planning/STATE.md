@@ -2,13 +2,14 @@
 
 **Project:** ENSO Brasil — public Brazilian climate hazard aggregator dashboard
 **Current milestone:** v1 — Per-state hazard dashboard
-**Status:** Phase 3 SHIPPED · Phase 4 NEXT (Path C — INMET-only; CEMADEN deferred to P5)
-**Last updated:** 2026-05-05
+**Status:** Phase 4 SHIPPED (Path C — INMET-only; CEMADEN P5) · Phase 5 NEXT
+**Last updated:** 2026-05-09
 
 ## Current Phase
 
-**Next:** Phase 4 — First Adapter (INMET) — **Path C revision** locked 2026-05-05
-**Command to run:** `/gsd-execute-phase 4`
+**Phase 4 verdict:** SHIPPED — PR #5 opened 2026-05-09 on branch `phase-4-adapters-cemaden-inmet`. Pending squash-merge after CI + Vercel preview smoke verification. INMET adapter (41 unit tests, 100/100/100/100 coverage), fixture refresh script, contract tests, atomic cutover from stub to inmetAdapter. CEMADEN deferred to P5 (Path C). Schema drift finding: live INMET API returns `{hoje:[...], futuro:[...]}` instead of flat array — P5.1 fix documented in 04-05-SUMMARY.
+**Next:** Phase 5 — CEMADEN + Dashboard UI
+**Command to run:** `/gsd-execute-phase 5`
 
 **Path C revision (2026-05-05):** Plan-checker round produced findings B-1/B-2/B-3 (CEMADEN endpoint discovery) and W-1/W-3/W-4 (taxonomy + verify + vitest race). Live discovery confirmed CEMADEN's only documented public REST API (`https://sws.cemaden.gov.br/PED/api/ui/`) is **PED — Plataforma de Entrega de Dados** — observational data only (PCDs, accumulated rainfall, weather stations), 15 paths, ZERO alert endpoints. PED ≠ alerts; deriving alerts from raw rainfall crosses the aggregator-vs-authority line in CLAUDE.md anti-features. CEMADEN authoritative alerts (`painelalertas.cemaden.gov.br` SPA) require DevTools-on-live-SPA fieldwork that exceeds Phase 4's scope budget.
 
@@ -46,8 +47,8 @@
 | 1   | Skeleton & OSS Foundation      | ✅ complete + verified (CI green, repo public, ruleset active)  |
 | 2   | Data Foundation                | ✅ shipped — production live, cron green, all 11 plans complete |
 | 3   | Pure Risk Engine               | ✅ shipped — PR #1 squash-merged 2026-05-04 (`8137afda`)        |
-| 4   | First Adapter (INMET) — Path C | ⏳ **next** — 5 plans revised 2026-05-05; CEMADEN P5 carry-over |
-| 5   | CEMADEN + Dashboard UI         | ⏳ pending — absorbs CEMADEN adapter from P4 Path C carry-over  |
+| 4   | First Adapter (INMET) — Path C | ✅ shipped — PR #5 opened 2026-05-09; pending squash-merge      |
+| 5   | CEMADEN + Dashboard UI         | ⏳ **next** — absorbs CEMADEN adapter from P4 Path C carry-over |
 | 6   | Hardening + 3rd Source         | ⏳ pending                                                      |
 | 7   | Launch                         | ⏳ pending                                                      |
 
