@@ -6,12 +6,92 @@
  *
  * Auth + Upstash mock cases run regardless via the 401 branch which
  * short-circuits before any DB access.
+ *
+ * Phase 4 cutover (plan 04-06): stub adapter removed; registry now exports
+ * inmetAdapter. The registry is mocked here to provide deterministic test
+ * data (3 fixed alerts) without real network calls to INMET.
  */
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { __setRedisForTest } from "@/lib/cache/upstash";
 import { UpstashRedisMock } from "../../../../tests/setup/upstash-mock";
+import { computePayloadHash } from "@/lib/sources/hash";
+import type { Alert } from "@/lib/sources/schema";
 
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
+
+// ---------------------------------------------------------------------------
+// Deterministic test alerts (3 alerts, 3 distinct UFs → 27 state snapshots).
+// Replaces the old stub-default.json fixture. Source key updated to "inmet"
+// following the Phase 4 atomic cutover.
+// ---------------------------------------------------------------------------
+
+function makeTestAlert(partial: Omit<Alert, "payload_hash">): Alert {
+  return { ...partial, payload_hash: computePayloadHash(partial) };
+}
+
+const INGEST_TEST_ALERTS: Alert[] = [
+  makeTestAlert({
+    source_key: "inmet",
+    hazard_kind: "queimada",
+    state_uf: "SP",
+    severity: "moderate",
+    headline: "Foco de queimada detectado em zona rural",
+    body: "Test fixture — ingest integration.",
+    source_url: "https://stub.example/sp/queimada",
+    fetched_at: "2026-05-01T00:00:00.000Z",
+    valid_from: "2026-05-01T00:00:00.000Z",
+    valid_until: "2026-05-01T06:00:00.000Z",
+    raw: { stub: true, uf: "SP" },
+  }),
+  makeTestAlert({
+    source_key: "inmet",
+    hazard_kind: "enchente",
+    state_uf: "RJ",
+    severity: "high",
+    headline: "Risco de enchente em áreas baixas",
+    body: "Test fixture — ingest integration.",
+    source_url: "https://stub.example/rj/enchente",
+    fetched_at: "2026-05-01T00:00:00.000Z",
+    valid_from: "2026-05-01T00:00:00.000Z",
+    valid_until: "2026-05-01T12:00:00.000Z",
+    raw: { stub: true, uf: "RJ" },
+  }),
+  makeTestAlert({
+    source_key: "inmet",
+    hazard_kind: "estiagem",
+    state_uf: "AM",
+    severity: "extreme",
+    headline: "Estiagem severa afeta comunidades ribeirinhas",
+    body: "Test fixture — ingest integration.",
+    source_url: "https://stub.example/am/estiagem",
+    fetched_at: "2026-05-01T00:00:00.000Z",
+    valid_from: "2026-05-01T00:00:00.000Z",
+    valid_until: "2026-05-08T00:00:00.000Z",
+    raw: { stub: true, uf: "AM" },
+  }),
+];
+
+// ---------------------------------------------------------------------------
+// Registry mock — injects controlled test source instead of live inmetAdapter.
+// A module-scope vi.fn() lets individual tests override the return value.
+// ---------------------------------------------------------------------------
+
+const mockInmetFetch = vi.fn<() => Promise<Alert[]>>();
+
+vi.mock("@/lib/sources/registry", () => ({
+  sources: [
+    {
+      key: "inmet",
+      displayName: "INMET — Alert-AS",
+      fetch: mockInmetFetch,
+    },
+  ],
+  sourceDisplayNames: { inmet: "INMET — Alert-AS" },
+}));
+
+// ---------------------------------------------------------------------------
+// Tests
+// ---------------------------------------------------------------------------
 
 const skip = !process.env.DATABASE_URL_TEST;
 
@@ -36,11 +116,14 @@ describe.skipIf(skip)("POST /api/ingest (integration)", () => {
     mock = new UpstashRedisMock();
     __setRedisForTest(mock as never);
     process.env.INGEST_TOKEN = "test-token-abc";
-    delete process.env.STUB_FIXTURE_PATH;
+    // Default: mock returns 3 deterministic test alerts per fetch.
+    mockInmetFetch.mockResolvedValue([...INGEST_TEST_ALERTS]);
     await dbMod.db.delete(schemaMod.alerts);
     await dbMod.db.delete(schemaMod.sourcesHealth);
     await dbMod.db.delete(schemaMod.snapshotCache);
     vi.clearAllMocks();
+    // Re-apply default after clearAllMocks (which clears implementations too).
+    mockInmetFetch.mockResolvedValue([...INGEST_TEST_ALERTS]);
   });
 
   it("rejects request without Authorization → 401", async () => {
@@ -60,7 +143,7 @@ describe.skipIf(skip)("POST /api/ingest (integration)", () => {
     expect(res.status).toBe(401);
   });
 
-  it("valid token → 200 + adopts 3 stub alerts on first call", async () => {
+  it("valid token → 200 + adopts 3 alerts on first call", async () => {
     const { POST } = await import("./route");
     const res = await POST(
       new Request("http://x.test/api/ingest", {
@@ -131,12 +214,14 @@ describe.skipIf(skip)("POST /api/ingest (integration)", () => {
     const headers = { authorization: "Bearer test-token-abc" };
     await POST(new Request("http://x.test/api/ingest", { method: "POST", headers }));
     vi.clearAllMocks();
+    mockInmetFetch.mockResolvedValue([...INGEST_TEST_ALERTS]);
     await POST(new Request("http://x.test/api/ingest", { method: "POST", headers }));
     expect(revalidatePath).toHaveBeenCalledTimes(0);
   });
 
   it("adapter throw bumps consecutive_failures + writes last_error", async () => {
-    process.env.STUB_FIXTURE_PATH = "tests/fixtures/sources/does-not-exist.json";
+    // Make the inmet adapter throw a network error for this test only.
+    mockInmetFetch.mockRejectedValueOnce(new Error("simulated network failure"));
     const { POST } = await import("./route");
     const res = await POST(
       new Request("http://x.test/api/ingest", {
@@ -148,7 +233,7 @@ describe.skipIf(skip)("POST /api/ingest (integration)", () => {
     const body = await res.json();
     expect(body.sources[0].status).toBe("error");
     const health = await dbMod.db.select().from(schemaMod.sourcesHealth);
-    expect(health[0]!.sourceKey).toBe("stub");
+    expect(health[0]!.sourceKey).toBe("inmet");
     expect(health[0]!.consecutiveFailures).toBeGreaterThanOrEqual(1);
     expect(health[0]!.lastError).toBeTruthy();
   });

@@ -13,7 +13,7 @@
 export const sourceMetadata: ReadonlyArray<{
   readonly key: string;
   readonly displayName: string;
-}> = Object.freeze([{ key: "stub", displayName: "Stub (fixture)" }]);
+}> = Object.freeze([{ key: "inmet", displayName: "INMET — Alert-AS" }]);
 
 export const sourceDisplayNames: Record<string, string> = Object.freeze(
   Object.fromEntries(sourceMetadata.map((s) => [s.key, s.displayName])),
