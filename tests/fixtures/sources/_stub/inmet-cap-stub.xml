@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<alert xmlns="urn:oasis:names:tc:emergency:cap:1.2">
+  <identifier>AVISO_STUB_001</identifier>
+  <sender>inmet@inmet.gov.br</sender>
+  <sent>2026-01-15T12:00:00-03:00</sent>
+  <status>Actual</status>
+  <msgType>Alert</msgType>
+  <scope>Public</scope>
+  <info xml:lang="pt-BR">
+    <category>Met</category>
+    <event>Chuva Intensa</event>
+    <urgency>Expected</urgency>
+    <severity>Moderate</severity>
+    <certainty>Likely</certainty>
+    <onset>2026-01-15T12:00:00-03:00</onset>
+    <expires>2026-01-16T12:00:00-03:00</expires>
+    <headline>Aviso de Chuva Intensa para fins de teste</headline>
+    <description>Fixture de teste para validação estrutural do script de refresh.</description>
+    <area>
+      <areaDesc>São Paulo</areaDesc>
+      <geocode>
+        <valueName>IBGE</valueName>
+        <value>SP</value>
+      </geocode>
+    </area>
+  </info>
+</alert>
