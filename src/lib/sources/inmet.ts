@@ -69,35 +69,41 @@ type UF = (typeof UF27_PROVISIONAL)[number];
 
 const UF_SET: ReadonlySet<UF> = new Set(UF27_PROVISIONAL);
 
+// Unicode-aware letter boundary so "Pará" matches but "Paraná" / "Paraíba" do not.
+// JS \b is ASCII-only and breaks at accented letters; \p{L} fixes that under /u.
+const B_OPEN = String.raw`(?<![\p{L}])`;
+const B_CLOSE = String.raw`(?![\p{L}])`;
+const ufName = (body: string): RegExp => new RegExp(`${B_OPEN}${body}${B_CLOSE}`, "iu");
+
 const UF_NAMES: ReadonlyArray<{ name: RegExp; uf: UF }> = [
   // Longer compound names first to avoid "Mato Grosso" matching "Mato Grosso do Sul".
-  { name: /mato\s+grosso\s+do\s+sul/i, uf: "MS" },
-  { name: /rio\s+grande\s+do\s+sul/i, uf: "RS" },
-  { name: /rio\s+grande\s+do\s+norte/i, uf: "RN" },
-  { name: /rio\s+de\s+janeiro/i, uf: "RJ" },
-  { name: /esp[ií]rito\s+santo/i, uf: "ES" },
-  { name: /distrito\s+federal/i, uf: "DF" },
-  { name: /santa\s+catarina/i, uf: "SC" },
-  { name: /s[aã]o\s+paulo/i, uf: "SP" },
-  { name: /minas\s+gerais/i, uf: "MG" },
-  { name: /mato\s+grosso/i, uf: "MT" },
-  { name: /pernambuco/i, uf: "PE" },
-  { name: /maranh[aã]o/i, uf: "MA" },
-  { name: /rond[oô]nia/i, uf: "RO" },
-  { name: /amazonas/i, uf: "AM" },
-  { name: /alagoas/i, uf: "AL" },
-  { name: /tocantins/i, uf: "TO" },
-  { name: /sergipe/i, uf: "SE" },
-  { name: /roraima/i, uf: "RR" },
-  { name: /para[ií]ba/i, uf: "PB" },
-  { name: /paran[aá]/i, uf: "PR" },
-  { name: /goi[aá]s/i, uf: "GO" },
-  { name: /cear[aá]/i, uf: "CE" },
-  { name: /bahia/i, uf: "BA" },
-  { name: /piau[ií]/i, uf: "PI" },
-  { name: /amap[aá]/i, uf: "AP" },
-  { name: /par[aá]/i, uf: "PA" },
-  { name: /acre/i, uf: "AC" },
+  { name: ufName(String.raw`mato\s+grosso\s+do\s+sul`), uf: "MS" },
+  { name: ufName(String.raw`rio\s+grande\s+do\s+sul`), uf: "RS" },
+  { name: ufName(String.raw`rio\s+grande\s+do\s+norte`), uf: "RN" },
+  { name: ufName(String.raw`rio\s+de\s+janeiro`), uf: "RJ" },
+  { name: ufName(String.raw`esp[ií]rito\s+santo`), uf: "ES" },
+  { name: ufName(String.raw`distrito\s+federal`), uf: "DF" },
+  { name: ufName(String.raw`santa\s+catarina`), uf: "SC" },
+  { name: ufName(String.raw`s[aã]o\s+paulo`), uf: "SP" },
+  { name: ufName(String.raw`minas\s+gerais`), uf: "MG" },
+  { name: ufName(String.raw`mato\s+grosso`), uf: "MT" },
+  { name: ufName(String.raw`pernambuco`), uf: "PE" },
+  { name: ufName(String.raw`maranh[aã]o`), uf: "MA" },
+  { name: ufName(String.raw`rond[oô]nia`), uf: "RO" },
+  { name: ufName(String.raw`amazonas`), uf: "AM" },
+  { name: ufName(String.raw`alagoas`), uf: "AL" },
+  { name: ufName(String.raw`tocantins`), uf: "TO" },
+  { name: ufName(String.raw`sergipe`), uf: "SE" },
+  { name: ufName(String.raw`roraima`), uf: "RR" },
+  { name: ufName(String.raw`para[ií]ba`), uf: "PB" },
+  { name: ufName(String.raw`paran[aá]`), uf: "PR" },
+  { name: ufName(String.raw`goi[aá]s`), uf: "GO" },
+  { name: ufName(String.raw`cear[aá]`), uf: "CE" },
+  { name: ufName(String.raw`bahia`), uf: "BA" },
+  { name: ufName(String.raw`piau[ií]`), uf: "PI" },
+  { name: ufName(String.raw`amap[aá]`), uf: "AP" },
+  { name: ufName(String.raw`par[aá]`), uf: "PA" },
+  { name: ufName(String.raw`acre`), uf: "AC" },
 ];
 
 const UF_CODE_RE = /\b([A-Z]{2})\b/g;
@@ -108,7 +114,8 @@ function extractUFs(area: InmetInfo["area"]): Set<UF> {
   const entries: InmetArea[] = Array.isArray(area) ? area : [area];
 
   for (const entry of entries) {
-    const desc = entry.areaDesc ?? "";
+    // areaDesc is guaranteed-string by InmetAreaSchema (z.string(), non-optional).
+    const desc = entry.areaDesc;
 
     // Pass 1: full state names (longest-first table).
     for (const { name, uf } of UF_NAMES) {
@@ -172,8 +179,9 @@ interface MaybeHttpError {
 function wrapHttpError(err: unknown, url: string): never {
   const e = err as MaybeHttpError;
   const status = e.status;
-  const name = e.name ?? e.cause?.name;
-  if (name === "AbortError" || name === "TimeoutError") {
+  const names = [e.name, e.cause?.name].filter((n): n is string => typeof n === "string");
+  const isTimeout = names.some((n) => n === "AbortError" || n === "TimeoutError");
+  if (isTimeout) {
     throw sourceError("timeout", `INMET fetch timed out: ${url}`, err);
   }
   if (status !== undefined && status >= 500) {
@@ -277,8 +285,12 @@ export function createInmetAdapter(http: InmetHttpClient = PROD_HTTP_CLIENT) {
         // for one alert must not poison the rest of the INMET tick (T-04-03-05).
       }
 
-      // Defense-in-depth: parse the final array against AlertArraySchema.
+      // Defense-in-depth: parse the final array against AlertArraySchema. The
+      // throw arm is structurally unreachable — normalizeCapDoc only emits
+      // values that pass AlertSchema field-by-field — but is kept as a tripwire
+      // for future refactors. Coverage ignored on the unreachable arm only.
       const validated = AlertArraySchema.safeParse(collected);
+      /* v8 ignore start */
       if (!validated.success) {
         throw sourceError(
           "schema_invalid",
@@ -286,6 +298,7 @@ export function createInmetAdapter(http: InmetHttpClient = PROD_HTTP_CLIENT) {
           validated.error,
         );
       }
+      /* v8 ignore stop */
       return validated.data;
     },
   };
