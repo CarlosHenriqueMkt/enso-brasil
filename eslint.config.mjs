@@ -81,4 +81,38 @@ export default [
       "no-restricted-imports": "off",
     },
   },
+  // BLOCK C — no unconditional test skips (P4 policy: zero skipped tests in CI).
+  //   `.skipIf(condition)` is allowed (env-guarded integration tests).
+  //   `.skip` / `.todo` / `xit` / `xdescribe` / `xtest` are forbidden.
+  {
+    files: [
+      "**/*.test.ts",
+      "**/*.test.tsx",
+      "tests/**/*.ts",
+      "tests/**/*.tsx",
+    ],
+    rules: {
+      "no-restricted-syntax": [
+        "error",
+        {
+          selector:
+            "CallExpression > MemberExpression.callee[property.name='skip']",
+          message:
+            "Unconditional `.skip` is forbidden. Use `.skipIf(condition)` for env-guarded tests, or fix and unskip.",
+        },
+        {
+          selector:
+            "CallExpression > MemberExpression.callee[property.name='todo']",
+          message:
+            "`.todo` is forbidden — open an issue or write the test. CI will not let pending tests merge.",
+        },
+        {
+          selector:
+            "CallExpression > Identifier.callee[name=/^x(it|test|describe)$/]",
+          message:
+            "`xit` / `xtest` / `xdescribe` are forbidden. Use `.skipIf(condition)` or remove the test.",
+        },
+      ],
+    },
+  },
 ];

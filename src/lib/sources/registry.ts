@@ -1,5 +1,5 @@
 import type { SourceAdapter } from "./types";
-import { stubAdapter } from "./stub";
+import { inmetAdapter } from "./inmet";
 
 /**
  * Registry of all SourceAdapters (REQ-S2.04). Adding a new source is a
@@ -9,13 +9,16 @@ import { stubAdapter } from "./stub";
  *
  *   grep -rE "import.*Stub|import.*Cemaden|import.*Inmet" src/lib src/app \
  *     | grep -v "src/lib/sources/" | wc -l   →   must be 0
+ *
+ * TODO(P5): append cemadenAdapter — Promise.allSettled is N-arity safe;
+ * orchestrator needs no change. Schema drift fix required first (04-05-SUMMARY).
  */
-export const sources: readonly SourceAdapter[] = [stubAdapter];
+export const sources: readonly SourceAdapter[] = [inmetAdapter];
 
 /**
  * Edge-safe lookup of source displayNames derived from the registry.
  * Consumed by `/api/health` (edge runtime) in plan 02-07 — that route
- * cannot import `stub.ts` directly because `stub.ts` uses `node:fs`.
+ * cannot import adapter modules directly in production contexts.
  * This map is plain data (string → string), safe in V8 isolates.
  */
 export const sourceDisplayNames: Record<string, string> = Object.freeze(

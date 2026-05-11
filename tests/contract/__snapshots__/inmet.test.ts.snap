@@ -1,0 +1,55 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`INMET contract: real fixture round-trip > fetch() resolves to Alert[] matching committed snapshot 1`] = `
+[
+  {
+    "body": "Fixture de teste para validação estrutural do script de refresh.",
+    "fetched_at": "NORMALIZED",
+    "hazard_kind": "inundacao",
+    "headline": "Aviso de Inundação para fins de teste",
+    "payload_hash": "c5a45806a334a160fbbf0b2b6e9db2762b70ed88866aba657505de6cb631bfa4",
+    "raw": {
+      "?xml": {
+        "@_encoding": "UTF-8",
+        "@_version": "1.0",
+      },
+      "alert": {
+        "@_xmlns": "urn:oasis:names:tc:emergency:cap:1.2",
+        "identifier": "AVISO_STUB_001",
+        "info": [
+          {
+            "@_xml:lang": "pt-BR",
+            "area": {
+              "areaDesc": "São Paulo",
+              "geocode": {
+                "value": "SP",
+                "valueName": "IBGE",
+              },
+            },
+            "category": "Met",
+            "certainty": "Likely",
+            "description": "Fixture de teste para validação estrutural do script de refresh.",
+            "event": "Inundação",
+            "expires": "2026-01-16T12:00:00-03:00",
+            "headline": "Aviso de Inundação para fins de teste",
+            "onset": "2026-01-15T12:00:00-03:00",
+            "severity": "Severe",
+            "urgency": "Expected",
+          },
+        ],
+        "msgType": "Alert",
+        "scope": "Public",
+        "sender": "inmet@inmet.gov.br",
+        "sent": "2026-01-15T12:00:00-03:00",
+        "status": "Actual",
+      },
+    },
+    "severity": "high",
+    "source_key": "inmet",
+    "source_url": "https://alertas2.inmet.gov.br/AVISO_STUB_001",
+    "state_uf": "SP",
+    "valid_from": undefined,
+    "valid_until": "2026-01-16T15:00:00.000Z",
+  },
+]
+`;

@@ -38,7 +38,7 @@ describe("GET /api/health (mocked db)", () => {
 
   it("marks isStale=true for null last_success_at", async () => {
     rows.push({
-      sourceKey: "stub",
+      sourceKey: "inmet",
       lastAttemptAt: null,
       lastSuccessAt: null,
       lastError: null,
@@ -48,8 +48,8 @@ describe("GET /api/health (mocked db)", () => {
     const res = await GET();
     const body = await res.json();
     expect(body.sources[0]).toMatchObject({
-      key: "stub",
-      displayName: "Stub (fixture)",
+      key: "inmet",
+      displayName: "INMET — Alert-AS",
       lastSuccessAt: null,
       isStale: true,
       consecutiveFailures: 0,
@@ -59,7 +59,7 @@ describe("GET /api/health (mocked db)", () => {
 
   it("marks isStale=true for last_success_at older than 30min", async () => {
     rows.push({
-      sourceKey: "stub",
+      sourceKey: "inmet",
       lastAttemptAt: new Date(),
       lastSuccessAt: new Date(Date.now() - 31 * 60 * 1000),
       lastError: null,
@@ -74,7 +74,7 @@ describe("GET /api/health (mocked db)", () => {
 
   it("marks isStale=false for last_success_at within 30min", async () => {
     rows.push({
-      sourceKey: "stub",
+      sourceKey: "inmet",
       lastAttemptAt: new Date(),
       lastSuccessAt: new Date(Date.now() - 5 * 60 * 1000),
       lastError: null,

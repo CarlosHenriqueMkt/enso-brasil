@@ -11,15 +11,15 @@
 
 ## Phase Map
 
-| #   | Phase                            | Goal                                                                                                                                                                                | Requirements                                       | Success criteria |
-| --- | -------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------- | ---------------- |
-| 1   | **Skeleton & OSS Foundation** ✅ | Public repo, scaffolded Next.js app, CI green, accessibility shell, disclaimer + privacy live · SPEC locked at `phases/01-skeleton-oss-foundation/01-SPEC.md` · VERIFIED 2026-05-01 | FOUND-01,02,04..10 (FOUND-03 removed)              | 4/4 ✓            |
-| 2   | **Data Foundation**              | Postgres + Upstash + ofetch + adapter contract + cron skeleton wired end-to-end with no real source yet                                                                             | DATA-01..09                                        | 4                |
-| 3   | **Pure Risk Engine**             | `calculateRiskLevel()` shipped with `unknown` level, 100% test coverage, plain-language explanations, versioned snapshot shape                                                      | RISK-01..10                                        | 4                |
-| 4   | **First Two Adapters**           | CEMADEN + INMET adapters live; full ingest → normalize → store → snapshot → cache → serve flow working                                                                              | ADAPT-01, ADAPT-02, ADAPT-04                       | 5                |
-| 5   | **Dashboard UI**                 | Map + cards + per-state route + share + filter + `/texto` route live; WCAG AA passes                                                                                                | DASH-01..10, A11Y-01..06                           | 5                |
-| 6   | **Hardening + 3rd Source**       | INPE Queimadas or NASA FIRMS integrated; perf budget met; canary deploy; observability minimal viable                                                                               | ADAPT-03, A11Y-05 (re-verify), DATA-09 (re-verify) | 4                |
-| 7   | **Launch**                       | Domain live, OG cards verified across WhatsApp/Twitter/LinkedIn, README final, Plausible wired, outreach sent                                                                       | DEPLOY-01..06                                      | 4                |
+| #   | Phase                              | Goal                                                                                                                                                                                | Requirements                                       | Success criteria |
+| --- | ---------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------- | ---------------- |
+| 1   | **Skeleton & OSS Foundation** ✅   | Public repo, scaffolded Next.js app, CI green, accessibility shell, disclaimer + privacy live · SPEC locked at `phases/01-skeleton-oss-foundation/01-SPEC.md` · VERIFIED 2026-05-01 | FOUND-01,02,04..10 (FOUND-03 removed)              | 4/4 ✓            |
+| 2   | **Data Foundation**                | Postgres + Upstash + ofetch + adapter contract + cron skeleton wired end-to-end with no real source yet                                                                             | DATA-01..09                                        | 4                |
+| 3   | **Pure Risk Engine**               | `calculateRiskLevel()` shipped with `unknown` level, 100% test coverage, plain-language explanations, versioned snapshot shape                                                      | RISK-01..10                                        | 4                |
+| 4   | **First Adapter (INMET) — Path C** | INMET adapter live; full ingest → normalize → store → snapshot → cache → serve flow on real INMET data. CEMADEN deferred to Phase 5.                                                | ADAPT-02, ADAPT-04                                 | 5                |
+| 5   | **CEMADEN + Dashboard UI**         | CEMADEN adapter (carry-over from P4 Path C) + Map + cards + per-state route + share + filter + `/texto` route live; WCAG AA passes                                                  | ADAPT-01, DASH-01..10, A11Y-01..06                 | 6                |
+| 6   | **Hardening + 3rd Source**         | INPE Queimadas or NASA FIRMS integrated; perf budget met; canary deploy; observability minimal viable                                                                               | ADAPT-03, A11Y-05 (re-verify), DATA-09 (re-verify) | 4                |
+| 7   | **Launch**                         | Domain live, OG cards verified across WhatsApp/Twitter/LinkedIn, README final, Plausible wired, outreach sent                                                                       | DEPLOY-01..06                                      | 4                |
 
 **Total:** 7 phases · 45 v1 requirements mapped · all v1 covered ✓
 
@@ -104,37 +104,52 @@ Plans:
 
 ---
 
-### Phase 4 — First Two Adapters (CEMADEN + INMET)
+### Phase 4 — First Adapter (INMET) — Path C
 
-**Goal:** Replace the stub adapter with real CEMADEN and INMET adapters. After this phase, `/api/states` returns real Brazilian alert data on every cron tick.
+**Goal:** Replace the stub adapter with the INMET adapter. After this phase, `/api/states` returns real Brazilian alert data on every cron tick. CEMADEN is **deferred to Phase 5** under the SPEC's locked Q6=a fallback (Path C, decided 2026-05-05).
 
-**Requirements:** ADAPT-01, ADAPT-02, ADAPT-04
+**Path C rationale:** Live discovery on 2026-05-05 confirmed CEMADEN's only documented public REST API (`https://sws.cemaden.gov.br/PED/api/ui/`) is **PED** — observational data only (PCDs, rainfall, weather stations), 15 paths, zero alert endpoints. Deriving alerts from raw rainfall would cross the aggregator-vs-authority line. CEMADEN authoritative alerts (`painelalertas.cemaden.gov.br`) require DevTools-on-live-SPA fieldwork that exceeds Phase 4's scope budget. PED swagger preserved at `.planning/phases/04-first-two-adapters/04-cemaden-PED-swagger.json` for P5.
+
+**Requirements:** ADAPT-02, ADAPT-04
 
 **Success criteria:**
 
-1. CEMADEN adapter fetches the Painel de Alertas backing endpoint, schema-validates with zod, normalizes to `Alert[]`; payload-hash anomaly detection logs schema drift
-2. INMET adapter parses Alert-AS **CAP XML** correctly (verified against captured real samples) and normalizes to `Alert[]` with proper attribution + sourceUrl
-3. Golden-file fixtures of real responses checked into `tests/fixtures/sources/` for both sources; adapter contract tests fail if response shape changes
-4. End-to-end: GH Actions cron tick → both adapters fire in parallel → dedup → store → risk computed → snapshot cached → `/api/states` returns real data with non-stub timestamps
-5. When either source is forced offline (mocked), the other still flows through; `sources_health` reflects the failure; risk for affected states downgrades to `unknown` only if BOTH fail for >1h
+1. INMET adapter parses Alert-AS **CAP XML** correctly (verified against captured real samples) and normalizes to `Alert[]` with proper attribution + sourceUrl
+2. Golden-file fixture of real INMET response checked into `tests/fixtures/sources/inmet-<ISO-date>.{xml,list.json}`; adapter contract test fails if response shape changes
+3. End-to-end: GH Actions cron tick → INMET adapter fires → dedup → store → risk computed → snapshot cached → `/api/states` returns real INMET data with non-stub timestamps
+4. Cross-source isolation test (REQ-7) preserved via inline `cemadenStub` factory in test file — proves `Promise.allSettled` keeps INMET flowing when CEMADEN-stub rejects. **NO real CEMADEN code lands in `src/`.**
+5. Atomic stub cutover: registry rewritten to `[inmetAdapter]` AND `stub.ts`/`stub.test.ts`/`stub-default.json` deleted in the same commit. Orchestrator uses `Promise.allSettled(sources.map(...))` which is N-arity safe — Phase 5 can append `cemadenAdapter` to the registry with zero `/api/ingest` changes.
 
 **Depends on:** Phase 3
 
+**Plans:** 5 plans (was 6 — plan 04-02 deleted under Path C)
+
+Plans:
+
+- [ ] 04-01-PLAN-fast-xml-parser-dep.md — Pin fast-xml-parser 5.3.0 + shared CAP parser module + sourceError() factory + vitest glob pre-extend (Wave 0)
+- [ ] 04-03-PLAN-inmet-schema-and-adapter.md — INMET two-step adapter (INMET_CAP_LIST + INMET_CAP_DETAIL) + CAP parsing + pt-BR selection (Wave 1)
+- [ ] 04-04-PLAN-fixture-refresh-script.md — pnpm fixtures:refresh:inmet + --dry-run + structural-diff util (Wave 1; CEMADEN refresh deferred to P5)
+- [ ] 04-05-PLAN-contract-tests-and-real-fixtures.md — Capture real INMET fixture + contract test + cross-source isolation via inline cemadenStub (Wave 2)
+- [ ] 04-06-PLAN-atomic-cutover.md — Atomic stub-removal + registry=[inmetAdapter] + preview smoke (Wave 3)
+
 ---
 
-### Phase 5 — Dashboard UI
+### Phase 5 — CEMADEN + Dashboard UI
 
-**Goal:** Everything users see. Map (desktop) + cards (mobile), per-state route, share, filter, `/texto` accessible alternative — and WCAG AA verified via axe-core in CI.
+**Goal:** Land the real CEMADEN adapter (carry-over from Phase 4 Path C) AND ship the user-facing dashboard. Map (desktop) + cards (mobile), per-state route, share, filter, `/texto` accessible alternative — and WCAG AA verified via axe-core in CI.
 
-**Requirements:** DASH-01, DASH-02, DASH-03, DASH-04, DASH-05, DASH-06, DASH-07, DASH-08, DASH-09, DASH-10, A11Y-01, A11Y-02, A11Y-03, A11Y-04, A11Y-05, A11Y-06
+**CEMADEN scope:** Discover the `painelalertas.cemaden.gov.br` SPA backing endpoint via DevTools network inspection; ship `src/lib/sources/cemaden.ts` factory + zod schema + golden fixture + contract test; replace the inline `cemadenStub` in `tests/contract/cross-source-isolation.test.ts` with the real adapter; append `cemadenAdapter` to `src/lib/sources/registry.ts` (zero `/api/ingest` changes — Promise.allSettled is N-arity safe).
+
+**Requirements:** ADAPT-01 (CEMADEN, carry-over from P4), DASH-01..10, A11Y-01..06
 
 **Success criteria:**
 
-1. Home `/` renders all 27 states with current risk level, badges (color + icon + label), source attribution, last-update timestamp; data comes from Upstash snapshot served via Edge runtime
-2. `/estado/{uf}` route works for all 27 UFs with per-state OG/Twitter cards rendering correctly when pasted into WhatsApp web preview
-3. Mobile cards layout works at 360px width; map appears below as secondary; region filter chips work
-4. `/texto` route renders full data with no map, no client JS dependency, screen-reader-friendly heading structure
-5. CI runs axe-core against home + 3 random state pages; zero critical violations. Lighthouse on simulated 3G profile shows perf ≥ 90, LCP < 2.5s, initial-route transfer < 200 KB
+1. CEMADEN adapter ships with real captured fixture; cross-source isolation test now uses real `cemadenAdapter` instead of inline stub
+2. Home `/` renders all 27 states with current risk level, badges (color + icon + label), source attribution, last-update timestamp; data comes from Upstash snapshot served via Edge runtime
+3. `/estado/{uf}` route works for all 27 UFs with per-state OG/Twitter cards rendering correctly when pasted into WhatsApp web preview
+4. Mobile cards layout works at 360px width; map appears below as secondary; region filter chips work
+5. `/texto` route renders full data with no map, no client JS dependency, screen-reader-friendly heading structure
+6. CI runs axe-core against home + 3 random state pages; zero critical violations. Lighthouse on simulated 3G profile shows perf ≥ 90, LCP < 2.5s, initial-route transfer < 200 KB
 
 **Depends on:** Phase 4
 
@@ -176,7 +191,7 @@ Plans:
 
 ## Coverage Validation
 
-Every v1 REQ-ID in `REQUIREMENTS.md` maps to exactly one phase ✓
+Every v1 REQ-ID in `REQUIREMENTS.md` maps to exactly one phase ✓ (ADAPT-01 moved P4→P5 under Path C)
 No phase contains requirements from other milestones ✓
 M2–M13 capabilities are out-of-scope for this milestone ✓
 

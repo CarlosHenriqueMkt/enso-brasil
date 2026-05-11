@@ -105,6 +105,32 @@ pnpm exec playwright test
 pnpm build
 ```
 
+## Atualizando fixtures INMET
+
+O pipeline de ingestão usa fixtures capturadas do INMET para testes de
+contrato. Para atualizar as fixtures localmente:
+
+```bash
+# Captura ao vivo (requer rede; INMET deve estar disponível):
+pnpm fixtures:refresh:inmet
+
+# Sem rede — usa stubs locais em tests/fixtures/sources/_stub/:
+pnpm fixtures:refresh:inmet --dry-run
+```
+
+Códigos de saída:
+
+- `0` — sem fixture anterior ou apenas mudança de valores folha (sem impacto estrutural)
+- `1` — deriva estrutural detectada (a estrutura da resposta INMET mudou)
+
+Revise o diff gerado antes de commitar. Fixtures novas ficam em
+`tests/fixtures/sources/inmet-<YYYY-MM-DD>.xml` e
+`tests/fixtures/sources/inmet-<YYYY-MM-DD>.list.json`.
+
+**CEMADEN será adicionado na Fase 5.** O script de refresh é parametrizado
+por fonte e o orquestrador (`/api/ingest`) já itera `sources[]` via
+`Promise.allSettled` — nenhuma mudança de arquitetura será necessária.
+
 ## Como contribuir
 
 Leia o guia em [CONTRIBUTING.md](./CONTRIBUTING.md). Resumo:

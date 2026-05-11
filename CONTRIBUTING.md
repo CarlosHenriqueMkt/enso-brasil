@@ -143,3 +143,37 @@ PRs que adicionem qualquer um destes itens serão **fechados sem merge**:
 - Qualquer coisa que possa substituir ou competir com a Defesa Civil / CEMADEN como sistema oficial de alerta
 
 Esta lista vive em [`CLAUDE.md`](./CLAUDE.md) e em [`.planning/PROJECT.md`](./.planning/PROJECT.md). Se você acha que um item dessa lista deveria mudar, abra uma issue de discussão antes de codar.
+
+## Workflow de fixture refresh (mantenedor)
+
+Fixtures do INMET são capturadas manualmente e commitadas no repositório.
+Execute após mudanças na API do INMET ou quando suspeitar de deriva de schema:
+
+```bash
+# 1. Captura ao vivo (requer rede)
+pnpm fixtures:refresh:inmet
+
+# 2. Revise o diff impresso no terminal
+#    - Saída 0: sem mudança estrutural → commit direto
+#    - Saída 1: deriva estrutural detectada → investigue antes de commitar
+
+# 3. Se a captura falhou por rate-limit ou INMET indisponível, use dry-run:
+pnpm fixtures:refresh:inmet --dry-run
+
+# 4. Commit
+git add tests/fixtures/sources/inmet-*.{xml,list.json}
+git commit -m "chore: refresh INMET fixtures <YYYY-MM-DD>"
+```
+
+**Path C (Fase 4):** apenas INMET está integrado. CEMADEN será adicionado
+na Fase 5 — veja issue [#4](https://github.com/CarlosHenriqueMkt/eo-brasil/issues/4)
+para o rastreamento da sentinela de deriva e a decisão completa em
+`.planning/phases/04-first-two-adapters/04-CONTEXT.md`.
+
+Quando o CEMADEN for adicionado, apenas dois passos serão necessários:
+
+1. Criar `scripts/refresh-cemaden.ts` (thin wrapper em `runFixtureRefresh`)
+2. Appender `cemadenAdapter` ao array em `src/lib/sources/registry.ts`
+
+O orquestrador (`/api/ingest`) já itera `sources[]` via `Promise.allSettled`
+e não precisará de alterações.
