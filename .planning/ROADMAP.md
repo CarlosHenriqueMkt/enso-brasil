@@ -25,9 +25,21 @@
 
 ---
 
+## Completion Status
+
+- [x] Phase 1: Skeleton & OSS Foundation
+- [x] Phase 2: Data Foundation
+- [x] Phase 3: Pure Risk Engine
+- [x] Phase 4: First Adapter (INMET) — Path C
+- [ ] Phase 5: CEMADEN + Dashboard UI
+- [ ] Phase 6: Hardening + 3rd Source
+- [ ] Phase 7: Launch
+
+---
+
 ## Phase Details
 
-### Phase 1 — Skeleton & OSS Foundation
+### Phase 1: Skeleton & OSS Foundation
 
 **Goal:** A public, accessible, MIT-licensed Next.js skeleton that already feels like ENSO Brasil — disclaimer visible, privacy page live, CI green — but no data flow yet.
 
@@ -54,7 +66,7 @@ Plans:
 
 ---
 
-### Phase 2 — Data Foundation
+### Phase 2: Data Foundation
 
 **Goal:** All the plumbing to ingest, store, cache, and serve hazard data — wired end-to-end with a stub adapter that returns deterministic fake alerts. No real source yet, no risk computation yet, no UI yet.
 
@@ -87,7 +99,7 @@ Plans:
 
 ---
 
-### Phase 3 — Pure Risk Engine
+### Phase 3: Pure Risk Engine
 
 **Goal:** A pure, edge-safe `calculateRiskLevel()` that fully implements the v0 formula (with the research-flagged corrections: `unknown` level + `moderate` default for unknown terms). No I/O. 100% test coverage. Replaces the placeholder in P2's snapshot computation.
 
@@ -104,7 +116,7 @@ Plans:
 
 ---
 
-### Phase 4 — First Adapter (INMET) — Path C
+### Phase 4: First Adapter (INMET) — Path C
 
 **Goal:** Replace the stub adapter with the INMET adapter. After this phase, `/api/states` returns real Brazilian alert data on every cron tick. CEMADEN is **deferred to Phase 5** under the SPEC's locked Q6=a fallback (Path C, decided 2026-05-05).
 
@@ -134,7 +146,7 @@ Plans:
 
 ---
 
-### Phase 5 — CEMADEN + Dashboard UI
+### Phase 5: CEMADEN + Dashboard UI
 
 **Goal:** Land the real CEMADEN adapter (carry-over from Phase 4 Path C) AND ship the user-facing dashboard. Map (desktop) + cards (mobile), per-state route, share, filter, `/texto` accessible alternative — and WCAG AA verified via axe-core in CI.
 
@@ -155,7 +167,7 @@ Plans:
 
 ---
 
-### Phase 6 — Hardening + 3rd Source
+### Phase 6: Hardening + 3rd Source
 
 **Goal:** Add the optional 3rd source (INPE Queimadas OR NASA FIRMS) using the registry pattern with no orchestrator/UI changes. Verify free-tier headroom under 27-state × 3-source × 15-min load. Add minimal observability.
 
@@ -172,7 +184,7 @@ Plans:
 
 ---
 
-### Phase 7 — Launch
+### Phase 7: Launch
 
 **Goal:** Make the project public. Domain, social cards, README, analytics, outreach — and a clean main branch ready to invite contributors.
 

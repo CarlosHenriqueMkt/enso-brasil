@@ -2,14 +2,16 @@
 
 **Project:** ENSO Brasil — public Brazilian climate hazard aggregator dashboard
 **Current milestone:** v1 — Per-state hazard dashboard
-**Status:** Phase 4 SHIPPED (Path C — INMET-only; CEMADEN P5) · Phase 5 NEXT
-**Last updated:** 2026-05-09
+**Status:** Phase 4 MERGED (Path C — INMET-only; CEMADEN P5) · Phase 5 IN PROGRESS
+**Last updated:** 2026-05-11
 
 ## Current Phase
 
-**Phase 4 verdict:** SHIPPED — PR #5 opened 2026-05-09 on branch `phase-4-adapters-cemaden-inmet`. Pending squash-merge after CI + Vercel preview smoke verification. INMET adapter (41 unit tests, 100/100/100/100 coverage), fixture refresh script, contract tests, atomic cutover from stub to inmetAdapter. CEMADEN deferred to P5 (Path C). Schema drift finding: live INMET API returns `{hoje:[...], futuro:[...]}` instead of flat array — P5.1 fix documented in 04-05-SUMMARY.
-**Next:** Phase 5 — CEMADEN + Dashboard UI
-**Command to run:** `/gsd-execute-phase 5`
+**Phase 4 verdict:** MERGED — PR #5 squash-merged to main as `2b6fad2` on 2026-05-11 via `--admin` bypass (CI green, GitGuardian PASS, Vercel preview PASS). Branch `phase-4-adapters-cemaden-inmet` auto-deleted on remote, local pruned. INMET adapter (41 unit tests, 100/100/100/100 coverage), fixture refresh script, contract tests, atomic cutover from stub to inmetAdapter. CEMADEN deferred to P5 (Path C). Schema drift finding: live INMET API returns `{hoje:[...], futuro:[...]}` instead of flat array — P5.1 fix documented in 04-05-SUMMARY.
+
+**Phase 5 kickoff (2026-05-11):** Branch `phase-5-cemaden-dashboard` created from `main@2b6fad2`. ROADMAP parser fix landed (em-dash `—` → colon `:` on `### Phase N` headings; SDK regex required colon separator) plus new `## Completion Status` checklist (P1–P4 `[x]`, P5–P7 `[ ]`) — without these, `gsd-sdk query roadmap.analyze` returned empty and `gsd-autonomous` would have exited "complete 🎉" falsely.
+**Next:** Phase 5 — CEMADEN + Dashboard UI (discuss → plan → execute)
+**Command to run:** `/gsd-discuss-phase 5` (or resume `/gsd-autonomous --from 5`)
 
 **Path C revision (2026-05-05):** Plan-checker round produced findings B-1/B-2/B-3 (CEMADEN endpoint discovery) and W-1/W-3/W-4 (taxonomy + verify + vitest race). Live discovery confirmed CEMADEN's only documented public REST API (`https://sws.cemaden.gov.br/PED/api/ui/`) is **PED — Plataforma de Entrega de Dados** — observational data only (PCDs, accumulated rainfall, weather stations), 15 paths, ZERO alert endpoints. PED ≠ alerts; deriving alerts from raw rainfall crosses the aggregator-vs-authority line in CLAUDE.md anti-features. CEMADEN authoritative alerts (`painelalertas.cemaden.gov.br` SPA) require DevTools-on-live-SPA fieldwork that exceeds Phase 4's scope budget.
 
@@ -47,8 +49,8 @@
 | 1   | Skeleton & OSS Foundation      | ✅ complete + verified (CI green, repo public, ruleset active)  |
 | 2   | Data Foundation                | ✅ shipped — production live, cron green, all 11 plans complete |
 | 3   | Pure Risk Engine               | ✅ shipped — PR #1 squash-merged 2026-05-04 (`8137afda`)        |
-| 4   | First Adapter (INMET) — Path C | ✅ shipped — PR #5 opened 2026-05-09; pending squash-merge      |
-| 5   | CEMADEN + Dashboard UI         | ⏳ **next** — absorbs CEMADEN adapter from P4 Path C carry-over |
+| 4   | First Adapter (INMET) — Path C | ✅ shipped — PR #5 squash-merged 2026-05-11 (`2b6fad2`)         |
+| 5   | CEMADEN + Dashboard UI         | 🚧 **in progress** — branch `phase-5-cemaden-dashboard`         |
 | 6   | Hardening + 3rd Source         | ⏳ pending                                                      |
 | 7   | Launch                         | ⏳ pending                                                      |
 
