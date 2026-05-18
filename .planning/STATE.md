@@ -3,7 +3,7 @@
 **Project:** ENSO Brasil — public Brazilian climate hazard aggregator dashboard
 **Current milestone:** v1 — Per-state hazard dashboard
 **Status:** Phase 4 MERGED (Path C — INMET-only; CEMADEN P5) · Phase 5 IN PROGRESS
-**Last updated:** 2026-05-11
+**Last updated:** 2026-05-18
 
 ## Current Phase
 
@@ -14,8 +14,10 @@
 **Phase 5 context shipped (2026-05-11, `5b8cef0`):** 4 gray areas resolved, 11 decisions captured in `05-CONTEXT.md`. Highlights: (1) CEMADEN strategy = DevTools discovery + adapter with `stability:unstable` marker; first P5 plan blocks on human DevTools session against `painelalertas.cemaden.gov.br`. (2) Desktop = Full SSR navigation (no client-side panel swap); home is read-only overview, `/estado/{uf}` is canonical detail. (3) `/texto` = regional tables + per-UF expanded articles, single SSR page, anchor links. (4) Share = wa.me primary + clipboard secondary. (5) Filter = URL-param `?region=` single-select, zero JS. UI design contract fully delegated to `sketch-findings-enso-brasil` skill (7 sources, 4 reference files, locked theme 2026-04-28). UI-phase workflow gate skipped intentionally — sketch findings cover all UI-SPEC scope. INMET P5.1 schema drift fix (`{hoje:[...], futuro:[...]}`) folded into P5 scope.
 **Phase 5 UI-SPEC shipped (2026-05-18, `5badedc`):** 05-UI-SPEC.md created by ui-researcher (0 user questions — all answers traced to LOCKED upstream: sketch-findings-enso-brasil skill, 05-CONTEXT.md, 05-SPEC.md). Bespoke civic theme (no shadcn) — locked presets reject rounded > 8px, shadows, weight ≥ 600. Yellow WCAG AA contrast lock: `#d4a017` border + `#fef7d6` fill + `#6b5006` ink, "never white on yellow" hard rule. ui-checker verdict: APPROVED (6/6 dimensions PASS, 2 FLAGs non-blocking — typography 9 sizes locked from sketch findings, spacing 3 exceptions 14px×2/44px justified by 360px breathing + WCAG touch target).
 
-**Next:** Phase 5 — plan-phase (research + structured plans + plan-check)
-**Command to run:** `/gsd-plan-phase 5`
+**Phase 5 plan-phase complete (2026-05-18, `5facae7`):** DevTools endpoint capture committed `2390be4` (verified `https://painelalertas.cemaden.gov.br/wsAlertas2` — national flat-array, UTC payload, no auth/CORS server-side, severity `[Moderado/Alto/Muito Alto]`, hazards `[Risco Hidrológico/Movimento de Massa]`, codibge+lat/lon per alert). Research `a847188` flagged D-04 contradiction (CEMADEN serves UTC, NOT BRT — `-03:00` offset rule reversed). Pattern map `f50776d` (11 exact analogs, 4 net-new flagged). Planner emitted 12 plans across 5 waves (W0 prep+spike → W1 CEMADEN adapter + INMET P5.1 fix → W2 UI primitives → W3 routes → W4 a11y/perf gate). Plan-check verdict PASS_WITH_FIXES (1 blocker, 4 high, 6 medium, 4 low) — all 7 targeted edits applied inline (RESEARCH §Open-Qs RESOLVED suffix, CONTEXT supersedes marker, plan-11 lowercase-only, plan-08 DOM invariant for pivot, plan-03 enchente lock, plan-02 bare-noun deslizamento, plan-01 spike-dir delete asserts). PLAN-REVIEW.md preserved for audit. 1 blocking checkpoint (Wave 0 package-legitimacy) + 1 final human-verify on Vercel preview.
+
+**Next:** Phase 5 — execute-phase
+**Command to run:** `/gsd-execute-phase 5`
 
 **Path C revision (2026-05-05):** Plan-checker round produced findings B-1/B-2/B-3 (CEMADEN endpoint discovery) and W-1/W-3/W-4 (taxonomy + verify + vitest race). Live discovery confirmed CEMADEN's only documented public REST API (`https://sws.cemaden.gov.br/PED/api/ui/`) is **PED — Plataforma de Entrega de Dados** — observational data only (PCDs, accumulated rainfall, weather stations), 15 paths, ZERO alert endpoints. PED ≠ alerts; deriving alerts from raw rainfall crosses the aggregator-vs-authority line in CLAUDE.md anti-features. CEMADEN authoritative alerts (`painelalertas.cemaden.gov.br` SPA) require DevTools-on-live-SPA fieldwork that exceeds Phase 4's scope budget.
 
