@@ -27,6 +27,8 @@ Deliver the public-facing v1 dashboard surface: 27-state overview at `/`, deep-l
 
 - **D-04 — BRT timestamp handling.** CEMADEN naive timestamps assumed UTC-3 no DST (Brazil 2019 abolition, verified P4 RESEARCH A6). Adapter explicitly applies `+ -03:00` offset; throws if source migrates to TZ-aware format (forces fixture refresh).
 
+  > **SUPERSEDED 2026-05-18 — see `05-02-CONTEXT-corrections.md`.** Endpoint capture (`05-cemaden-endpoint-capture.md`, commit `2390be4`) proves CEMADEN serves UTC (payload self-labels `atualizado: "DD-MM-YYYY HH:MM:SS UTC"`). Adapter parses as UTC and outputs ISO-Z; presentation layer converts to `America/Sao_Paulo` via `@date-fns/tz`, with per-UF overrides for AC (UTC-5) and Manaus (UTC-4). DO NOT apply a flat -03:00 offset.
+
 ### Desktop Interaction Model (Map ↔ Panel)
 
 - **D-05 — Full SSR navigation, no client-side panel swap.** Home `/` is a read-only overview: map (Albers conic, locked projection params) + all 27 state cards. Map state shapes wrap `<Link href="/estado/{uf}">`. Hover renders a tooltip (CSS-only or minimal JS, no panel mutation). `/estado/{uf}` is the canonical per-state detail page (sketch finding 004 two-column layout). Back/forward works natively. Simplest model; aligns with WCAG (works no-JS) and `/texto` mirror semantics.

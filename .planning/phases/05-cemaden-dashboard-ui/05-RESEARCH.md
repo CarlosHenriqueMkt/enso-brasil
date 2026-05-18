@@ -1034,13 +1034,13 @@ Use the parent-focus pattern. Tailwind v4 handles it via `group focus-visible:` 
 
 ---
 
-## Open Questions for the Planner
+## Open Questions for the Planner (RESOLVED)
 
-1. **D-04 rewrite:** Plan-phase MUST replace D-04 in CONTEXT.md (or document an override) before any adapter task lands. Recommended wording: "CEMADEN timestamps are UTC. Adapter outputs ISO-Z. Presentation layer converts to `America/Sao_Paulo` via `@date-fns/tz`, handling Acre (UTC-5) and Amazonas (UTC-4) where applicable."
-2. **Hazard enum extension (`deslizamento`):** Add to `HAZARD_KINDS` union? Required to map "Movimento de Massa" verbatim per CLAUDE.md.
-3. **Fixture capture date:** capture committed `2026-05-18` shows only `Risco Hidrológico - Moderado/Alto`. Should planner schedule a second capture during the SE summer to land `Muito Alto` and `Movimento de Massa` examples? (Recommendation: yes, gated by data availability — but not blocking.)
-4. **`br-atlas` packaging:** Is `carolinabigonha/br-atlas` published on npm under that name, or does the project need to vendor `states.json` directly? Spike answers.
-5. **README anchor `#formula-v0`:** Does the PT-BR README have a stable section explaining v0 formula? If not, planner should add one as a Wave 0 doc task to satisfy DASH-09.
+1. **D-04 rewrite:** RESOLVED in plan 02 — produces `05-02-CONTEXT-corrections.md` with `<rewrites decision="D-04">` block. Plan 03 implements UTC parsing in adapter; plan 07 `time/format.ts` converts at presentation layer via `@date-fns/tz` (handles AC=UTC-5 / Manaus=UTC-4 / Brasília).
+2. **Hazard enum extension (`deslizamento`):** RESOLVED in plan 02 — adds `deslizamento` to `HAZARD_KINDS` union mapped from CEMADEN `Movimento de Massa`.
+3. **Fixture capture date:** RESOLVED — plan 04 ships current capture; second capture scheduled non-blocking (Movimento de Massa / Muito Alto exercised synthetically in unit tests, flagged M-5 in PLAN-REVIEW).
+4. **`br-atlas` packaging:** RESOLVED in plan 01 spike ADR; plan 08 consumes the locked decision.
+5. **README anchor `#formula-v0`:** RESOLVED in plan 02 (adds anchor); plan 11 verifies via lychee CI gate.
 
 ---
 
