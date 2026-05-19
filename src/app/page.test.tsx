@@ -70,6 +70,22 @@ vi.mock("@/lib/snapshot/load", () => ({
   loadSnapshotForUi: vi.fn(),
 }));
 
+// BrazilMap is an async Server Component that awaits a TopoJSON file read.
+// In SSR-static rendering we can't suspend; stub it with a synchronous element
+// that preserves the locked DOM invariant (27 `<a href="/estado/{uf}">`) so
+// the page tests can still assert the map is rendered without filtering.
+vi.mock("@/components/map/BrazilMap", () => ({
+  BrazilMap: ({ states }: { states: ReadonlyArray<{ uf: string }> }) => (
+    <svg data-test-brazilmap="true">
+      {states.map((s) => (
+        <a key={s.uf} href={`/estado/${s.uf.toLowerCase()}`}>
+          <path />
+        </a>
+      ))}
+    </svg>
+  ),
+}));
+
 async function renderPage(searchParams: { region?: string } = {}): Promise<string> {
   const Page = (await import("./page")).default;
   // RSC: returns ReactElement
@@ -107,7 +123,7 @@ describe.skipIf(!existsSync(pagePath))("HomePage /", () => {
       degraded: false,
     });
     const html = await renderPage();
-    const cards = html.match(/class="state-card/g);
+    const cards = html.match(/class="state-card /g);
     expect(cards?.length).toBe(27);
   });
 
@@ -119,7 +135,7 @@ describe.skipIf(!existsSync(pagePath))("HomePage /", () => {
       degraded: false,
     });
     const html = await renderPage({ region: "sul" });
-    const cards = html.match(/class="state-card/g);
+    const cards = html.match(/class="state-card /g);
     expect(cards?.length).toBe(3);
     expect(html).toContain("Paraná");
     expect(html).toContain("Rio Grande do Sul");
@@ -134,7 +150,7 @@ describe.skipIf(!existsSync(pagePath))("HomePage /", () => {
       degraded: false,
     });
     const html = await renderPage({ region: "norte" });
-    const cards = html.match(/class="state-card/g);
+    const cards = html.match(/class="state-card /g);
     expect(cards?.length).toBe(7);
   });
 
@@ -146,7 +162,7 @@ describe.skipIf(!existsSync(pagePath))("HomePage /", () => {
       degraded: false,
     });
     const html = await renderPage({ region: "hawaii" });
-    const cards = html.match(/class="state-card/g);
+    const cards = html.match(/class="state-card /g);
     expect(cards?.length).toBe(27);
   });
 
@@ -186,7 +202,7 @@ describe.skipIf(!existsSync(pagePath))("HomePage /", () => {
       degraded: true,
     });
     const html = await renderPage();
-    const cards = html.match(/class="state-card/g);
+    const cards = html.match(/class="state-card /g);
     expect(cards?.length).toBe(27);
     // Gray-stripe token must be present on every card (StateCard maps
     // risk="unknown" → token "gray").
