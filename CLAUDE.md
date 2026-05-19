@@ -21,15 +21,15 @@ Always start with `.planning/STATE.md` to know the current phase, then `.plannin
 
 ## Source-of-truth files (read these before substantive changes)
 
-| File | When to read |
-|------|--------------|
-| `.planning/PROJECT.md` | Vision, audience, locked decisions, key decisions table |
-| `.planning/REQUIREMENTS.md` | All v1 REQ-IDs |
-| `.planning/ROADMAP.md` | Phase breakdown + success criteria |
-| `.planning/STATE.md` | Current phase, status, open decisions |
-| `.planning/research/SUMMARY.md` | What changed vs the original idea doc — load-bearing |
-| `risk-formula-v0.md` | Risk formula contract. Apply v0.1 corrections from SUMMARY: `unknown` level + `moderate` default for unknown source terms |
-| `gsd-new-project-prompt.md` | Original idea document — preserved for traceability |
+| File                            | When to read                                                                                                              |
+| ------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| `.planning/PROJECT.md`          | Vision, audience, locked decisions, key decisions table                                                                   |
+| `.planning/REQUIREMENTS.md`     | All v1 REQ-IDs                                                                                                            |
+| `.planning/ROADMAP.md`          | Phase breakdown + success criteria                                                                                        |
+| `.planning/STATE.md`            | Current phase, status, open decisions                                                                                     |
+| `.planning/research/SUMMARY.md` | What changed vs the original idea doc — load-bearing                                                                      |
+| `risk-formula-v0.md`            | Risk formula contract. Apply v0.1 corrections from SUMMARY: `unknown` level + `moderate` default for unknown source terms |
+| `gsd-new-project-prompt.md`     | Original idea document — preserved for traceability                                                                       |
 
 ## Locked decisions (do not relitigate without `/gsd-new-milestone`)
 
@@ -39,7 +39,7 @@ Always start with `.planning/STATE.md` to know the current phase, then `.plannin
 - Cache: **Upstash Redis** (`@upstash/redis`)
 - DB: **Neon Postgres** + **Drizzle ORM**
 - HTTP: **ofetch** (unjs)
-- Map: **Albers conic** projection, parallels [-7, -22], rotate [54, 0], using `carolinabigonha/br-atlas` simplified TopoJSON
+- Map: **Albers conic** projection, parallels [-7, -22], rotate [54, 0], rendered via hand-rolled `<svg>` + `d3-geo` `geoPath()` server-side (react-simple-maps@3 PIVOT verdict 2026-05-18 — incompatible with React 19 SSR). TopoJSON source: **IBGE BR_UF_YYYY shapefile** → `mapshaper` Visvalingam simplification → vendored at `src/lib/geo/data/states.json` (regenerated via `pnpm geo:build`). Amends original `carolinabigonha/br-atlas` plan (that repo publishes only build scripts, no fetchable JSON artifact).
 - Risk levels: `green | yellow | orange | red | unknown` (5, including `unknown`)
 - Default severity for unknown source terms: `moderate` (NOT `low`)
 - PT-BR severity labels (verbatim): "Sem alertas / Atenção / Alerta / Perigo / Dados indisponíveis"

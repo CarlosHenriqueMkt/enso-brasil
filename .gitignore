@@ -38,6 +38,9 @@ test-results/
 # Vercel
 .vercel
 
+# Geo build artifacts (zip input; output states.json IS committed)
+scripts/build/
+
 # TypeScript incremental
 *.tsbuildinfo
 tsconfig.tsbuildinfo
