@@ -112,9 +112,6 @@ export default async function TextoPage(): Promise<ReactElement> {
       <StaleSourceBanner sources={health} />
 
       <section aria-label="Resumo por região">
-        <h2 id="por-regiao" className="text-section-title" style={{ fontWeight: 600 }}>
-          Por região
-        </h2>
         {REGION_ORDER.map((region) => {
           const regionName = messages.filter.regions[region];
           return (
@@ -157,10 +154,7 @@ export default async function TextoPage(): Promise<ReactElement> {
         })}
       </section>
 
-      <section aria-label="Detalhes por estado">
-        <h2 id="estados" className="text-section-title" style={{ fontWeight: 600 }}>
-          Estados
-        </h2>
+      <section aria-label="Detalhes por estado" id="estados">
         {articleUfs.map((uf) => {
           const snap = byUf.get(uf);
           if (!snap) return null;

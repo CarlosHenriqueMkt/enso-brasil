@@ -85,7 +85,7 @@ describe.skipIf(!existsSync(pagePath))("/texto", () => {
     const expected = [7, 9, 4, 4, 3];
     for (let i = 0; i < regions.length; i++) {
       const start = html.indexOf(`>${regions[i]}<`);
-      const endName = regions[i + 1] ? `>${regions[i + 1]}<` : '<h2 id="estados"';
+      const endName = regions[i + 1] ? `>${regions[i + 1]}<` : 'id="estados"';
       const end = html.indexOf(endName, start);
       const slice = html.slice(start, end === -1 ? undefined : end);
       const tableRows = (slice.match(/<tbody[\s\S]*?<\/tbody>/g) ?? []).join("");

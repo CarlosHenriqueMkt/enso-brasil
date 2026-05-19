@@ -25,21 +25,24 @@ export function EmergencyButton() {
 
   return (
     <div ref={ref} className="emergency-button-root">
-      {open && (
-        <ul role="menu" aria-label={messages.emergency.panel_title} className="emergency-panel">
-          <li className="emergency-panel-title" aria-hidden="true">
-            {messages.emergency.panel_title}
+      <ul
+        role="menu"
+        aria-label={messages.emergency.panel_title}
+        className="emergency-panel"
+        hidden={!open}
+      >
+        <li className="emergency-panel-title" aria-hidden="true">
+          {messages.emergency.panel_title}
+        </li>
+        {messages.emergency.entries.map((e) => (
+          <li key={e.number} role="none">
+            <a role="menuitem" href={`tel:${e.number}`} className="emergency-panel-link">
+              <span className="emergency-panel-number">{e.number}</span>
+              <span className="emergency-panel-agency">{e.agency}</span>
+            </a>
           </li>
-          {messages.emergency.entries.map((e) => (
-            <li key={e.number} role="none">
-              <a role="menuitem" href={`tel:${e.number}`} className="emergency-panel-link">
-                <span className="emergency-panel-number">{e.number}</span>
-                <span className="emergency-panel-agency">{e.agency}</span>
-              </a>
-            </li>
-          ))}
-        </ul>
-      )}
+        ))}
+      </ul>
       <button
         type="button"
         aria-label={messages.emergency.button_label}
