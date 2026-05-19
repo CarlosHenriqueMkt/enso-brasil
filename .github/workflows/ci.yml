@@ -79,10 +79,13 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Install lychee
+        run: |
+          curl -sSL -o /tmp/lychee.tar.gz https://github.com/lycheeverse/lychee/releases/download/lychee-v0.23.0/lychee-x86_64-unknown-linux-gnu.tar.gz
+          tar -xzf /tmp/lychee.tar.gz -C /usr/local/bin/ lychee
+          lychee --version
+
       - name: Link check (README.pt-BR.md — DASH-09 anchor)
-        uses: lycheeverse/lychee-action@v2
-        with:
-          args: --no-progress --include-fragments ./README.pt-BR.md
-          fail: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: lychee --no-progress --include-fragments ./README.pt-BR.md
