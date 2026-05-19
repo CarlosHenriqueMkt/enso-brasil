@@ -18,7 +18,10 @@ import { sourceError } from "./errors";
 
 export const InmetActiveListEntrySchema = z
   .object({
-    id: z.string().min(1),
+    // Plan 05-05: live INMET API returns `id` as a number (e.g. 54412), the
+    // pre-05-05 stub fixture used a string. Coerce so both shapes parse and
+    // downstream code always sees a non-empty string.
+    id: z.coerce.string().min(1),
   })
   .passthrough();
 
