@@ -1,5 +1,9 @@
 {
   "$schema": "https://unpkg.com/knip@6/schema.json",
   "ignore": [".claude/**", ".planning/**", "**/*.type-test.ts"],
-  "ignoreDependencies": []
+  "ignoreDependencies": ["mapshaper"],
+  "vitest": {
+    "config": ["vitest.config.ts"],
+    "entry": ["tests/reporters/no-skip.ts"]
+  }
 }
