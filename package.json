@@ -16,6 +16,7 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "fixtures:refresh:inmet": "tsx scripts/refresh-inmet.ts",
+    "fixtures:refresh:cemaden": "tsx scripts/refresh-cemaden.ts",
     "depcruise": "depcruise --config .dependency-cruiser.cjs src",
     "test": "vitest run",
     "test:ci": "cross-env CI=1 vitest run",
