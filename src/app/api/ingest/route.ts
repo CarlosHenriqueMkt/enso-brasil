@@ -259,7 +259,7 @@ export async function POST(req: Request) {
 
   // Step 7: revalidate ISR for changed UFs (D-04).
   const { changedUFs, rootChanged } = diffSnapshot(prev, curr);
-  for (const uf of changedUFs) revalidatePath("/estado/" + uf);
+  for (const uf of changedUFs) revalidatePath("/estado/" + uf.toLowerCase());
   if (rootChanged) revalidatePath("/");
 
   const durationMs = Date.now() - t0;
