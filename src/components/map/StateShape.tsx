@@ -8,8 +8,6 @@
  * Fills use CSS vars `--color-risk-{level}-bg` — never hard-coded hex.
  */
 import type { ReactElement } from "react";
-import Link from "next/link";
-import type { Route } from "next";
 import type { RiskLevel } from "@/lib/sources/schema";
 import { messages } from "@/lib/messages";
 import type { UF } from "@/lib/geo/br-atlas";
@@ -43,11 +41,13 @@ function severityLabel(level: RiskLevel): string {
 export function StateShape({ uf, stateName, level, d }: StateShapeProps): ReactElement {
   const palette = paletteKey(level);
   const label = `${stateName}: ${severityLabel(level)}`;
-  // Cast: `/estado/[uf]` route lands in plan 11; Next 16 typed-routes does
-  // not yet know about it at the time this component is authored.
-  const href = `/estado/${uf.toLowerCase()}` as Route;
+  const href = `/estado/${uf.toLowerCase()}`;
+  // Raw SVG `<a>` — Next's `<Link>` would render an HTML `<a>` wrapper that
+  // browsers reject inside `<svg>` (the anchor gets hoisted out of the SVG
+  // subtree on parse, leaving the map blank). React renders this in the SVG
+  // namespace because the parent is `<svg>`, producing a valid SVG anchor.
   return (
-    <Link href={href} prefetch={false} tabIndex={0} aria-label={label} data-uf={uf}>
+    <a href={href} tabIndex={0} aria-label={label} data-uf={uf}>
       <path
         d={d}
         fill={`var(--color-risk-${palette}-bg)`}
@@ -57,6 +57,6 @@ export function StateShape({ uf, stateName, level, d }: StateShapeProps): ReactE
       >
         <title>{label}</title>
       </path>
-    </Link>
+    </a>
   );
 }
