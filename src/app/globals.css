@@ -140,9 +140,20 @@ html {
 .enso-home-map {
   width: 100%;
   min-width: 0;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
 }
 .enso-home-map svg {
   width: 100%;
   height: auto;
   display: block;
+  max-width: 25vw; /* viewport-relative cap — 25% screen width on desktop */
+  max-height: 75vh; /* never taller than 75% viewport */
+}
+@media (max-width: 768px) {
+  .enso-home-map svg {
+    max-width: 90vw;
+    max-height: 60vh;
+  }
 }

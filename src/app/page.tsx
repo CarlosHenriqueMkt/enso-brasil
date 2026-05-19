@@ -70,7 +70,7 @@ export default async function HomePage({ searchParams }: HomePageProps): Promise
     <main id="main" className="enso-home flex flex-col gap-s-3 px-s-3 py-s-3">
       <StaleSourceBanner sources={health} />
 
-      <h1 className="text-page-title" style={{ fontWeight: 600 }}>
+      <h1 className="text-page-title" style={{ fontWeight: 500 }}>
         {messages.page_title}
       </h1>
 
