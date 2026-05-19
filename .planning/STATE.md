@@ -2,8 +2,8 @@
 
 **Project:** ENSO Brasil — public Brazilian climate hazard aggregator dashboard
 **Current milestone:** v1 — Per-state hazard dashboard
-**Status:** Phase 4 MERGED (Path C — INMET-only; CEMADEN P5) · Phase 5 IN PROGRESS
-**Last updated:** 2026-05-18
+**Status:** Phase 4 MERGED (Path C — INMET-only; CEMADEN P5) · Phase 5 EXECUTE COMPLETE except plan 12 Task 4 (human checkpoint on Vercel preview)
+**Last updated:** 2026-05-19
 
 ## Current Phase
 
@@ -28,16 +28,20 @@
 
 - **Wave 2 ✅ DONE** (plans 04 + 07 + 08 + 09). Parallel execution proved unreliable — 3/4 background agents returned "completed" with uncommitted work. Recovery via sequential agents + inline finishing. Commits: plan 04 (`0cc024a`, `a3071e4`, `a33379d`, `bfd47f1`) + plan 07 (`f14bc14`, `e4b196a`, `63678b8`, `e572bc4`, `66c05e9`) + plan 08 (`a150e61`, `cd04a5a` — `br-atlas.{ts,test.ts}` accidentally landed in plan 07's `e4b196a`) + plan 09 (`35eebdc`, `7ffc556`, `bf4ccbc`). **plan 09 remaining: `RegionFilter.tsx` + `StateCard.tsx` + tests not yet created.**
 
-- **Wave 3 ⏸ PENDING** — plans 06 (registry wire), 10 (home `/`), 11 (`/estado/[uf]` + `/texto`).
+- **Wave 3 ✅ DONE** (plans 06 + 10 + 11, sequential). Commits:
+  - Plan 09 finish: `645eda7` (RegionFilter) + `5c0acd2` (CSS scripting:none) + `12a8067` (StateCard) + `8eebb92` (summary) + `c701984` (Route typed-routes fix).
+  - Plan 06: `74f9449` (registry-meta stability) + `bdafd10` (cemaden in registry) + `1b55a1a` (real adapter in isolation test) + `21fa688` (summary).
+  - Plan 10: `9294a35` → `61f5307` (loadSnapshotForUi) + `6e3d293` → `e890c11` (HomePage) + `bf604c6` (summary).
+  - Plan 11: `1a8798a` (/estado/[uf]) + `19e7d92` (OG image) + `684c67b` → `8689084` (/texto) + `6e745c3` (lychee link-check) + `1994fac` (summary).
 
-- **Wave 4 ⏸ PENDING** — plan 12 (axe + LHCI + Vercel preview human-verify).
+- **Wave 4 🚧 PARTIAL** — plan 12 Tasks 1-3 done, Task 4 (human checkpoint) BLOCKS phase completion.
+  - `1676c62` axe-core 5 routes · `5e2da4a` keyboard+color-blind · `6ea124b` LHCI config + CI · `f882937` summary.
+  - LHCI deferred to CI (needs `pnpm next start` boot + DB/Upstash env). Yellow contrast assertion data-dependent.
 
 **Outstanding work for next session:**
 
-1. **Finish plan 09** — `src/components/filters/RegionFilter.tsx` + test, `src/components/cards/StateCard.tsx` + test. Use `renderToStaticMarkup` test pattern (NOT `@testing-library/react` — not installed; use `react-dom/server` per RiskBadge/StaleSourceBanner precedent). Region filter: 6 chips, `?region=<slug>` URL, `aria-current="page"`. StateCard composes `<RiskBadge>` + `formatRelativePtBr` + `<ShareButton>` + formula explainer link `/README.md#formula-v0`.
-2. **Add CSS rule** to `src/app/globals.css`: `@media (scripting: none) { .share-clipboard { display: none } }` — closes the ShareButton TODO from `bf4ccbc`.
-3. **Wave 3** — plans 06, 10, 11 (parallel-safe per file ownership map).
-4. **Wave 4** — plan 12 with final human-verify on Vercel preview.
+1. **Plan 12 Task 4 — Vercel preview human checkpoint** (BLOCKING). Push branch, wait for preview URL, walk the 10-step smoke list in `05-12-SUMMARY.md` §"Task 4 — PENDING-HUMAN". Confirm WhatsApp OG unfurl + JS-off rendering + map projection.
+2. After approval: `/gsd-verify-work` UAT → `/gsd-ship` PR + review → squash-merge to main.
 
 **Pattern lessons (memory candidates):**
 
