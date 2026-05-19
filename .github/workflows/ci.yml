@@ -85,7 +85,7 @@ jobs:
           tar -xzf /tmp/lychee.tar.gz -C /usr/local/bin/ lychee
           lychee --version
 
-      - name: Link check (README.pt-BR.md — DASH-09 anchor)
+      - name: Link check (README.md — DASH-09 anchor)
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: lychee --no-progress --include-fragments ./README.pt-BR.md
+        run: lychee --no-progress --include-fragments ./README.md

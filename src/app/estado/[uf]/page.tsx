@@ -71,7 +71,7 @@ const CANONICAL_ORIGIN = process.env.NEXT_PUBLIC_SITE_URL ?? "https://ensobrasil
 
 const REPO_URL =
   process.env.NEXT_PUBLIC_REPO_URL ?? "https://github.com/CarlosHenriqueMkt/enso-brasil";
-const FORMULA_ANCHOR = `${REPO_URL}/blob/main/README.pt-BR.md#formula-v0`;
+const FORMULA_ANCHOR = `${REPO_URL}/blob/main/README.md#formula-v0`;
 
 const PRIMARY_SOURCE_URL = "https://www.cemaden.gov.br";
 

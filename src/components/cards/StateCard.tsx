@@ -79,7 +79,7 @@ const CANONICAL_ORIGIN = "https://ensobrasil.com.br";
 /** Repo URL for the "Como calculamos isso?" link target. */
 const REPO_URL =
   process.env.NEXT_PUBLIC_REPO_URL ?? "https://github.com/CarlosHenriqueMkt/enso-brasil";
-const FORMULA_ANCHOR = `${REPO_URL}/blob/main/README.pt-BR.md#formula-v0`;
+const FORMULA_ANCHOR = `${REPO_URL}/blob/main/README.md#formula-v0`;
 
 /** Fallback source URL used by the unknown-state explainer. */
 const PRIMARY_SOURCE_URL = "https://www.cemaden.gov.br";
