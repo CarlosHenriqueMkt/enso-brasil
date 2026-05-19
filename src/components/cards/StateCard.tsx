@@ -26,6 +26,7 @@
  *                 individual alert objects).
  */
 import Link from "next/link";
+import type { Route } from "next";
 import { RiskBadge } from "@/components/badge/RiskBadge";
 import { ShareButton } from "@/components/share/ShareButton";
 import { messages } from "@/lib/messages";
@@ -148,7 +149,7 @@ export function StateCard({ snapshot }: Props) {
 
       {/* 6. Primary CTA → state-detail page */}
       <Link
-        href={`/estado/${uf.toLowerCase()}`}
+        href={`/estado/${uf.toLowerCase()}` as Route}
         prefetch={false}
         className="state-card-cta text-body"
       >
