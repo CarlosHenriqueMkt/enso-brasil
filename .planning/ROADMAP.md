@@ -31,7 +31,7 @@
 - [x] Phase 2: Data Foundation
 - [x] Phase 3: Pure Risk Engine
 - [x] Phase 4: First Adapter (INMET) — Path C
-- [ ] Phase 5: CEMADEN + Dashboard UI
+- [x] Phase 5: CEMADEN + Dashboard UI
 - [ ] Phase 6: Hardening + 3rd Source
 - [ ] Phase 7: Launch
 
@@ -169,18 +169,18 @@ Plans:
 
 Plans:
 
-- [ ] 05-01-wave0-deps-and-spike-PLAN.md — Pin P5 deps + react-simple-maps SSR spike + br-atlas ADR + @date-fns/tz tz verification
-- [ ] 05-02-wave0-prep-locks-PLAN.md — Extend HAZARD_KINDS with deslizamento + rewrite D-04 (CEMADEN is UTC) + add stable #formula-v0 anchor
-- [ ] 05-03-cemaden-adapter-PLAN.md — cemaden.ts factory + zod schema + UTC parse + hazard/severity maps; mirrors INMET adapter pattern
-- [ ] 05-04-cemaden-tests-and-fixture-PLAN.md — Unit + contract tests (target 100/100/100/100) + golden fixture from capture + refresh-cemaden.ts CLI
-- [ ] 05-05-inmet-p51-schema-drift-PLAN.md — INMET adapter handles {hoje,futuro} envelope + refreshed fixture + contract test
-- [ ] 05-06-registry-and-isolation-PLAN.md — Append cemadenAdapter to registry + stability:unstable in registry-meta + cross-source isolation uses real adapter
-- [ ] 05-07-theme-and-primitives-PLAN.md — @theme tokens (typography, ink scale, yellow-ink) + RiskBadge + StaleSourceBanner + time/format.ts (UTC→BRT/AC/AM)
-- [ ] 05-08-map-and-geo-PLAN.md — br-atlas TopoJSON loader + UF↔region map + BrazilMap RSC (Albers conic, SSR `<path>`) + StateShape with `prefetch={false}` Link
-- [ ] 05-09-cards-filter-share-PLAN.md — StateCard (5-level branches, mobile reading order) + RegionFilter (anchor chips, zero JS) + ShareButton (first `"use client"`) + share URL pure module
-- [ ] 05-10-home-route-PLAN.md — src/app/page.tsx Server Component: map + cards + filter + stale banner + total-failure floor + ?region= server filter
-- [ ] 05-11-state-and-texto-routes-PLAN.md — /estado/[uf] (Variant C two-col) + opengraph-image.tsx + /texto SSR (5 tables + 27 articles, pure HTML, no icons) + DASH-09 link-check
-- [ ] 05-12-a11y-perf-verification-PLAN.md — axe-core × 5 routes + Playwright keyboard nav + Lighthouse CI (perf≥90, LCP<2.5s, transfer<200KB) + Vercel preview human checkpoint
+- [x] 05-01-wave0-deps-and-spike-PLAN.md — Pin P5 deps + react-simple-maps SSR spike + br-atlas ADR + @date-fns/tz tz verification
+- [x] 05-02-wave0-prep-locks-PLAN.md — Extend HAZARD_KINDS with deslizamento + rewrite D-04 (CEMADEN is UTC) + add stable #formula-v0 anchor
+- [x] 05-03-cemaden-adapter-PLAN.md — cemaden.ts factory + zod schema + UTC parse + hazard/severity maps; mirrors INMET adapter pattern
+- [x] 05-04-cemaden-tests-and-fixture-PLAN.md — Unit + contract tests (target 100/100/100/100) + golden fixture from capture + refresh-cemaden.ts CLI
+- [x] 05-05-inmet-p51-schema-drift-PLAN.md — INMET adapter handles {hoje,futuro} envelope + refreshed fixture + contract test
+- [x] 05-06-registry-and-isolation-PLAN.md — Append cemadenAdapter to registry + stability:unstable in registry-meta + cross-source isolation uses real adapter
+- [x] 05-07-theme-and-primitives-PLAN.md — @theme tokens (typography, ink scale, yellow-ink) + RiskBadge + StaleSourceBanner + time/format.ts (UTC→BRT/AC/AM)
+- [x] 05-08-map-and-geo-PLAN.md — br-atlas TopoJSON loader + UF↔region map + BrazilMap RSC (Albers conic, SSR `<path>`) + StateShape with `prefetch={false}` Link
+- [x] 05-09-cards-filter-share-PLAN.md — StateCard (5-level branches, mobile reading order) + RegionFilter (anchor chips, zero JS) + ShareButton (first `"use client"`) + share URL pure module
+- [x] 05-10-home-route-PLAN.md — src/app/page.tsx Server Component: map + cards + filter + stale banner + total-failure floor + ?region= server filter
+- [x] 05-11-state-and-texto-routes-PLAN.md — /estado/[uf] (Variant C two-col) + opengraph-image.tsx + /texto SSR (5 tables + 27 articles, pure HTML, no icons) + DASH-09 link-check
+- [x] 05-12-a11y-perf-verification-PLAN.md — axe-core × 5 routes + Playwright keyboard nav + Lighthouse CI (perf≥90, LCP<2.5s, transfer<200KB) + Vercel preview human checkpoint
 
 ---
 
