@@ -38,4 +38,14 @@ Supply chain notes for `mapshaper@0.7.18`:
 
 ## @date-fns/tz
 
-(pending Task 3 execution)
+tz verified — 3/3 GREEN.
+
+Pattern: `format(utcDate, "yyyy-MM-dd HH:mm:ss", { in: tz(zoneId) })`
+
+Zones validated against UTC `2026-05-18 22:15:01`:
+
+- `America/Sao_Paulo` → `2026-05-18 19:15:01` (UTC-3, no DST post-2019) ✓
+- `America/Manaus` → `2026-05-18 18:15:01` (UTC-4) ✓
+- `America/Rio_Branco` → `2026-05-18 17:15:01` (UTC-5) ✓
+
+Adapter (plan 03) outputs ISO-Z; presentation layer (plan 07 `time/format.ts`) converts per UF.
