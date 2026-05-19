@@ -24,9 +24,9 @@ describe("BrazilMap (SSR)", () => {
     __resetBrAtlasCacheForTests();
   });
 
-  it("renders the outer svg with role and aria-label", async () => {
+  it("renders the outer svg with aria-label (no role='img' — interactive children make it semantically wrong, and axe nested-interactive flags role='img' with focusable descendants)", async () => {
     const html = await renderMap([]);
-    expect(html).toMatch(/<svg[^>]*role="img"/);
+    expect(html).toMatch(/<svg/);
     expect(html).toMatch(/aria-label="Mapa do Brasil — risco por estado"/);
   });
 

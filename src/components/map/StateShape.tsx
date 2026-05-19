@@ -47,7 +47,7 @@ export function StateShape({ uf, stateName, level, d }: StateShapeProps): ReactE
   // subtree on parse, leaving the map blank). React renders this in the SVG
   // namespace because the parent is `<svg>`, producing a valid SVG anchor.
   return (
-    <a href={href} aria-label={label} data-uf={uf}>
+    <a href={href} tabIndex={0} aria-label={label} data-uf={uf}>
       <path
         d={d}
         fill={`var(--color-risk-${palette}-bg)`}

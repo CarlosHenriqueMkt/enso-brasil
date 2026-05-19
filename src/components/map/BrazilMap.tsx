@@ -79,7 +79,6 @@ export async function BrazilMap({
 
   return (
     <svg
-      role="img"
       aria-label="Mapa do Brasil — risco por estado"
       viewBox={`0 0 ${width} ${height}`}
       xmlns="http://www.w3.org/2000/svg"
