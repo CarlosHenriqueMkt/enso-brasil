@@ -2,11 +2,7 @@
  * Tests for presentation-layer time formatting (UTC → BRT/AC/AM zones, PT-BR phrasing).
  */
 import { describe, it, expect } from "vitest";
-import {
-  toBrtFromIsoZ,
-  formatRelativePtBr,
-  formatAbsolutePtBr,
-} from "./format";
+import { toBrtFromIsoZ, formatRelativePtBr, formatAbsolutePtBr } from "./format";
 
 describe("formatRelativePtBr", () => {
   const NOW = new Date("2026-05-18T22:15:00Z");
