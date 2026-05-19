@@ -95,7 +95,7 @@ test("color-blind redundancy: every state badge renders an icon glyph", async ({
   expect(present.length).toBeGreaterThan(0);
 });
 
-test("color-blind redundancy: /texto also surfaces icon glyphs (deuteranopia sim)", async ({
+test("color-blind redundancy: /texto carries severity in text labels (deuteranopia sim)", async ({
   page,
 }) => {
   await page.goto("/texto");
@@ -104,8 +104,10 @@ test("color-blind redundancy: /texto also surfaces icon glyphs (deuteranopia sim
     content: `html { filter: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg'><filter id='d'><feColorMatrix type='matrix' values='0.625 0.375 0 0 0  0.7 0.3 0 0 0  0 0.3 0.7 0 0  0 0 0 1 0'/></filter></svg>#d") !important; }`,
   });
 
+  // Per D-08: /texto is pure-text — no icons. Severity is conveyed by the
+  // verbatim PT-BR labels, which survive any color filter.
   const bodyText = (await page.locator("body").textContent()) ?? "";
-  const glyphs = ["✓", "⚠", "⛔", "?"];
-  const present = glyphs.filter((g) => bodyText.includes(g));
+  const labels = ["Sem alertas", "Atenção", "Alerta", "Perigo", "Dados indisponíveis"];
+  const present = labels.filter((l) => bodyText.includes(l));
   expect(present.length).toBeGreaterThan(0);
 });
