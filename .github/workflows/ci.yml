@@ -82,7 +82,7 @@ jobs:
       - name: Link check (README.pt-BR.md — DASH-09 anchor)
         uses: lycheeverse/lychee-action@v2
         with:
-          args: --no-progress --include-fragments README.pt-BR.md
+          args: --no-progress --include-fragments ./README.pt-BR.md
           fail: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
