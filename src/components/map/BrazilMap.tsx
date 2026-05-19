@@ -64,11 +64,16 @@ export async function BrazilMap({
   const rotate = projection?.rotate ?? DEFAULT_ROTATE;
   const scale = projection?.scale ?? DEFAULT_SCALE;
 
-  const proj = geoConicEqualArea()
-    .parallels(parallels)
-    .rotate(rotate)
-    .scale(scale)
-    .translate([width / 2, height / 2]);
+  // Build projection: parallels + rotate define the conic shape; fitSize()
+  // computes scale + translate so the FeatureCollection occupies the viewBox
+  // without manual tuning. Manual `scale` is retained as a multiplier override
+  // when callers pass projection.scale (defaults to 1 = pure fit).
+  const proj = geoConicEqualArea().parallels(parallels).rotate(rotate);
+  proj.fitSize([width, height], fc as unknown as Parameters<typeof proj.fitSize>[1]);
+  if (projection?.scale && projection.scale !== DEFAULT_SCALE) {
+    proj.scale(proj.scale() * (projection.scale / DEFAULT_SCALE));
+  }
+  void scale;
 
   const path = geoPath(proj);
 
