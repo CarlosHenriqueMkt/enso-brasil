@@ -68,6 +68,12 @@ jobs:
       - name: E2E smoke tests (Playwright)
         run: pnpm exec playwright test
 
+      - name: Build app for Lighthouse CI
+        run: pnpm build
+
+      - name: Lighthouse CI (perf >=0.90, LCP <2.5s, transfer <=200KB)
+        run: pnpm exec lhci autorun --config=.lighthouserc.json
+
       - name: Gitleaks scan
         uses: gitleaks/gitleaks-action@v2.3.9
         env:
