@@ -34,7 +34,7 @@ export const WsAlertas2ItemSchema = z
     codibge: z.union([z.string(), z.number()]),
     evento: z.string().min(1),
     nivel: z.enum(["Moderado", "Alto", "Muito Alto"]),
-    status: z.string(),
+    status: z.union([z.string(), z.number()]),
     uf: z.enum(UF27_PROVISIONAL),
     municipio: z.string(),
     latitude: z.union([z.string(), z.number()]),
