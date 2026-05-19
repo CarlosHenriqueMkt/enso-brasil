@@ -53,6 +53,7 @@ describe("messages.risk (RISK-09 vocab SoT)", () => {
         incendio: "incêndio",
         inundacao: "inundação",
         seca: "seca",
+        deslizamento: "deslizamento",
       });
       // Source attribution
       expect(messages.risk.source).toEqual({

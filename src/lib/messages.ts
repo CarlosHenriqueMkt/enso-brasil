@@ -64,6 +64,7 @@ export const messages = {
       incendio: "incêndio",
       inundacao: "inundação",
       seca: "seca",
+      deslizamento: "deslizamento",
     },
     /** Source display names for explanation prose attribution. */
     source: {
