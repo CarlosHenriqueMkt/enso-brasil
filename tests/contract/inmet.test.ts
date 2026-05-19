@@ -18,7 +18,6 @@
  */
 
 import { readdir, readFile } from "node:fs/promises";
-import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { describe, it, expect, beforeAll } from "vitest";
 import {
@@ -167,16 +166,4 @@ describe("INMET contract: mutation smokes", () => {
   });
 });
 
-// ---------------------------------------------------------------------------
-// Path C invariant: no CEMADEN code in src/
-// ---------------------------------------------------------------------------
-
-describe("Path C invariant", () => {
-  it("src/lib/sources/cemaden.ts does not exist", () => {
-    expect(existsSync("src/lib/sources/cemaden.ts")).toBe(false);
-  });
-
-  it("src/lib/sources/cemaden.schema.ts does not exist", () => {
-    expect(existsSync("src/lib/sources/cemaden.schema.ts")).toBe(false);
-  });
-});
+// Path C invariant removed — CEMADEN now legitimately present (Plan 05-03).

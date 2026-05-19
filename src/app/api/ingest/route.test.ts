@@ -193,7 +193,7 @@ describe.skipIf(skip)("POST /api/ingest (integration)", () => {
     );
     const rows = await dbMod.db.select().from(schemaMod.snapshotCache);
     expect(rows.length).toBe(1);
-    expect(rows[0]!.formulaVersion).toBe("v0-placeholder");
+    expect(rows[0]!.formulaVersion).toBe("v0");
   });
 
   it("revalidatePath called for all 27 UFs + root on cold start", async () => {
