@@ -25,9 +25,21 @@
 
 ---
 
+## Completion Status
+
+- [x] Phase 1: Skeleton & OSS Foundation
+- [x] Phase 2: Data Foundation
+- [x] Phase 3: Pure Risk Engine
+- [x] Phase 4: First Adapter (INMET) — Path C
+- [ ] Phase 5: CEMADEN + Dashboard UI
+- [ ] Phase 6: Hardening + 3rd Source
+- [ ] Phase 7: Launch
+
+---
+
 ## Phase Details
 
-### Phase 1 — Skeleton & OSS Foundation
+### Phase 1: Skeleton & OSS Foundation
 
 **Goal:** A public, accessible, MIT-licensed Next.js skeleton that already feels like ENSO Brasil — disclaimer visible, privacy page live, CI green — but no data flow yet.
 
@@ -54,7 +66,7 @@ Plans:
 
 ---
 
-### Phase 2 — Data Foundation
+### Phase 2: Data Foundation
 
 **Goal:** All the plumbing to ingest, store, cache, and serve hazard data — wired end-to-end with a stub adapter that returns deterministic fake alerts. No real source yet, no risk computation yet, no UI yet.
 
@@ -87,7 +99,7 @@ Plans:
 
 ---
 
-### Phase 3 — Pure Risk Engine
+### Phase 3: Pure Risk Engine
 
 **Goal:** A pure, edge-safe `calculateRiskLevel()` that fully implements the v0 formula (with the research-flagged corrections: `unknown` level + `moderate` default for unknown terms). No I/O. 100% test coverage. Replaces the placeholder in P2's snapshot computation.
 
@@ -104,7 +116,7 @@ Plans:
 
 ---
 
-### Phase 4 — First Adapter (INMET) — Path C
+### Phase 4: First Adapter (INMET) — Path C
 
 **Goal:** Replace the stub adapter with the INMET adapter. After this phase, `/api/states` returns real Brazilian alert data on every cron tick. CEMADEN is **deferred to Phase 5** under the SPEC's locked Q6=a fallback (Path C, decided 2026-05-05).
 
@@ -134,7 +146,7 @@ Plans:
 
 ---
 
-### Phase 5 — CEMADEN + Dashboard UI
+### Phase 5: CEMADEN + Dashboard UI
 
 **Goal:** Land the real CEMADEN adapter (carry-over from Phase 4 Path C) AND ship the user-facing dashboard. Map (desktop) + cards (mobile), per-state route, share, filter, `/texto` accessible alternative — and WCAG AA verified via axe-core in CI.
 
@@ -153,9 +165,26 @@ Plans:
 
 **Depends on:** Phase 4
 
+**Plans:** 12 plans
+
+Plans:
+
+- [ ] 05-01-wave0-deps-and-spike-PLAN.md — Pin P5 deps + react-simple-maps SSR spike + br-atlas ADR + @date-fns/tz tz verification
+- [ ] 05-02-wave0-prep-locks-PLAN.md — Extend HAZARD_KINDS with deslizamento + rewrite D-04 (CEMADEN is UTC) + add stable #formula-v0 anchor
+- [ ] 05-03-cemaden-adapter-PLAN.md — cemaden.ts factory + zod schema + UTC parse + hazard/severity maps; mirrors INMET adapter pattern
+- [ ] 05-04-cemaden-tests-and-fixture-PLAN.md — Unit + contract tests (target 100/100/100/100) + golden fixture from capture + refresh-cemaden.ts CLI
+- [ ] 05-05-inmet-p51-schema-drift-PLAN.md — INMET adapter handles {hoje,futuro} envelope + refreshed fixture + contract test
+- [ ] 05-06-registry-and-isolation-PLAN.md — Append cemadenAdapter to registry + stability:unstable in registry-meta + cross-source isolation uses real adapter
+- [ ] 05-07-theme-and-primitives-PLAN.md — @theme tokens (typography, ink scale, yellow-ink) + RiskBadge + StaleSourceBanner + time/format.ts (UTC→BRT/AC/AM)
+- [ ] 05-08-map-and-geo-PLAN.md — br-atlas TopoJSON loader + UF↔region map + BrazilMap RSC (Albers conic, SSR `<path>`) + StateShape with `prefetch={false}` Link
+- [ ] 05-09-cards-filter-share-PLAN.md — StateCard (5-level branches, mobile reading order) + RegionFilter (anchor chips, zero JS) + ShareButton (first `"use client"`) + share URL pure module
+- [ ] 05-10-home-route-PLAN.md — src/app/page.tsx Server Component: map + cards + filter + stale banner + total-failure floor + ?region= server filter
+- [ ] 05-11-state-and-texto-routes-PLAN.md — /estado/[uf] (Variant C two-col) + opengraph-image.tsx + /texto SSR (5 tables + 27 articles, pure HTML, no icons) + DASH-09 link-check
+- [ ] 05-12-a11y-perf-verification-PLAN.md — axe-core × 5 routes + Playwright keyboard nav + Lighthouse CI (perf≥90, LCP<2.5s, transfer<200KB) + Vercel preview human checkpoint
+
 ---
 
-### Phase 6 — Hardening + 3rd Source
+### Phase 6: Hardening + 3rd Source
 
 **Goal:** Add the optional 3rd source (INPE Queimadas OR NASA FIRMS) using the registry pattern with no orchestrator/UI changes. Verify free-tier headroom under 27-state × 3-source × 15-min load. Add minimal observability.
 
@@ -172,7 +201,7 @@ Plans:
 
 ---
 
-### Phase 7 — Launch
+### Phase 7: Launch
 
 **Goal:** Make the project public. Domain, social cards, README, analytics, outreach — and a clean main branch ready to invite contributors.
 

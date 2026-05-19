@@ -5,18 +5,19 @@
  * through the DI-stub httpClient, and asserts the produced Alert[] against a
  * committed snapshot.
  *
- * Fixture capture notes (2026-05-09):
- * - The live INMET API returned `{"hoje": [...], "futuro": [...]}` — structurally
- *   different from the flat-array InmetActiveListSchema. This is a real schema
- *   drift finding documented in 04-05-SUMMARY. The live API response is preserved
- *   as a drift artifact; these contract tests exercise the adapter against the
- *   stub-format fixtures (dry-run captures via `pnpm fixtures:refresh:inmet --dry-run`).
+ * Fixture capture notes (2026-05-19, Plan 05-05):
+ * - The live INMET API returns `{"hoje": [...], "futuro": [...]}` — the
+ *   InmetActiveListSchema and adapter were updated to consume this envelope
+ *   shape (see 04-05-SUMMARY schema-drift finding + 05-05-SUMMARY). The
+ *   refreshed fixture `inmet-2026-05-19.list.json` is a live capture; the
+ *   CAP XML fixture (`inmet-2026-05-09.xml`) is retained from Phase 4 as the
+ *   live CAP endpoint was rate-limited / ECONNRESET-flaky during the 05-05
+ *   capture session.
  *
  * All error assertions use `isSourceError()` — never `instanceof SourceError` (W-1).
  */
 
 import { readdir, readFile } from "node:fs/promises";
-import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { describe, it, expect, beforeAll } from "vitest";
 import {
@@ -88,6 +89,15 @@ beforeAll(async () => {
 // ---------------------------------------------------------------------------
 
 describe("INMET contract: real fixture round-trip", () => {
+  it("fixture matches `{hoje, futuro}` envelope contract (Plan 05-05)", () => {
+    // Lock the envelope shape at the fixture level so a future refresh that
+    // accidentally captures the legacy flat-array shape fails this assertion
+    // before adapter code is exercised (T-05-08).
+    const parsed = JSON.parse(listJson) as { hoje?: unknown; futuro?: unknown };
+    expect(Array.isArray(parsed.hoje)).toBe(true);
+    expect(Array.isArray(parsed.futuro)).toBe(true);
+  });
+
   it("fetch() resolves to Alert[] matching committed snapshot", async () => {
     const adapter = createInmetAdapter(buildStubClient(listJson, capXml));
     const alerts = await adapter.fetch();
@@ -97,10 +107,10 @@ describe("INMET contract: real fixture round-trip", () => {
     expect(normalized).toMatchSnapshot();
   });
 
-  it("fetch() with empty list returns []", async () => {
+  it("fetch() with empty envelope returns []", async () => {
     const emptyStub: InmetHttpClient = {
       async getJson<T>(): Promise<T> {
-        return [] as unknown as T;
+        return { hoje: [], futuro: [] } as unknown as T;
       },
       async getText(): Promise<string> {
         return "";
@@ -156,16 +166,4 @@ describe("INMET contract: mutation smokes", () => {
   });
 });
 
-// ---------------------------------------------------------------------------
-// Path C invariant: no CEMADEN code in src/
-// ---------------------------------------------------------------------------
-
-describe("Path C invariant", () => {
-  it("src/lib/sources/cemaden.ts does not exist", () => {
-    expect(existsSync("src/lib/sources/cemaden.ts")).toBe(false);
-  });
-
-  it("src/lib/sources/cemaden.schema.ts does not exist", () => {
-    expect(existsSync("src/lib/sources/cemaden.schema.ts")).toBe(false);
-  });
-});
+// Path C invariant removed — CEMADEN now legitimately present (Plan 05-03).

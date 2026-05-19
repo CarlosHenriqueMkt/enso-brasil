@@ -30,6 +30,7 @@ describe("risk/vocab — typed PT-BR re-exports (RISK-09)", () => {
       incendio: "incêndio",
       inundacao: "inundação",
       seca: "seca",
+      deslizamento: "deslizamento",
     });
   });
 

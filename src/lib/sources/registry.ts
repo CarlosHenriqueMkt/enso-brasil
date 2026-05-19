@@ -1,5 +1,6 @@
 import type { SourceAdapter } from "./types";
 import { inmetAdapter } from "./inmet";
+import { cemadenAdapter } from "./cemaden";
 
 /**
  * Registry of all SourceAdapters (REQ-S2.04). Adding a new source is a
@@ -9,11 +10,8 @@ import { inmetAdapter } from "./inmet";
  *
  *   grep -rE "import.*Stub|import.*Cemaden|import.*Inmet" src/lib src/app \
  *     | grep -v "src/lib/sources/" | wc -l   →   must be 0
- *
- * TODO(P5): append cemadenAdapter — Promise.allSettled is N-arity safe;
- * orchestrator needs no change. Schema drift fix required first (04-05-SUMMARY).
  */
-export const sources: readonly SourceAdapter[] = [inmetAdapter];
+export const sources: readonly SourceAdapter[] = [inmetAdapter, cemadenAdapter];
 
 /**
  * Edge-safe lookup of source displayNames derived from the registry.

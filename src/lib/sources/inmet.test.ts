@@ -31,8 +31,21 @@ import { SEVERITY_TABLE } from "@/lib/risk/sources/inmet";
 // --- Stub client builder ---------------------------------------------------
 
 interface StubInputs {
+  /**
+   * INMET active-list payload. Pre-05-05 this was a flat array `[{ id }, ...]`.
+   * Post-05-05 the live envelope is `{ hoje: [...], futuro: [...] }` — see
+   * `04-05-SUMMARY` schema-drift finding. For ergonomics this stub accepts
+   * either a bare array (which is wrapped into `{ hoje: arr, futuro: [] }`)
+   * or the raw envelope/error value the test wants to inject.
+   */
   list?: unknown | (() => Promise<unknown>);
   capById?: Record<string, string | (() => Promise<string>)>;
+}
+
+function wrapList(v: unknown): unknown {
+  // Auto-wrap bare arrays into the envelope so legacy test fixtures keep working.
+  if (Array.isArray(v)) return { hoje: v, futuro: [] };
+  return v;
 }
 
 function makeStubClient(inputs: StubInputs): InmetHttpClient {
@@ -42,8 +55,8 @@ function makeStubClient(inputs: StubInputs): InmetHttpClient {
         throw new Error(`stub getJson called with unexpected URL: ${url}`);
       }
       const v = inputs.list;
-      if (typeof v === "function") return (await v()) as T;
-      return v as T;
+      if (typeof v === "function") return wrapList(await v()) as T;
+      return wrapList(v) as T;
     },
     async getText(url: string): Promise<string> {
       const map = inputs.capById ?? {};
@@ -195,6 +208,47 @@ describe("createInmetAdapter — happy paths", () => {
   it("empty list → empty Alert[]", async () => {
     const adapter = createInmetAdapter(makeStubClient({ list: [] }));
     expect(await adapter.fetch()).toEqual([]);
+  });
+
+  it("envelope: hoje ∪ futuro dedups by id (futuro wins on collision) → single fetch per id", async () => {
+    // Plan 05-05: live API returns `{hoje, futuro}`. The adapter flattens and
+    // dedups by id. We assert dedup behavior by giving the same id in both arms
+    // and verifying the CAP fetch is only invoked once for that id.
+    let capCallCount = 0;
+    const sharedXml = buildCap({ identifier: "DUP", infos: [{ areaDesc: "Bahia" }] });
+    const client: InmetHttpClient = {
+      async getJson<T = unknown>(): Promise<T> {
+        return {
+          hoje: [{ id: "DUP" }, { id: "H_ONLY" }],
+          futuro: [{ id: "DUP" }, { id: "F_ONLY" }],
+        } as unknown as T;
+      },
+      async getText(url: string): Promise<string> {
+        capCallCount += 1;
+        void url;
+        return sharedXml;
+      },
+    };
+    const adapter = createInmetAdapter(client);
+    const out = await adapter.fetch();
+    // 3 unique ids × 1 UF each = 3 alerts; CAP fetched exactly 3 times (DUP once).
+    expect(out).toHaveLength(3);
+    expect(capCallCount).toBe(3);
+  });
+
+  it("envelope: futuro-only entries are processed (not silently dropped)", async () => {
+    const client: InmetHttpClient = {
+      async getJson<T = unknown>(): Promise<T> {
+        return { hoje: [], futuro: [{ id: "F1" }] } as unknown as T;
+      },
+      async getText(): Promise<string> {
+        return buildCap({ identifier: "F1", infos: [{ areaDesc: "Sergipe" }] });
+      },
+    };
+    const adapter = createInmetAdapter(client);
+    const out = await adapter.fetch();
+    expect(out).toHaveLength(1);
+    expect(out[0]!.state_uf).toBe("SE");
   });
 });
 
@@ -588,9 +642,37 @@ describe("createInmetAdapter — error paths", () => {
     );
   });
 
-  it("list payload that is not an array → sourceError code='schema_invalid'", async () => {
-    const adapter = createInmetAdapter(makeStubClient({ list: { not: "an array" } }));
+  it("list payload missing hoje/futuro keys → sourceError code='schema_invalid'", async () => {
+    const adapter = createInmetAdapter(makeStubClient({ list: { not: "an envelope" } }));
     await expect(adapter.fetch()).rejects.toSatisfy(
+      (e) => isSourceError(e) && e.code === "schema_invalid",
+    );
+  });
+
+  it("list payload as legacy flat array (drift) → sourceError code='schema_invalid' (T-05-08)", async () => {
+    // Plan 05-05: live API moved to `{hoje, futuro}` envelope. The defensive
+    // schema rejects the legacy flat-array shape loudly so a silent regression
+    // upstream can't make alerts vanish. Bypass the test stub's auto-wrap by
+    // injecting through the function-form which is forwarded raw.
+    const adapter = createInmetAdapter(
+      makeStubClient({
+        // Wrap once so makeStubClient's wrapList does NOT re-wrap, by returning
+        // the flat array via a function whose value we pre-mark non-array via
+        // a custom object — simplest path: pass through getJson directly.
+      }),
+    );
+    // Build a bespoke client that returns the legacy shape verbatim.
+    const legacyClient: InmetHttpClient = {
+      async getJson<T = unknown>(): Promise<T> {
+        return [{ id: "X1" }] as unknown as T;
+      },
+      async getText(): Promise<string> {
+        return "";
+      },
+    };
+    void adapter;
+    const a2 = createInmetAdapter(legacyClient);
+    await expect(a2.fetch()).rejects.toSatisfy(
       (e) => isSourceError(e) && e.code === "schema_invalid",
     );
   });
@@ -599,7 +681,7 @@ describe("createInmetAdapter — error paths", () => {
     // Exercises the no-arg createInmetAdapter() default-arg path so the
     // PROD_HTTP_CLIENT.getJson / .getText arrow bodies are covered.
     vi.clearAllMocks();
-    vi.mocked(httpGet).mockResolvedValueOnce([{ id: "P1" }]);
+    vi.mocked(httpGet).mockResolvedValueOnce({ hoje: [{ id: "P1" }], futuro: [] });
     vi.mocked(httpGetText).mockResolvedValueOnce(
       buildCap({ identifier: "P1", infos: [{ areaDesc: "Bahia" }] }),
     );

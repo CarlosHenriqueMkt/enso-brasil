@@ -2,9 +2,8 @@
 
 exports[`CEMADEN severity mapping (RISK-04, RISK-10) > exposes the locked v0.1 SEVERITY_TABLE 1`] = `
 {
-  "Alerta": "high",
-  "Alerta Máximo": "extreme",
-  "Atenção": "moderate",
-  "Observação": "low",
+  "Alto": "high",
+  "Moderado": "moderate",
+  "Muito Alto": "extreme",
 }
 `;

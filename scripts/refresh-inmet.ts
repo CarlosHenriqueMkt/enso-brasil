@@ -109,21 +109,28 @@ async function main(): Promise<void> {
     console.log(listResult.diff);
   }
 
-  // Parse list to find first active id
-  const listData = JSON.parse(
+  // Parse list to find first active id.
+  // Plan 05-05: INMET response is `{hoje:[...], futuro:[...]}` envelope, not a
+  // flat array. We fall back to the legacy flat-array shape only for the
+  // pre-05-05 stub fixture (`tests/fixtures/sources/_stub/inmet-list-stub.json`).
+  type Entry = { id: string | number };
+  type Envelope = { hoje?: Entry[]; futuro?: Entry[] };
+  const raw = JSON.parse(
     await (async () => {
       const { readFile: rf } = await import("node:fs/promises");
       return rf(listResult.newPath, "utf8");
     })(),
-  ) as Array<{ id: string }>;
+  ) as Envelope | Entry[];
 
-  if (listData.length === 0) {
+  const entries: Entry[] = Array.isArray(raw) ? raw : [...(raw.hoje ?? []), ...(raw.futuro ?? [])];
+
+  if (entries.length === 0) {
     console.warn("[refresh-inmet] WARNING: INMET returned 0 active alerts. Skipping CAP fixture.");
     process.exitCode = 0;
     return;
   }
 
-  const firstId = listData[0]?.id ?? "";
+  const firstId = String(entries[0]?.id ?? "");
   console.log(`[refresh-inmet] fetching CAP for id=${firstId}`);
 
   // --- Step 2: CAP XML fixture ---

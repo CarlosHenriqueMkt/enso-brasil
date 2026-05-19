@@ -257,7 +257,18 @@ export function createInmetAdapter(http: InmetHttpClient = PROD_HTTP_CLIENT) {
       } catch (err) {
         wrapHttpError(err, INMET_CAP_LIST);
       }
-      const list = assertActiveList(rawList);
+      const envelope = assertActiveList(rawList);
+
+      // Plan 05-05: live API moved from flat array to `{hoje, futuro}` envelope
+      // (see 04-05-SUMMARY schema-drift finding). Flatten and dedup by id;
+      // `futuro` wins on collision so an entry that has both active-today and
+      // scheduled-future metadata uses the forward-looking record (typically
+      // the longer effective window). Both arms semantically represent
+      // "active+upcoming" per the INMET portal convention.
+      const byId = new Map<string, (typeof envelope.hoje)[number]>();
+      for (const entry of envelope.hoje) byId.set(entry.id, entry);
+      for (const entry of envelope.futuro) byId.set(entry.id, entry); // futuro wins
+      const list = Array.from(byId.values());
       if (list.length === 0) return [];
 
       // Step 2: per-alert CAP fetch with isolation.

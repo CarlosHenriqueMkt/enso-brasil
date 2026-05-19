@@ -12,6 +12,7 @@ export const HAZARD_KINDS = [
   "incendio",
   "inundacao",
   "seca",
+  "deslizamento",
 ] as const;
 
 /**

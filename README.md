@@ -22,11 +22,16 @@ O risco por estado é computado a partir dos alertas ativos publicados pelas fon
 
 Veja o contrato completo em [risk-formula-v0.md](./risk-formula-v0.md).
 
-## Como calculamos o risco — v0
+<a id="formula-v0"></a>
+
+## Como calculamos isso? {#formula-v0}
 
 O risco de cada estado é calculado a partir dos alertas oficiais ativos
 recebidos das fontes integradas. A versão atual da fórmula é **v0** — o
 contrato completo está em [`risk-formula-v0.md`](./risk-formula-v0.md).
+
+**Os 5 níveis de risco exibidos:** `green` (Sem alertas) · `yellow` (Atenção)
+· `orange` (Alerta) · `red` (Perigo) · `unknown` (Dados indisponíveis).
 
 **Em resumo, para cada estado:**
 
@@ -44,6 +49,10 @@ contrato completo está em [`risk-formula-v0.md`](./risk-formula-v0.md).
 6. **Override de defasagem:** se todas as fontes integradas estão com mais
    de 1 hora sem atualização, o estado vai para `Dados indisponíveis` —
    nunca afirmamos `Sem alertas` quando não temos certeza.
+
+> **Disclaimer v0:** Esta é uma fórmula v0. Não substitui a Defesa Civil
+> (199), Bombeiros (193) ou Polícia (190). Em emergência, ligue:
+> **199 Defesa Civil · 193 Bombeiros · 190 Polícia**.
 
 ### Exemplo (Minas Gerais)
 

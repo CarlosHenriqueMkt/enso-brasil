@@ -1,0 +1,70 @@
+{
+  "alertas": [
+    {
+      "cod_alerta": 2092,
+      "datahoracriacao": "2026-05-09 17:30:37.092",
+      "ult_atualizacao": "2026-05-09 17:30:37.092",
+      "codibge": 1302504,
+      "evento": "Risco Hidrológico - Moderado",
+      "nivel": "Moderado",
+      "status": 1,
+      "uf": "AM",
+      "municipio": "MANACAPURU",
+      "latitude": -3.2914230945153,
+      "longitude": -60.958424389662
+    },
+    {
+      "cod_alerta": 2121,
+      "datahoracriacao": "2026-05-13 09:41:46.225",
+      "ult_atualizacao": "2026-05-13 09:41:46.225",
+      "codibge": 1300631,
+      "evento": "Risco Hidrológico - Moderado",
+      "nivel": "Moderado",
+      "status": 1,
+      "uf": "AM",
+      "municipio": "BERURI",
+      "latitude": -4.6034983521613,
+      "longitude": -61.787542278385
+    },
+    {
+      "cod_alerta": 2124,
+      "datahoracriacao": "2026-05-13 22:13:19.09",
+      "ult_atualizacao": "2026-05-14 01:08:42.378",
+      "codibge": 1600279,
+      "evento": "Risco Hidrológico - Alto",
+      "nivel": "Alto",
+      "status": 1,
+      "uf": "AP",
+      "municipio": "LARANJAL DO JARI",
+      "latitude": 1.0965735549331,
+      "longitude": -53.305868029142
+    },
+    {
+      "cod_alerta": 2127,
+      "datahoracriacao": "2026-05-14 06:31:25.991",
+      "ult_atualizacao": "2026-05-14 06:31:25.991",
+      "codibge": 1302603,
+      "evento": "Risco Hidrológico - Moderado",
+      "nivel": "Moderado",
+      "status": 1,
+      "uf": "AM",
+      "municipio": "MANAUS",
+      "latitude": -2.6259193827197,
+      "longitude": -60.259628014208
+    },
+    {
+      "cod_alerta": 2138,
+      "datahoracriacao": "2026-05-16 23:30:58.999",
+      "ult_atualizacao": "2026-05-16 23:30:58.999",
+      "codibge": 1600535,
+      "evento": "Risco Hidrológico - Moderado",
+      "nivel": "Moderado",
+      "status": 1,
+      "uf": "AP",
+      "municipio": "PORTO GRANDE",
+      "latitude": 0.58786623033118,
+      "longitude": -51.67367622865
+    }
+  ],
+  "atualizado": "18-05-2026 22:15:01 UTC"
+}

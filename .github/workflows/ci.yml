@@ -68,7 +68,24 @@ jobs:
       - name: E2E smoke tests (Playwright)
         run: pnpm exec playwright test
 
+      - name: Build app for Lighthouse CI
+        run: pnpm build
+
+      - name: Lighthouse CI (perf >=0.90, LCP <2.5s, transfer <=200KB)
+        run: pnpm exec lhci autorun --config=.lighthouserc.json
+
       - name: Gitleaks scan
         uses: gitleaks/gitleaks-action@v2.3.9
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Install lychee
+        run: |
+          curl -sSL -o /tmp/lychee.tar.gz https://github.com/lycheeverse/lychee/releases/download/lychee-v0.23.0/lychee-x86_64-unknown-linux-gnu.tar.gz
+          tar -xzf /tmp/lychee.tar.gz -C /usr/local/bin/ lychee
+          lychee --version
+
+      - name: Link check (README.md — DASH-09 anchor)
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: lychee --no-progress --include-fragments ./README.md

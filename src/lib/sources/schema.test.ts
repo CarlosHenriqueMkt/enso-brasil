@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { AlertSchema } from "./schema";
+import { AlertSchema, HAZARD_KINDS } from "./schema";
 import { computePayloadHash } from "./hash";
 
 const valid = {
@@ -29,6 +29,12 @@ describe("AlertSchema", () => {
   });
   it("rejects non-hex payload_hash", () => {
     expect(() => AlertSchema.parse({ ...valid, payload_hash: "not-hex" })).toThrow();
+  });
+  it("HAZARD_KINDS includes `deslizamento` (CEMADEN Movimento de Massa normalized)", () => {
+    expect(HAZARD_KINDS).toContain("deslizamento");
+  });
+  it("accepts hazard_kind = `deslizamento` via zod parse", () => {
+    expect(() => AlertSchema.parse({ ...valid, hazard_kind: "deslizamento" })).not.toThrow();
   });
 });
 

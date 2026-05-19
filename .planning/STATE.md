@@ -2,14 +2,55 @@
 
 **Project:** ENSO Brasil — public Brazilian climate hazard aggregator dashboard
 **Current milestone:** v1 — Per-state hazard dashboard
-**Status:** Phase 4 SHIPPED (Path C — INMET-only; CEMADEN P5) · Phase 5 NEXT
-**Last updated:** 2026-05-09
+**Status:** Phase 4 MERGED (Path C — INMET-only; CEMADEN P5) · Phase 5 EXECUTE COMPLETE except plan 12 Task 4 (human checkpoint on Vercel preview)
+**Last updated:** 2026-05-19
 
 ## Current Phase
 
-**Phase 4 verdict:** SHIPPED — PR #5 opened 2026-05-09 on branch `phase-4-adapters-cemaden-inmet`. Pending squash-merge after CI + Vercel preview smoke verification. INMET adapter (41 unit tests, 100/100/100/100 coverage), fixture refresh script, contract tests, atomic cutover from stub to inmetAdapter. CEMADEN deferred to P5 (Path C). Schema drift finding: live INMET API returns `{hoje:[...], futuro:[...]}` instead of flat array — P5.1 fix documented in 04-05-SUMMARY.
-**Next:** Phase 5 — CEMADEN + Dashboard UI
-**Command to run:** `/gsd-execute-phase 5`
+**Phase 4 verdict:** MERGED — PR #5 squash-merged to main as `2b6fad2` on 2026-05-11 via `--admin` bypass (CI green, GitGuardian PASS, Vercel preview PASS). Branch `phase-4-adapters-cemaden-inmet` auto-deleted on remote, local pruned. INMET adapter (41 unit tests, 100/100/100/100 coverage), fixture refresh script, contract tests, atomic cutover from stub to inmetAdapter. CEMADEN deferred to P5 (Path C). Schema drift finding: live INMET API returns `{hoje:[...], futuro:[...]}` instead of flat array — P5.1 fix documented in 04-05-SUMMARY.
+
+**Phase 5 kickoff (2026-05-11):** Branch `phase-5-cemaden-dashboard` created from `main@2b6fad2`. ROADMAP parser fix landed as `f7f5300` (em-dash `—` → colon `:` on `### Phase N` headings; SDK regex required colon separator) plus new `## Completion Status` checklist (P1–P4 `[x]`, P5–P7 `[ ]`) — without these, `gsd-sdk query roadmap.analyze` returned empty and `gsd-autonomous` would have exited "complete 🎉" falsely.
+
+**Phase 5 context shipped (2026-05-11, `5b8cef0`):** 4 gray areas resolved, 11 decisions captured in `05-CONTEXT.md`. Highlights: (1) CEMADEN strategy = DevTools discovery + adapter with `stability:unstable` marker; first P5 plan blocks on human DevTools session against `painelalertas.cemaden.gov.br`. (2) Desktop = Full SSR navigation (no client-side panel swap); home is read-only overview, `/estado/{uf}` is canonical detail. (3) `/texto` = regional tables + per-UF expanded articles, single SSR page, anchor links. (4) Share = wa.me primary + clipboard secondary. (5) Filter = URL-param `?region=` single-select, zero JS. UI design contract fully delegated to `sketch-findings-enso-brasil` skill (7 sources, 4 reference files, locked theme 2026-04-28). UI-phase workflow gate skipped intentionally — sketch findings cover all UI-SPEC scope. INMET P5.1 schema drift fix (`{hoje:[...], futuro:[...]}`) folded into P5 scope.
+**Phase 5 UI-SPEC shipped (2026-05-18, `5badedc`):** 05-UI-SPEC.md created by ui-researcher (0 user questions — all answers traced to LOCKED upstream: sketch-findings-enso-brasil skill, 05-CONTEXT.md, 05-SPEC.md). Bespoke civic theme (no shadcn) — locked presets reject rounded > 8px, shadows, weight ≥ 600. Yellow WCAG AA contrast lock: `#d4a017` border + `#fef7d6` fill + `#6b5006` ink, "never white on yellow" hard rule. ui-checker verdict: APPROVED (6/6 dimensions PASS, 2 FLAGs non-blocking — typography 9 sizes locked from sketch findings, spacing 3 exceptions 14px×2/44px justified by 360px breathing + WCAG touch target).
+
+**Phase 5 plan-phase complete (2026-05-18, `5facae7`):** DevTools endpoint capture committed `2390be4` (verified `https://painelalertas.cemaden.gov.br/wsAlertas2` — national flat-array, UTC payload, no auth/CORS server-side, severity `[Moderado/Alto/Muito Alto]`, hazards `[Risco Hidrológico/Movimento de Massa]`, codibge+lat/lon per alert). Research `a847188` flagged D-04 contradiction (CEMADEN serves UTC, NOT BRT — `-03:00` offset rule reversed). Pattern map `f50776d` (11 exact analogs, 4 net-new flagged). Planner emitted 12 plans across 5 waves. Plan-check verdict PASS_WITH_FIXES — all 7 targeted edits applied inline. PLAN-REVIEW.md preserved for audit.
+
+**Phase 5 execute-phase IN PROGRESS (2026-05-19):**
+
+- **Wave 0 ✅ DONE** (plans 01 + 02). Commits `bd806ef` → `5050b5f` → `9ff02b9`. Key outcomes:
+  - RSM SSR spike verdict: **PIVOT** (`react-simple-maps@3.0.0` incompatible with React 19 SSR — `<Geographies>` defers to client state, 0 `<path>` on SSR). Dep removed.
+  - br-atlas locked-decision **amended in CLAUDE.md**: `carolinabigonha/br-atlas` publishes no JSON (Python+GDAL scripts only). Replaced with **IBGE BR_UF_YYYY shapefile + mapshaper Visvalingam pipeline** (`pnpm geo:build`). Output `src/lib/geo/data/states.json` 78.4 KB, 27 features, topology key `BR_UF_2022`, props `{uf,name}`.
+  - `@date-fns/tz` verified 3/3 for `America/Sao_Paulo`/`Manaus`/`Rio_Branco`.
+  - D-04 SUPERSEDED inline + corrections file (`05-02-CONTEXT-corrections.md`). `HAZARD_KINDS` extended with bare `"deslizamento"`. README.md `#formula-v0` anchor added.
+
+- **Wave 1 ✅ DONE** (plans 03 + 05 in parallel). Plan 03 commits `3777468` (schema) + `485bb90` (adapter) + `80a0d68` (severity table fix `Observação/Atenção/Alerta/Alerta Máximo` → `Moderado/Alto/Muito Alto`). Plan 05 commits `d610cbc` → `f4cd3df`. INMET envelope `{hoje, futuro}` adopted, fixture refreshed `inmet-2026-05-19.list.json`.
+
+- **Wave 2 ✅ DONE** (plans 04 + 07 + 08 + 09). Parallel execution proved unreliable — 3/4 background agents returned "completed" with uncommitted work. Recovery via sequential agents + inline finishing. Commits: plan 04 (`0cc024a`, `a3071e4`, `a33379d`, `bfd47f1`) + plan 07 (`f14bc14`, `e4b196a`, `63678b8`, `e572bc4`, `66c05e9`) + plan 08 (`a150e61`, `cd04a5a` — `br-atlas.{ts,test.ts}` accidentally landed in plan 07's `e4b196a`) + plan 09 (`35eebdc`, `7ffc556`, `bf4ccbc`). **plan 09 remaining: `RegionFilter.tsx` + `StateCard.tsx` + tests not yet created.**
+
+- **Wave 3 ✅ DONE** (plans 06 + 10 + 11, sequential). Commits:
+  - Plan 09 finish: `645eda7` (RegionFilter) + `5c0acd2` (CSS scripting:none) + `12a8067` (StateCard) + `8eebb92` (summary) + `c701984` (Route typed-routes fix).
+  - Plan 06: `74f9449` (registry-meta stability) + `bdafd10` (cemaden in registry) + `1b55a1a` (real adapter in isolation test) + `21fa688` (summary).
+  - Plan 10: `9294a35` → `61f5307` (loadSnapshotForUi) + `6e3d293` → `e890c11` (HomePage) + `bf604c6` (summary).
+  - Plan 11: `1a8798a` (/estado/[uf]) + `19e7d92` (OG image) + `684c67b` → `8689084` (/texto) + `6e745c3` (lychee link-check) + `1994fac` (summary).
+
+- **Wave 4 🚧 PARTIAL** — plan 12 Tasks 1-3 done, Task 4 (human checkpoint) BLOCKS phase completion.
+  - `1676c62` axe-core 5 routes · `5e2da4a` keyboard+color-blind · `6ea124b` LHCI config + CI · `f882937` summary.
+  - LHCI deferred to CI (needs `pnpm next start` boot + DB/Upstash env). Yellow contrast assertion data-dependent.
+
+**Outstanding work for next session:**
+
+1. **Plan 12 Task 4 — Vercel preview human checkpoint** (BLOCKING). Push branch, wait for preview URL, walk the 10-step smoke list in `05-12-SUMMARY.md` §"Task 4 — PENDING-HUMAN". Confirm WhatsApp OG unfurl + JS-off rendering + map projection.
+2. After approval: `/gsd-verify-work` UAT → `/gsd-ship` PR + review → squash-merge to main.
+
+**Pattern lessons (memory candidates):**
+
+- Parallel `gsd-executor` agents on Wave 2 produced race conditions — files leaked across plan boundaries (br-atlas → plan 07's commit). Sequential safer.
+- Multiple background agents returned "completed" with no commits or with abandoned partial work. Always verify via `git log -1` after agent claims completion.
+- React 19's `react-hooks/set-state-in-effect` lint rule blocks `useEffect(() => setX(true), [])` progressive-enhancement pattern. Use CSS `@media (scripting: none)` instead.
+
+**Next:** Continue Phase 5 execute-phase (finish plan 09 + Wave 3 + Wave 4)
+**Command to run:** `/gsd-resume-work` or `/gsd-execute-phase 5 --gaps-only` (latter is approximate — there is no `gap_closure: true` flag on plans, just unfinished tasks; manual resumption recommended)
 
 **Path C revision (2026-05-05):** Plan-checker round produced findings B-1/B-2/B-3 (CEMADEN endpoint discovery) and W-1/W-3/W-4 (taxonomy + verify + vitest race). Live discovery confirmed CEMADEN's only documented public REST API (`https://sws.cemaden.gov.br/PED/api/ui/`) is **PED — Plataforma de Entrega de Dados** — observational data only (PCDs, accumulated rainfall, weather stations), 15 paths, ZERO alert endpoints. PED ≠ alerts; deriving alerts from raw rainfall crosses the aggregator-vs-authority line in CLAUDE.md anti-features. CEMADEN authoritative alerts (`painelalertas.cemaden.gov.br` SPA) require DevTools-on-live-SPA fieldwork that exceeds Phase 4's scope budget.
 
@@ -47,8 +88,8 @@
 | 1   | Skeleton & OSS Foundation      | ✅ complete + verified (CI green, repo public, ruleset active)  |
 | 2   | Data Foundation                | ✅ shipped — production live, cron green, all 11 plans complete |
 | 3   | Pure Risk Engine               | ✅ shipped — PR #1 squash-merged 2026-05-04 (`8137afda`)        |
-| 4   | First Adapter (INMET) — Path C | ✅ shipped — PR #5 opened 2026-05-09; pending squash-merge      |
-| 5   | CEMADEN + Dashboard UI         | ⏳ **next** — absorbs CEMADEN adapter from P4 Path C carry-over |
+| 4   | First Adapter (INMET) — Path C | ✅ shipped — PR #5 squash-merged 2026-05-11 (`2b6fad2`)         |
+| 5   | CEMADEN + Dashboard UI         | 🚧 **in progress** — branch `phase-5-cemaden-dashboard`         |
 | 6   | Hardening + 3rd Source         | ⏳ pending                                                      |
 | 7   | Launch                         | ⏳ pending                                                      |
 
