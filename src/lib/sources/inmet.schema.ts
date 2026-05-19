@@ -22,7 +22,26 @@ export const InmetActiveListEntrySchema = z
   })
   .passthrough();
 
-export const InmetActiveListSchema = z.array(InmetActiveListEntrySchema);
+/**
+ * INMET active-list envelope (Plan 05-05 — schema-drift fix).
+ *
+ * Live `/avisos/ativos` returns `{ hoje: [...], futuro: [...] }`, NOT a flat
+ * array as originally documented in Plan 04-03. The legacy flat-array shape
+ * is rejected by this schema deliberately (T-05-08): a silent regression
+ * upstream must surface as `schema_invalid`, never as "zero alerts".
+ *
+ * Field semantics (per INMET portal convention):
+ *   - `hoje`   = currently active alerts
+ *   - `futuro` = scheduled / upcoming alerts within the active window
+ *
+ * The adapter flattens `hoje ∪ futuro` and dedups by id; see `inmet.ts`.
+ */
+export const InmetActiveListSchema = z
+  .object({
+    hoje: z.array(InmetActiveListEntrySchema),
+    futuro: z.array(InmetActiveListEntrySchema),
+  })
+  .passthrough();
 
 export type InmetActiveListEntry = z.infer<typeof InmetActiveListEntrySchema>;
 export type InmetActiveList = z.infer<typeof InmetActiveListSchema>;
