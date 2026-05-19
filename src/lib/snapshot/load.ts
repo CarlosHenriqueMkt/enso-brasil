@@ -110,7 +110,11 @@ function isHealthStale(lastSuccess: Date | null, now: Date): boolean {
 }
 
 function rowsToHealth(rows: SourceHealthRow[], now: Date): UiHealthEntry[] {
-  return rows.map((r) => ({
+  // Defensive filter: drop rows whose source_key is not registered in
+  // registry-meta. Prevents leftover rows (e.g., the P2 "stub" placeholder)
+  // from leaking into the StaleSourceBanner with a literal key as displayName.
+  const known = rows.filter((r) => r.sourceKey in sourceDisplayNames);
+  return known.map((r) => ({
     key: r.sourceKey,
     displayName: sourceDisplayNames[r.sourceKey] ?? r.sourceKey,
     url: "",

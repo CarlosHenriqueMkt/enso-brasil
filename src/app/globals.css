@@ -14,6 +14,7 @@
   /* Surfaces */
   --color-bg: #fafaf8;
   --color-surface: #ffffff;
+  --color-surface-muted: #f3f3f0;
   /* Ink scale (UI-SPEC). NOTE: --color-ink-1 keeps existing #111111 (vs UI-SPEC #1a1a1a)
      to avoid breaking P1/P2 snapshots — 0x09 delta accepted, WCAG AAA on bg either way. */
   --color-ink-1: #111111;
@@ -50,6 +51,18 @@
      44px touch target floor (mobile). Do not encode as scale tokens — use inline. */
   --spacing: 0.5rem;
 
+  /* Semantic spacing scale (sketch findings 03-tokens-theme). Generates
+     gap-s-N, p-s-N, m-s-N, w-s-N, h-s-N utilities. Components use s-1..s-3
+     for tight UI, s-4..s-6 for layout. */
+  --spacing-s-1: 4px;
+  --spacing-s-2: 8px;
+  --spacing-s-3: 12px;
+  --spacing-s-4: 16px;
+  --spacing-s-5: 24px;
+  --spacing-s-6: 32px;
+  --spacing-s-7: 48px;
+  --spacing-s-8: 64px;
+
   /* Radii — legacy aliases preserved + r-1..r-3 scale (UI-SPEC) */
   --radius-sm: 2px;
   --radius-md: 4px;
@@ -69,6 +82,7 @@
   --text-h3: 18px; /* page H3 */
   --text-h2: 20px; /* page H2 / topbar */
   --text-h1: 22px; /* page H1 (cap, no display sizes) */
+  --text-page-title: 22px; /* alias used by home page h1 (matches H1) */
 
   /* System fonts only — NO external font files (3G performance budget) */
   --font-sans:
