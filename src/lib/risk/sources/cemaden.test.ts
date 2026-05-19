@@ -11,17 +11,16 @@ describe("CEMADEN severity mapping (RISK-04, RISK-10)", () => {
   });
 
   it.each([
-    ["Observação", "low"],
-    ["Atenção", "moderate"],
-    ["Alerta", "high"],
-    ["Alerta Máximo", "extreme"],
-  ] as const)("maps known term %s → %s", (raw, expected) => {
+    ["Moderado", "moderate"],
+    ["Alto", "high"],
+    ["Muito Alto", "extreme"],
+  ] as const)("maps known CEMADEN nivel %s → %s", (raw, expected) => {
     expect(mapSeverity(raw)).toBe(expected);
   });
 
   it("falls back to 'moderate' for unknown terms (RISK-04)", () => {
     expect(mapSeverity("Random Term")).toBe("moderate");
     expect(mapSeverity("")).toBe("moderate");
-    expect(mapSeverity("ATENÇÃO")).toBe("moderate"); // case-sensitive on purpose
+    expect(mapSeverity("MODERADO")).toBe("moderate"); // case-sensitive on purpose
   });
 });
