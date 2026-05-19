@@ -76,6 +76,17 @@
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
 }
 
+/* No-JS progressive enhancement: hide the clipboard-share button when the
+ * browser has scripting disabled. The wa.me anchor remains as the canonical
+ * share path. Pair: src/components/share/ShareButton.tsx (.share-clipboard).
+ * (Avoids React 19 react-hooks/set-state-in-effect lint rule via CSS-driven
+ * PE rather than a `jsReady` state.) */
+@media (scripting: none) {
+  .share-clipboard {
+    display: none;
+  }
+}
+
 /* Reduced motion (REQ-S1.09 a11y shell) */
 @media (prefers-reduced-motion: reduce) {
   *,
