@@ -162,7 +162,7 @@ html {
 .emergency-button-root {
   position: fixed;
   right: 16px;
-  bottom: 16px;
+  bottom: 64px; /* clears the slim footer below */
   z-index: 50;
 }
 .emergency-button {
@@ -199,7 +199,7 @@ html {
 @media (max-width: 768px) {
   .emergency-button-root {
     right: 12px;
-    bottom: 12px;
+    bottom: 72px; /* clears slim footer + safe-area margin on mobile */
   }
   .emergency-panel {
     min-width: 240px;
