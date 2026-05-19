@@ -7,38 +7,72 @@
  *
  * WCAG note (Pitfall 3): yellow border is the DARKENED #d4a017 — Tailwind's
  * default `yellow-500` (#eab308) fails WCAG AA on white (2.34:1 contrast).
- * NEVER pair white text with yellow background — black ink on yellow always.
+ * NEVER pair white text with yellow background — use --color-risk-yellow-ink
+ * (#6b5006) on yellow backgrounds. Verified WCAG AA via UI-SPEC contrast lock.
  */
 @theme {
   /* Surfaces */
   --color-bg: #fafaf8;
   --color-surface: #ffffff;
+  /* Ink scale (UI-SPEC). NOTE: --color-ink-1 keeps existing #111111 (vs UI-SPEC #1a1a1a)
+     to avoid breaking P1/P2 snapshots — 0x09 delta accepted, WCAG AAA on bg either way. */
   --color-ink-1: #111111;
   --color-ink-2: #555555;
-  --color-hairline: #e5e5e0;
+  --color-ink-3: #707070;
+  --color-ink-4: #9a9a9a;
 
-  /* INMET-aligned 5-level risk palette (bg / border triplets) */
-  --color-risk-green-bg:  #e7f3e8;
-  --color-risk-green-bd:  #2e7d32;
-  --color-risk-yellow-bg: #fff7d6;
-  --color-risk-yellow-bd: #d4a017;  /* darkened — bespoke; NEVER white text on yellow */
+  /* Line / hairline (UI-SPEC). --color-hairline kept as alias for backward compat. */
+  --color-line: #dcdcd6;
+  --color-line-strong: #bfbfb8;
+  --color-hairline: var(--color-line);
+
+  /* INMET-aligned 5-level risk palette (bg / border / ink triplets) */
+  --color-risk-green-bg: #e7f3e8;
+  --color-risk-green-bd: #2e7d32;
+  --color-risk-green-ink: #0d4f1e;
+  /* Yellow: UI-SPEC contrast lock — #fef7d6 fill + #d4a017 border + #6b5006 ink.
+     NEVER white text on yellow (hard rule, A11Y-01). */
+  --color-risk-yellow-bg: #fef7d6;
+  --color-risk-yellow-bd: #d4a017;
+  --color-risk-yellow-ink: #6b5006;
   --color-risk-orange-bg: #ffe7cc;
   --color-risk-orange-bd: #e76f00;
-  --color-risk-red-bg:    #fde2e2;
-  --color-risk-red-bd:    #c62828;
-  --color-risk-gray-bg:   #ececec;
-  --color-risk-gray-bd:   #757575;
+  --color-risk-orange-ink: #6b3206;
+  --color-risk-red-bg: #fde2e2;
+  --color-risk-red-bd: #c62828;
+  --color-risk-red-ink: #7a1f1f;
+  --color-risk-gray-bg: #ececec;
+  --color-risk-gray-bd: #757575;
+  --color-risk-gray-ink: #4a4a4a;
 
-  /* 8pt spacing scale (Tailwind v4 generates p-1..p-N from this base) */
+  /* 8pt spacing scale (Tailwind v4 generates p-1..p-N from this base).
+     Locked spacing exceptions (UI-SPEC): 14px (gap between badge+icon, hand-tuned),
+     44px touch target floor (mobile). Do not encode as scale tokens — use inline. */
   --spacing: 0.5rem;
 
-  /* Radii */
+  /* Radii — legacy aliases preserved + r-1..r-3 scale (UI-SPEC) */
   --radius-sm: 2px;
   --radius-md: 4px;
   --radius-lg: 6px;
+  --radius-r-1: 2px;
+  --radius-r-2: 4px;
+  --radius-r-3: 6px;
+
+  /* Typography — locked 9-size scale (UI-SPEC §Typography).
+     Weights restricted to 400 / 500 only (no bold). */
+  --text-meta: 11.5px; /* badge label, dense meta */
+  --text-mono: 12px; /* SourceLink domain, code */
+  --text-card-meta: 12.5px; /* card secondary meta */
+  --text-body: 14px; /* default body copy */
+  --text-card-title: 15px; /* card title */
+  --text-section: 16px; /* section heading inside card */
+  --text-h3: 18px; /* page H3 */
+  --text-h2: 20px; /* page H2 / topbar */
+  --text-h1: 22px; /* page H1 (cap, no display sizes) */
 
   /* System fonts only — NO external font files (3G performance budget) */
-  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-sans:
+    ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
 }
 
