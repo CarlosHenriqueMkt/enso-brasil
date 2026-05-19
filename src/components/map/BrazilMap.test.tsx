@@ -30,6 +30,11 @@ describe("BrazilMap (SSR)", () => {
     expect(html).toMatch(/aria-label="Mapa do Brasil — risco por estado"/);
   });
 
+  it("renders svg with width=100% so it does not collapse in grid containers", async () => {
+    const html = await renderMap([]);
+    expect(html).toMatch(/<svg[^>]*width="100%"/);
+  });
+
   it("renders exactly 27 <a href=/estado/{uf}> links wrapping a <path>", async () => {
     const html = await renderMap([]);
     const anchorMatches = html.match(/<a[^>]*href="\/estado\/[a-z]{2}"/g) ?? [];

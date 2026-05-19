@@ -133,3 +133,16 @@ html {
   color: var(--color-ink-1);
   font-family: var(--font-sans);
 }
+
+/* BrazilMap container — ensures the SVG stretches to the grid column width.
+ * Without min-width:0, grid items default to min-content which collapses the
+ * SVG to its intrinsic 150px fallback height. */
+.enso-home-map {
+  width: 100%;
+  min-width: 0;
+}
+.enso-home-map svg {
+  width: 100%;
+  height: auto;
+  display: block;
+}

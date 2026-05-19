@@ -78,6 +78,10 @@ export async function BrazilMap({
       aria-label="Mapa do Brasil — risco por estado"
       viewBox={`0 0 ${width} ${height}`}
       xmlns="http://www.w3.org/2000/svg"
+      width="100%"
+      height="auto"
+      preserveAspectRatio="xMidYMid meet"
+      style={{ display: "block", aspectRatio: `${width} / ${height}` }}
     >
       {fc.features.map((f: UFFeature) => {
         const d = path(f as unknown as Parameters<typeof path>[0]) ?? "";
