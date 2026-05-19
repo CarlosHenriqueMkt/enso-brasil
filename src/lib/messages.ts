@@ -80,6 +80,8 @@ export const messages = {
     page_title: "Versão em texto",
     table_headers: ["Estado", "Nível", "Alertas ativos", "Atualizado há"],
   },
+  // P5 plan 10 — locked PT-BR copy for the home page <h1>.
+  page_title: "Alertas climáticos por estado",
   skip_link: "Pular para o conteúdo",
   a11y: {
     skipLink: "Pular para o conteúdo principal",
