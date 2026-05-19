@@ -10,11 +10,18 @@ export const messages = {
   emergency: {
     // Sketch-findings HARD RULE: never bare numbers — always paired with agency.
     inline: "199 Defesa Civil · 193 Bombeiros · 190 Polícia",
+    button_label: "Emergência",
+    panel_title: "Em emergência, ligue:",
+    entries: [
+      { number: "199", agency: "Defesa Civil" },
+      { number: "193", agency: "Bombeiros" },
+      { number: "190", agency: "Polícia" },
+    ] as const,
   },
   // P5 alias for the locked emergency line — referenced by UI primitives.
   emergency_contacts: "199 Defesa Civil · 193 Bombeiros · 190 Polícia",
   disclaimer: {
-    body: "Este site agrega informações de fontes oficiais. Não substitui sistemas oficiais de alerta. Em emergência, ligue:",
+    body: "Este site agrega informações de fontes oficiais. Não substitui sistemas oficiais de alerta.",
   },
   severity: {
     // CEMADEN/INMET vocabulary — locked verbatim

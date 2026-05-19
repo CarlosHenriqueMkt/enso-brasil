@@ -157,3 +157,73 @@ html {
     max-height: 60vh;
   }
 }
+
+/* Emergency floating button + panel (fixed bottom-right). Locked red palette. */
+.emergency-button-root {
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  z-index: 50;
+}
+.emergency-button {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--color-risk-red-bd);
+  color: var(--color-surface);
+  border: 2px solid var(--color-risk-red-ink);
+  font-size: 28px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.emergency-button:focus-visible {
+  outline: 2px solid var(--color-ink-1);
+  outline-offset: 2px;
+}
+.emergency-panel {
+  position: absolute;
+  bottom: 64px;
+  right: 0;
+  min-width: 220px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-r-3);
+  padding: 8px;
+  margin: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.emergency-panel-title {
+  font-size: var(--text-meta);
+  color: var(--color-ink-3);
+  padding: 4px 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.emergency-panel-link {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 8px;
+  border-radius: var(--radius-r-2);
+  text-decoration: none;
+  color: var(--color-ink-1);
+  min-height: 44px;
+}
+.emergency-panel-link:hover,
+.emergency-panel-link:focus-visible {
+  background: var(--color-surface-muted);
+}
+.emergency-panel-number {
+  font-family: var(--font-mono);
+  font-size: var(--text-body);
+  color: var(--color-risk-red-ink);
+}
+.emergency-panel-agency {
+  font-size: var(--text-body);
+}
