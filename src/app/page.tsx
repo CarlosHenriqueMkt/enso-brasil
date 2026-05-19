@@ -67,7 +67,10 @@ export default async function HomePage({ searchParams }: HomePageProps): Promise
     activeRegion === null ? states : states.filter((s) => UF_TO_REGION[s.uf] === activeRegion);
 
   return (
-    <main id="main" className="enso-home flex flex-col gap-s-3 px-s-3 py-s-3">
+    <main
+      id="main"
+      className="enso-home flex flex-col gap-s-3 px-s-3 py-s-3 flex-1 min-h-0 overflow-hidden"
+    >
       <StaleSourceBanner sources={health} />
 
       <h1 className="text-page-title" style={{ fontWeight: 500 }}>
@@ -78,12 +81,12 @@ export default async function HomePage({ searchParams }: HomePageProps): Promise
 
       <section
         aria-label="Mapa e cartões por estado"
-        className="enso-home-grid grid grid-cols-1 md:grid-cols-2 gap-s-3 items-start"
+        className="enso-home-grid grid grid-cols-1 md:grid-cols-2 gap-s-3 items-start flex-1 min-h-0 overflow-hidden"
       >
         <div className="enso-home-map">
           <BrazilMap states={statesForMap(allStates)} />
         </div>
-        <div className="enso-home-cards flex flex-col gap-s-2">
+        <div className="enso-home-cards flex flex-col gap-s-2 overflow-y-auto min-h-0 h-full pr-s-2">
           {filteredStates.map((s) => (
             <StateCard key={s.uf} snapshot={s} />
           ))}
