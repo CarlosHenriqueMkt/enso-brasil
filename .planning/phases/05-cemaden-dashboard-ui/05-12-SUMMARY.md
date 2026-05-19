@@ -99,3 +99,48 @@ Verification gate landed: axe-core, keyboard/color-blind, and Lighthouse CI now 
 - Commit `1676c62` FOUND (Task 1)
 - Commit `5e2da4a` FOUND (Task 2)
 - Commit `6ea124b` FOUND (Task 3)
+
+## Risk-engine wiring fix (post-Wave 4)
+
+**Date:** 2026-05-19
+**Bug:** `src/app/api/ingest/route.ts` Step 5 hardcoded `risk:"unknown"` + `formulaVersion:"v0-placeholder"` for all 27 UFs (P2-era placeholder). The Phase 3 risk engine (`src/lib/risk/**`) was never wired into the snapshot composer. Result: even after a successful ingest, every state rendered gray "Dados indisponíveis no momento." on the dashboard.
+
+**Fix scope (single file modified — risk engine untouched):**
+
+- Rewrote Step 5 of `src/app/api/ingest/route.ts`:
+  - Added DB query for active alerts (RISK-06 window: `valid_until > now` OR (`valid_until IS NULL` AND `fetched_at > now - 24h`)) using Drizzle `or/and/gt/isNull`, grouped into `activeAlertsByUF: Map<UF, Alert[]>` with snake_case ↔ camelCase column mapping and date→ISO normalization.
+  - Added DB query for `sources_health` rows, reshaped to `SourcesHealthRow[]` (`source_key`, `last_successful_fetch` ISO string or null) to honor RISK-01 decoupling.
+  - Per UF compose: `applyStaleness(calculateRiskLevel(alerts, composerNow), healthShape, composerNow)` (locked pipeline per `pipeline.integration.test.ts`), then `generateExplanation(risk, alerts)` for PT-BR `riskReason`.
+  - `alertCount: alerts.length` now reflects active (cumulative) alerts, not just this-tick payloads.
+  - Replaced both `"v0-placeholder"` literals in `snapshot_cache` insert/onConflictDoUpdate with `FORMULA_VERSION` (= `"v0"`).
+  - Introduced single `composerNow = new Date()` after the per-source loop to avoid reusing per-source local `now`.
+  - Removed unused `messages` import (riskReason now comes from `generateExplanation`).
+
+**Test added (infra-independent — does NOT require `DATABASE_URL_TEST` or Upstash):**
+
+- `src/app/api/ingest/route.snapshot-composition.test.ts` — 5 tests, all green:
+  1. Per-UF risk mapping via the engine: SP (high) → red, RJ (moderate) → orange, AM (low) → yellow, MG (no alerts) → green.
+  2. `riskReason` is non-empty PT-BR for non-unknown levels (regression guard against gray-default).
+  3. `formulaVersion === "v0"` on `snapshot_cache` row, every snapshot entry, and Upstash body.
+  4. Staleness override: all sources stale >1h → every UF risk `unknown` + reason `"Dados indisponíveis no momento."`.
+  5. Shape contract preserved: 27 entries, all required `StateSnapshot` fields present.
+- Mocks `@/db/node`, `@/lib/cache/upstash`, `@/lib/auth/token`, `@/lib/sources/registry`, `next/cache` at module boundary. Captures `snapshot_cache` writes via the insert-stub's `onConflictDoUpdate` hook.
+
+**Verification:**
+
+- `pnpm exec tsc --noEmit` → clean (no errors).
+- `pnpm exec vitest run src/app/api/ingest/route.snapshot-composition.test.ts` → 5/5 pass (~1s test runtime).
+- Pre-existing `src/app/api/ingest/route.test.ts` not exercised here — it is DB-gated and remains untouched (still `describe.skipIf(!DATABASE_URL_TEST)`).
+
+**Commits on `phase-5-cemaden-dashboard`:**
+
+- `a6485c8` — `fix(05-12): wire risk engine into ingest composer`
+- `6d2f4fe` — `test(05-12): risk-engine wiring in ingest composer`
+- (this SUMMARY append commit — see below)
+
+**Constraints honored:**
+
+- No files under `src/lib/risk/**` modified.
+- No `@testing-library/react` usage.
+- Three atomic Conventional Commits (subject ≤50 chars).
+- `STATE.md` not touched (per instruction).
