@@ -32,6 +32,8 @@ must_haves:
       pattern: "deslizamento"
 ---
 
+> **Note (2026-06-02):** This document references `README.pt-BR.md`, which never materialized. The repo's `README.md` is already PT-BR primary per CLAUDE.md. All `README.pt-BR.md` mentions below should be interpreted as `README.md`. Tracking: #10.
+
 <objective>
 Lock the three CONTEXT/RESEARCH open items that downstream plans depend on: extend the hazard taxonomy with `deslizamento`, rewrite D-04 (timestamps are UTC not BRT-naive), and add a stable PT-BR README anchor for the "Como calculamos isso?" link.
 

@@ -37,6 +37,8 @@ must_haves:
       pattern: "buildWaMeHref"
 ---
 
+> **Note (2026-06-02):** This document references `README.pt-BR.md`, which never materialized. The repo's `README.md` is already PT-BR primary per CLAUDE.md. All `README.pt-BR.md` mentions below should be interpreted as `README.md`. Tracking: #10.
+
 <objective>
 The three remaining primitives. Filter is a server component (anchor chips, zero JS). Share button is the FIRST `"use client"` component in the repo (per `05-PATTERNS.md` net-new flag) — gated to leaf only.
 
