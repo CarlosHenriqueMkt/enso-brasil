@@ -47,6 +47,22 @@ const DEFAULT_PARALLELS: [number, number] = [-7, -22];
 const DEFAULT_ROTATE: [number, number, number] = [54, 0, 0];
 const DEFAULT_SCALE = 600;
 
+/**
+ * Trim per-coordinate precision in an SVG `path d=...` string to one decimal.
+ *
+ * d3-geo's `geoPath` emits ~3 fractional digits (e.g. `396.488`); on the
+ * locked 600×600 viewBox a single decimal is sub-pixel (~0.17 %), well under
+ * the issue-8 99.5 % fidelity floor. Truncation (not rounding) is the
+ * cheapest reduction; gzip-savings on the 27-UF map: ~24 KB transferred.
+ *
+ * Operates on the already-emitted string so we don't need a custom path
+ * sink — `geoPath().precision()` in d3-geo controls *resampling*, not
+ * output precision.
+ */
+function roundPathPrecision(d: string): string {
+  return d.replace(/(\.\d)\d+/g, "$1");
+}
+
 function levelFor(states: BrazilMapProps["states"], uf: UF): RiskLevel {
   const hit = states.find((s) => s.uf === uf);
   return hit ? hit.level : "unknown";
@@ -88,7 +104,13 @@ export async function BrazilMap({
       style={{ display: "block", aspectRatio: `${width} / ${height}` }}
     >
       {fc.features.map((f: UFFeature) => {
-        const d = path(f as unknown as Parameters<typeof path>[0]) ?? "";
+        const raw = path(f as unknown as Parameters<typeof path>[0]) ?? "";
+        // Path-precision rounding (issue #8): d3-geo emits coordinates with
+        // ~3 decimals (e.g. 396.488). On a 600px viewport one decimal is
+        // sub-pixel — ~0.17 % of viewport width, well under the 99.5 %
+        // fidelity floor — yet trimming the trailing digits cuts the inlined
+        // SVG payload by ~24 KB gzipped across 27 features.
+        const d = roundPathPrecision(raw);
         const uf = f.properties.uf;
         return (
           <StateShape
