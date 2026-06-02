@@ -1,0 +1,143 @@
+# Drift sentinel — issue #4 (acceptance lifted into PR #12).
+#
+# Catches schema drift on the two source APIs (CEMADEN wsAlertas2, INMET
+# /avisos/ativos) between maintainer-triggered fixture refreshes. Compares
+# the canonical SHAPE of a fresh fetch against the committed shape under
+# tests/fixtures/sources/_shapes/. On drift: opens (or updates) a GitHub
+# issue with label `drift`.
+#
+# Schedule is gated to "at most once every 72h" to stay well under the
+# free-tier minute budget. Manual dispatch + adapter-touching PRs always
+# run (counter resets).
+
+name: drift-sentinel
+
+on:
+  schedule:
+    # Every day at 09:00 UTC — the gate below filters down to once-per-72h.
+    - cron: "0 9 * * *"
+  workflow_dispatch: {}
+  pull_request:
+    paths:
+      - "src/lib/sources/**"
+      - "tests/fixtures/sources/_shapes/**"
+      - "scripts/snapshot-source-shape.ts"
+      - ".github/workflows/drift-sentinel.yml"
+
+permissions:
+  contents: read
+  issues: write
+  actions: read
+
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    outputs:
+      should_run: ${{ steps.gate.outputs.should_run }}
+    steps:
+      - name: 72h gate (scheduled runs only)
+        id: gate
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if [ "${{ github.event_name }}" != "schedule" ]; then
+            echo "non-schedule trigger → always run"
+            echo "should_run=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          LAST=$(gh run list \
+            --workflow=drift-sentinel.yml \
+            --status=success \
+            --json createdAt \
+            --jq '.[0].createdAt // ""' \
+            --limit 1)
+          if [ -z "$LAST" ]; then
+            echo "no prior successful run → run"
+            echo "should_run=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          NOW=$(date -u +%s)
+          THEN=$(date -u -d "$LAST" +%s)
+          AGE_H=$(( (NOW - THEN) / 3600 ))
+          echo "last successful run: $LAST (${AGE_H}h ago)"
+          if [ "$AGE_H" -lt 72 ]; then
+            echo "within 72h window → skip"
+            echo "should_run=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "older than 72h → run"
+            echo "should_run=true" >> "$GITHUB_OUTPUT"
+          fi
+
+  drift:
+    needs: gate
+    if: needs.gate.outputs.should_run == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.33.2
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+
+      - name: CEMADEN shape compare
+        id: cemaden
+        run: |
+          pnpm exec tsx scripts/snapshot-source-shape.ts compare \
+            "https://painelalertas.cemaden.gov.br/wsAlertas2" \
+            "tests/fixtures/sources/_shapes/cemaden.shape.json"
+        continue-on-error: true
+
+      - name: INMET shape compare
+        id: inmet
+        run: |
+          pnpm exec tsx scripts/snapshot-source-shape.ts compare \
+            "https://apiprevmet3.inmet.gov.br/avisos/ativos" \
+            "tests/fixtures/sources/_shapes/inmet-list.shape.json"
+        continue-on-error: true
+
+      - name: Open drift issue on failure
+        if: steps.cemaden.outcome == 'failure' || steps.inmet.outcome == 'failure'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          DRIFT_SOURCES=""
+          [ "${{ steps.cemaden.outcome }}" = "failure" ] && DRIFT_SOURCES="$DRIFT_SOURCES cemaden"
+          [ "${{ steps.inmet.outcome }}" = "failure" ] && DRIFT_SOURCES="$DRIFT_SOURCES inmet"
+          DRIFT_SOURCES="$(echo $DRIFT_SOURCES | tr -s ' ' ' ' | sed 's/^ //')"
+          TITLE="drift-sentinel: schema drift on${DRIFT_SOURCES// /, } ($(date -u +%Y-%m-%d))"
+          BODY=$(cat <<EOF
+          The drift sentinel detected a structural change in one or more source payloads.
+
+          - Sources flagged: $DRIFT_SOURCES
+          - Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          - Last committed shapes: \`tests/fixtures/sources/_shapes/\`
+          - Compare command (locally):
+            \`\`\`bash
+            pnpm exec tsx scripts/snapshot-source-shape.ts compare \\
+              https://painelalertas.cemaden.gov.br/wsAlertas2 \\
+              tests/fixtures/sources/_shapes/cemaden.shape.json
+            \`\`\`
+
+          ## Remediation
+
+          1. Pull the live payload locally and inspect the diff (see workflow log).
+          2. If the change is benign (new optional field) → re-freeze the shape:
+             \`pnpm fixtures:refresh:<source>\` + commit new \`_shapes/*.shape.json\`.
+          3. If the change breaks the adapter → ship an adapter fix in the same PR.
+
+          Closes after the next successful drift-sentinel run with up-to-date shapes.
+          EOF
+          )
+
+          EXISTING=$(gh issue list --label drift --state open --search "$TITLE" --json number --jq '.[0].number // ""')
+          if [ -n "$EXISTING" ]; then
+            gh issue comment "$EXISTING" --body "$BODY"
+            echo "Updated drift issue #$EXISTING"
+          else
+            gh issue create --title "$TITLE" --label drift --body "$BODY"
+          fi
+          exit 1

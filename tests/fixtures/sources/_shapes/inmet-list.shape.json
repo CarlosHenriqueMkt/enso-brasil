@@ -1,0 +1,225 @@
+{
+  "type": "object",
+  "keys": {
+    "futuro": {
+      "type": "array",
+      "item": {
+        "type": "object",
+        "keys": {
+          "alterado": {
+            "type": "boolean"
+          },
+          "aviso_cor": {
+            "type": "string"
+          },
+          "codigo": {
+            "type": "string"
+          },
+          "created_at": {
+            "type": "string"
+          },
+          "data_fim": {
+            "type": "string"
+          },
+          "data_inicio": {
+            "type": "string"
+          },
+          "descricao": {
+            "type": "string"
+          },
+          "encerrado": {
+            "type": "boolean"
+          },
+          "estados": {
+            "type": "string"
+          },
+          "fim": {
+            "type": "string"
+          },
+          "geocodes": {
+            "type": "string"
+          },
+          "hora_fim": {
+            "type": "string"
+          },
+          "hora_inicio": {
+            "type": "string"
+          },
+          "icone": {
+            "type": "string"
+          },
+          "id": {
+            "type": "number"
+          },
+          "id_aviso": {
+            "type": "number"
+          },
+          "id_condicao_severa": {
+            "type": "number"
+          },
+          "id_icone": {
+            "type": "number"
+          },
+          "id_sequencia": {
+            "type": "number"
+          },
+          "id_severidade": {
+            "type": "number"
+          },
+          "id_usuario": {
+            "type": "number"
+          },
+          "inicio": {
+            "type": "string"
+          },
+          "instrucoes": {
+            "type": "array",
+            "item": {
+              "type": "string"
+            }
+          },
+          "mesorregioes": {
+            "type": "string"
+          },
+          "microrregioes": {
+            "type": "string"
+          },
+          "municipios": {
+            "type": "string"
+          },
+          "poligono": {
+            "type": "string"
+          },
+          "referencia": {
+            "type": "string"
+          },
+          "regioes": {
+            "type": "string"
+          },
+          "riscos": {
+            "type": "array",
+            "item": {
+              "type": "string"
+            }
+          },
+          "severidade": {
+            "type": "string"
+          },
+          "updated_at": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "hoje": {
+      "type": "array",
+      "item": {
+        "type": "object",
+        "keys": {
+          "alterado": {
+            "type": "boolean"
+          },
+          "aviso_cor": {
+            "type": "string"
+          },
+          "codigo": {
+            "type": "string"
+          },
+          "created_at": {
+            "type": "string"
+          },
+          "data_fim": {
+            "type": "string"
+          },
+          "data_inicio": {
+            "type": "string"
+          },
+          "descricao": {
+            "type": "string"
+          },
+          "encerrado": {
+            "type": "boolean"
+          },
+          "estados": {
+            "type": "string"
+          },
+          "fim": {
+            "type": "string"
+          },
+          "geocodes": {
+            "type": "string"
+          },
+          "hora_fim": {
+            "type": "string"
+          },
+          "hora_inicio": {
+            "type": "string"
+          },
+          "icone": {
+            "type": "string"
+          },
+          "id": {
+            "type": "number"
+          },
+          "id_aviso": {
+            "type": "number"
+          },
+          "id_condicao_severa": {
+            "type": "number"
+          },
+          "id_icone": {
+            "type": "number"
+          },
+          "id_sequencia": {
+            "type": "number"
+          },
+          "id_severidade": {
+            "type": "number"
+          },
+          "id_usuario": {
+            "type": "number"
+          },
+          "inicio": {
+            "type": "string"
+          },
+          "instrucoes": {
+            "type": "array",
+            "item": {
+              "type": "string"
+            }
+          },
+          "mesorregioes": {
+            "type": "string"
+          },
+          "microrregioes": {
+            "type": "string"
+          },
+          "municipios": {
+            "type": "string"
+          },
+          "poligono": {
+            "type": "string"
+          },
+          "referencia": {
+            "type": "null"
+          },
+          "regioes": {
+            "type": "string"
+          },
+          "riscos": {
+            "type": "array",
+            "item": {
+              "type": "string"
+            }
+          },
+          "severidade": {
+            "type": "string"
+          },
+          "updated_at": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}
