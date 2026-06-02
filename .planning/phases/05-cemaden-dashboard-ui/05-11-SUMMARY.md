@@ -37,6 +37,8 @@ metrics:
   completed_date: 2026-05-19
 ---
 
+> **Note (2026-06-02):** This document references `README.pt-BR.md`, which never materialized. The repo's `README.md` is already PT-BR primary per CLAUDE.md. All `README.pt-BR.md` mentions below should be interpreted as `README.md`. Tracking: #10.
+
 # Phase 5 Plan 11: /estado/[uf] + /texto Routes Summary
 
 Shipped the two remaining v1 routes (deep-link per-state detail + accessible text mirror) plus per-state OG image and a CI link-check guard for the PT-BR README.

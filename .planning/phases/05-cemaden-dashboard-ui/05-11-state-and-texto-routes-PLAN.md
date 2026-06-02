@@ -35,6 +35,8 @@ must_haves:
       pattern: "loadSnapshotForUi"
 ---
 
+> **Note (2026-06-02):** This document references `README.pt-BR.md`, which never materialized. The repo's `README.md` is already PT-BR primary per CLAUDE.md. All `README.pt-BR.md` mentions below should be interpreted as `README.md`. Tracking: #10.
+
 <objective>
 Build the two remaining routes. /estado/{uf} is the deep-link target for map clicks + share URLs. /texto is the accessible mirror.
 

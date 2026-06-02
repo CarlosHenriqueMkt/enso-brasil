@@ -6,6 +6,8 @@ wave_count: 5
 generated: 2026-05-18
 ---
 
+> **Note (2026-06-02):** This document references `README.pt-BR.md`, which never materialized. The repo's `README.md` is already PT-BR primary per CLAUDE.md. All `README.pt-BR.md` mentions below should be interpreted as `README.md`. Tracking: #10.
+
 # Phase 5 — Plan Index
 
 CEMADEN adapter carry-over + INMET P5.1 schema-drift fix + full public dashboard surface (home, /estado, /texto, region filter, share, axe + LHCI verification). 17 requirements (ADAPT-01 + ADAPT-02 fix + DASH-01..10 + A11Y-01..06).
