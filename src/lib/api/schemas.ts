@@ -60,7 +60,7 @@ export const StateSnapshotSchema = z.object({
   risk: z.enum(RISK_LEVELS),
   riskReason: z.string(),
   alertCount: z.number().int().nonnegative(),
-  lastSuccessfulFetch: z.string().datetime().nullable(),
+  lastSuccessfulFetch: z.iso.datetime().nullable(),
   formulaVersion: z.string(),
 });
 export type StateSnapshot = z.infer<typeof StateSnapshotSchema>;
@@ -69,7 +69,7 @@ export type StateSnapshot = z.infer<typeof StateSnapshotSchema>;
 export const SourceHealthSchema = z.object({
   key: z.string(),
   displayName: z.string(),
-  lastSuccessAt: z.string().datetime().nullable(),
+  lastSuccessAt: z.iso.datetime().nullable(),
   consecutiveFailures: z.number().int().nonnegative(),
   isStale: z.boolean(),
   payloadDriftCount: z.number().int().nonnegative(),
@@ -78,7 +78,7 @@ export type SourceHealth = z.infer<typeof SourceHealthSchema>;
 
 /** Top-level health report served by /api/health. */
 export const HealthReportSchema = z.object({
-  generatedAt: z.string().datetime(),
+  generatedAt: z.iso.datetime(),
   sources: z.array(SourceHealthSchema),
 });
 export type HealthReport = z.infer<typeof HealthReportSchema>;

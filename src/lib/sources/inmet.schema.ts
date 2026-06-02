@@ -65,7 +65,7 @@ const InmetInfoSchema = z
     expires: z.string().optional(),
     headline: z.string(),
     description: z.string().optional(),
-    web: z.string().url().optional(),
+    web: z.url().optional(),
     area: z.union([InmetAreaSchema, z.array(InmetAreaSchema)]).optional(),
   })
   .passthrough();
