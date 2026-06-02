@@ -23,30 +23,23 @@ import { sourceError, isSourceError } from "@/lib/sources/errors";
 
 const FIXTURES_DIR = "tests/fixtures/sources";
 
-async function loadLatestInmetPair(): Promise<{ listJson: string; capXml: string } | null> {
+async function loadLatestInmetList(): Promise<string | null> {
   try {
     const entries = await readdir(FIXTURES_DIR);
-    const listFiles = entries.filter((e) => /^inmet-\d{4}-\d{2}-\d{2}\.list\.json$/.test(e)).sort();
-    const xmlFiles = entries.filter((e) => /^inmet-\d{4}-\d{2}-\d{2}\.xml$/.test(e)).sort();
-
-    if (listFiles.length === 0 || xmlFiles.length === 0) return null;
-
-    const listJson = await readFile(join(FIXTURES_DIR, listFiles.at(-1)!), "utf8");
-    const capXml = await readFile(join(FIXTURES_DIR, xmlFiles.at(-1)!), "utf8");
-    return { listJson, capXml };
+    const listFiles = entries
+      .filter((e) => /^inmet-\d{4}-\d{2}-\d{2}\.list\.json$/.test(e))
+      .sort();
+    if (listFiles.length === 0) return null;
+    return await readFile(join(FIXTURES_DIR, listFiles.at(-1)!), "utf8");
   } catch {
     return null;
   }
 }
 
-function buildInmetStub(listJson: string, capXml: string): InmetHttpClient {
+function buildInmetStub(listJson: string): InmetHttpClient {
   return {
     async getJson<T>(url: string): Promise<T> {
       if (url === INMET_CAP_LIST) return JSON.parse(listJson) as T;
-      throw new Error(`unexpected URL: ${url}`);
-    },
-    async getText(url: string): Promise<string> {
-      if (url.startsWith("https://alertas2.inmet.gov.br/")) return capXml;
       throw new Error(`unexpected URL: ${url}`);
     },
   };
@@ -68,15 +61,12 @@ describe("cross-source isolation via Promise.allSettled", () => {
   it("CEMADEN rejects; INMET fulfills independently", async () => {
     const cemaden = createCemadenAdapter(failingCemadenHttp);
 
-    const fixtures = await loadLatestInmetPair();
-    if (!fixtures) {
-      // Fixtures missing — use minimal inline stubs
+    const listJson = await loadLatestInmetList();
+    if (!listJson) {
+      // Fixtures missing — use minimal inline stub
       const minimalInmetStub: InmetHttpClient = {
         async getJson<T>(): Promise<T> {
-          return [] as unknown as T; // empty list → inmet returns []
-        },
-        async getText(): Promise<string> {
-          return "";
+          return { hoje: [], futuro: [] } as unknown as T;
         },
       };
       const inmet = createInmetAdapter(minimalInmetStub);
@@ -98,7 +88,7 @@ describe("cross-source isolation via Promise.allSettled", () => {
       return;
     }
 
-    const inmet = createInmetAdapter(buildInmetStub(fixtures.listJson, fixtures.capXml));
+    const inmet = createInmetAdapter(buildInmetStub(listJson));
     const [cemadenResult, inmetResult] = await Promise.allSettled([cemaden.fetch(), inmet.fetch()]);
 
     // CEMADEN adapter wraps mockHttp rejection as sourceError(http_5xx)
@@ -119,9 +109,6 @@ describe("cross-source isolation via Promise.allSettled", () => {
     const throwingInmetStub: InmetHttpClient = {
       async getJson<T>(): Promise<T> {
         throw sourceError("http_5xx", "inmet stub: simulated network failure");
-      },
-      async getText(): Promise<string> {
-        return "";
       },
     };
 

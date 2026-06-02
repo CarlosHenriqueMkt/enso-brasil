@@ -48,7 +48,9 @@ type Hazard = (typeof HAZARD_KINDS)[number];
 
 const CEMADEN_HAZARD_PATTERNS: ReadonlyArray<{ pattern: RegExp; hazard: Hazard }> = [
   { pattern: /^Risco Hidrol[óo]gico/i, hazard: "enchente" },
-  { pattern: /^Movimento de Massa/i, hazard: "deslizamento" },
+  // CEMADEN emits both "Movimento de Massa" (singular, pre-2026-06) and
+  // "Movimentos de Massa" (plural, observed live 2026-06-02). Accept either.
+  { pattern: /^Movimentos?\s+de\s+Massa/i, hazard: "deslizamento" },
 ];
 
 function mapHazard(event: string): Hazard {
@@ -117,16 +119,19 @@ function wrapHttpError(err: unknown, url: string): never {
 
 // --- Item → Alert[] normalization -------------------------------------------
 
-const VALIDITY_WINDOW_MS = 24 * 60 * 60 * 1000; // RISK-05 default 24h
-
 function normalizeItem(item: WsAlertas2Item, fetchedAt: string): Alert {
   const hazard = mapHazard(item.evento);
   const severity = mapSeverity(item.nivel);
 
   const validFrom = parseCemadenUtc(item.datahoracriacao, "datahoracriacao");
-  // 24h default validity window (RISK-05) — CEMADEN payload has no explicit
-  // expiry field. Computed from valid_from for determinism.
-  const validUntil = new Date(new Date(validFrom).getTime() + VALIDITY_WINDOW_MS).toISOString();
+  // CEMADEN does not expose an expiry field — alerts remain active as long
+  // as they are present in the `wsAlertas2` response. We previously
+  // synthesized a 24h window from `datahoracriacao`, which silently filtered
+  // long-running alerts out of `/api/states` (issue #12 root cause Bug C).
+  // Leaving `valid_until` undefined lets the ingest active-rows query fall
+  // back to the `fetched_at > now - 24h` clause (route.ts:189-194), keeping
+  // any alert alive for as long as we keep observing it upstream.
+  const validUntil: string | undefined = undefined;
 
   const headline = `${item.evento} — ${item.municipio}/${item.uf}`;
 

@@ -82,11 +82,11 @@ vi.mock("@/lib/sources/registry", () => ({
   sources: [
     {
       key: "inmet",
-      displayName: "INMET — Alert-AS",
+      displayName: "INMET — Avisos Ativos",
       fetch: mockInmetFetch,
     },
   ],
-  sourceDisplayNames: { inmet: "INMET — Alert-AS" },
+  sourceDisplayNames: { inmet: "INMET — Avisos Ativos" },
 }));
 
 // ---------------------------------------------------------------------------

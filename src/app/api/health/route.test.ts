@@ -49,7 +49,7 @@ describe("GET /api/health (mocked db)", () => {
     const body = await res.json();
     expect(body.sources[0]).toMatchObject({
       key: "inmet",
-      displayName: "INMET — Alert-AS",
+      displayName: "INMET — Avisos Ativos",
       lastSuccessAt: null,
       isStale: true,
       consecutiveFailures: 0,
