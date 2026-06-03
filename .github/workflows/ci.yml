@@ -61,8 +61,6 @@ jobs:
               - 'playwright.config.ts'
               - 'tests/e2e/**'
               - '.lighthouserc.json'
-              - 'package.json'
-              - 'pnpm-lock.yaml'
 
       - uses: pnpm/action-setup@v5
 
