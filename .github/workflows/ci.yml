@@ -34,43 +34,39 @@ jobs:
         with:
           fetch-depth: 0
 
-      # Path-filter: backend-only PRs (adapters, schemas, scripts, unit
-      # tests, workflows, docs) skip the heavy Playwright + Lighthouse
-      # pipeline entirely. Vercel's preview deploy validates the build for
-      # those PRs and the unit/contract tests cover the logic surface.
-      #
-      # Triggered only when something the E2E / Lighthouse suite can
-      # observably regress changes: pages, components, global styles,
-      # middleware, public assets, framework config, playwright config,
-      # the e2e tests themselves, or the Lighthouse budget. Also includes
-      # lockfile / package.json so a dep bump that affects bundle output
-      # still gets the full Lighthouse pass.
+      # Detect UI-relevant changes via plain git diff. dorny/paths-filter v3
+      # picomatch negations returned ui=true even when only api routes / unit
+      # tests changed (PR #16 thread). Shell-based logic gives explicit
+      # control: backend-only PRs (api, lib, scripts, tests, workflows,
+      # docs) skip the heavy Playwright + Lighthouse pipeline.
       - name: Detect UI changes
         id: changes
-        uses: dorny/paths-filter@v3
-        with:
-          filters: |
-            ui:
-              # Pages, layouts, components, middleware — anything an E2E
-              # or Lighthouse run can observably touch.
-              - 'src/app/**'
-              # API routes are exercised by Vitest integration tests, not
-              # by Playwright — exclude so backend-only PRs don't pay the
-              # E2E + Lighthouse tax.
-              - '!src/app/api/**'
-              # *.test.* alongside source files are unit tests, not E2E.
-              - '!src/app/**/*.test.*'
-              - '!src/app/**/*.snap'
-              - 'src/components/**'
-              - '!src/components/**/*.test.*'
-              - 'src/middleware.ts'
-              - 'public/**'
-              - 'next.config.ts'
-              - 'tailwind.config.*'
-              - 'postcss.config.*'
-              - 'playwright.config.ts'
-              - 'tests/e2e/**'
-              - '.lighthouserc.json'
+        run: |
+          if [ "${{ github.event_name }}" = "push" ]; then
+            BASE=$(git rev-parse HEAD^)
+          else
+            BASE=$(git merge-base origin/main HEAD)
+          fi
+          echo "Diffing against base: $BASE"
+          FILES=$(git diff --name-only "$BASE" HEAD)
+          echo "::group::All changed files"
+          echo "$FILES"
+          echo "::endgroup::"
+
+          # UI-relevant includes (must match)
+          UI=$(echo "$FILES" | grep -E '^(src/(app|components|middleware\.ts)|public/|tests/e2e/|playwright\.config\.ts|next\.config\.ts|tailwind\.config|postcss\.config|\.lighthouserc\.json)' || true)
+          # Strip api routes (server-only) and unit-test / snapshot artifacts
+          UI=$(echo "$UI" | grep -vE '^src/app/api/' | grep -vE '\.test\.[jt]sx?$' | grep -vE '\.snap$' || true)
+
+          if [ -n "$UI" ]; then
+            echo "ui=true" >> "$GITHUB_OUTPUT"
+            echo "::group::UI files that triggered E2E + Lighthouse"
+            echo "$UI"
+            echo "::endgroup::"
+          else
+            echo "ui=false" >> "$GITHUB_OUTPUT"
+            echo "No UI-relevant changes — skipping Playwright / E2E / Lighthouse"
+          fi
 
       - uses: pnpm/action-setup@v5
 
@@ -131,7 +127,7 @@ jobs:
         run: |
           for attempt in 1 2 3; do
             echo "::group::Playwright browsers download — attempt $attempt"
-            if timeout 240 pnpm exec playwright install chromium; then
+            if timeout 240 pnpm exec playwright install chromium --no-shell; then
               echo "::endgroup::"
               exit 0
             fi

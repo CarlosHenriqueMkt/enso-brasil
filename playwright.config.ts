@@ -11,5 +11,10 @@ export default defineConfig({
     timeout: 120000,
   },
   use: { baseURL: "http://localhost:3000" },
-  projects: [{ name: "chromium", use: { browserName: "chromium" } }],
+  // `channel: 'chromium'` opts into Chrome's new headless mode, which uses
+  // the full Chromium binary instead of the separate `chromium-headless-shell`
+  // download. Combined with `playwright install --no-shell` in CI this
+  // halves the install surface and sidesteps the cdn.playwright.dev
+  // headless-shell stall observed in PR #16 (2026-06-02).
+  projects: [{ name: "chromium", use: { browserName: "chromium", channel: "chromium" } }],
 });
