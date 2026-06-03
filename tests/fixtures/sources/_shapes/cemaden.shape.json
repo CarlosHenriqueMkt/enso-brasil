@@ -1,0 +1,49 @@
+{
+  "type": "object",
+  "keys": {
+    "alertas": {
+      "type": "array",
+      "item": {
+        "type": "object",
+        "keys": {
+          "cod_alerta": {
+            "type": "number"
+          },
+          "codibge": {
+            "type": "number"
+          },
+          "datahoracriacao": {
+            "type": "string"
+          },
+          "evento": {
+            "type": "string"
+          },
+          "latitude": {
+            "type": "number"
+          },
+          "longitude": {
+            "type": "number"
+          },
+          "municipio": {
+            "type": "string"
+          },
+          "nivel": {
+            "type": "string"
+          },
+          "status": {
+            "type": "number"
+          },
+          "uf": {
+            "type": "string"
+          },
+          "ult_atualizacao": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "atualizado": {
+      "type": "string"
+    }
+  }
+}

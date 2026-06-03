@@ -117,6 +117,29 @@ function calculateRiskLevel(alerts: Alert[]): RiskLevel {
 
 ---
 
+## Modo de falha "under-warning" (issue #12, 2026-06)
+
+Documentado retroativamente após o incidente #12 de 2026-06-02. O ENSO Brasil ficou exibindo "Sem alertas" em todos os 27 UFs apesar de CEMADEN e INMET terem alertas vigentes — exatamente o oposto da postura "errar para o lado seguro" travada acima.
+
+**Causa-raiz.** Três bugs compostos:
+
+1. **INMET — endpoint CAP legacy morto.** O subdomínio `alertas2.inmet.gov.br/{id}` parou de responder; o adapter chamava-o por id dentro de `Promise.allSettled`, então cada fetch falhava silenciosamente e o tick retornava `[]` sem nunca lançar erro global. `consecutiveFailures` permanecia em 0.
+2. **CEMADEN — regex de hazard rejeitando plural.** Live data emitia `Movimentos de Massa - Moderado` (plural); o regex `^Movimento de Massa` (singular) descartava 33% dos alertas dentro do mesmo `Promise.allSettled`.
+3. **CEMADEN — `valid_until` sintético de 24h.** `datahoracriacao` é momento de criação, não janela de validade; o adapter sintetizava `valid_until = creation + 24h`, então alertas com mais de um dia eram filtrados pela consulta `valid_until > now` do `/api/ingest`. Resultado: mesmo os 8 alertas que sobreviviam ao bug 2 sumiam do snapshot.
+
+**Por que CI não pegou.** Fixtures golden congeladas em 2026-05-18/19 não continham as variantes problemáticas (sem "Movimentos" plural, com CAP XML stub local). O teste de health verifica HTTP 200, não cardinalidade — adapter retornando `[]` continua sendo um "sucesso".
+
+**Guardrails adicionados na correção (PR #12 closes #12/#11/#4):**
+
+- **Cardinality test** (`tests/contract/cardinality.test.ts`) — dado um fixture com N ≥ 1 alertas upstream, o adapter precisa emitir N ≥ 1 alertas. Pega o cenário "tudo dropado".
+- **`outputCount` por SourceReport** — `/api/ingest` agora reporta `outputCount` (saída do adapter) além de `alertCount` (linhas novas pós-dedup). Observável via futuro `/api/health` rico ou downstream alerting; o caso `outputCount === 0 && upstream tem entradas` é a regressão de under-warning.
+- **Drift sentinel** (`.github/workflows/drift-sentinel.yml`) — workflow gated a 72h que compara o shape canônico de cada API contra um shape congelado em `tests/fixtures/sources/_shapes/`. Abre issue com label `drift` se quebrar. Pega mudanças estruturais (chaves novas, tipos diferentes) antes que elas degenerem em fail-silent.
+- **Default de hazard mais permissivo no INMET.** `descricao` não mapeada agora cai em `enchente` (over-warning) em vez de throw + silent drop. Risco de classificação imprecisa, mas o alerta aparece — fiel ao CLAUDE.md.
+
+**Lição.** Nenhum adapter pode retornar `[]` silenciosamente quando o upstream traz dados. Cardinalidade > correção: melhor classificar errado e aparecer do que classificar certo e sumir. Toda nova fonte deve ser coberta pelo cardinality test e pelo drift sentinel desde o D1.
+
+---
+
 ## O que a UI mostra junto com a cor
 
 Para cada estado, junto do badge de cor, mostrar:

@@ -1,20 +1,19 @@
 /**
- * INMET adapter contract tests (Plan 04-05, REQ-4 + REQ-5).
+ * INMET adapter contract test.
  *
- * Loads the most recent dated INMET fixture pair from disk, feeds them
- * through the DI-stub httpClient, and asserts the produced Alert[] against a
- * committed snapshot.
+ * Replays the production flow against the newest committed live fixture
+ * `tests/fixtures/sources/inmet-YYYY-MM-DD.list.json`. Rebuilt 2026-06 for
+ * issue #12 (Bug A): the legacy CAP XML detail endpoint is dead; the
+ * adapter now consumes the full inline payload from `/avisos/ativos`.
  *
- * Fixture capture notes (2026-05-19, Plan 05-05):
- * - The live INMET API returns `{"hoje": [...], "futuro": [...]}` — the
- *   InmetActiveListSchema and adapter were updated to consume this envelope
- *   shape (see 04-05-SUMMARY schema-drift finding + 05-05-SUMMARY). The
- *   refreshed fixture `inmet-2026-05-19.list.json` is a live capture; the
- *   CAP XML fixture (`inmet-2026-05-09.xml`) is retained from Phase 4 as the
- *   live CAP endpoint was rate-limited / ECONNRESET-flaky during the 05-05
- *   capture session.
- *
- * All error assertions use `isSourceError()` — never `instanceof SourceError` (W-1).
+ * Lock-ins:
+ *  - Envelope `{hoje, futuro}` membership (regression guard for the
+ *    pre-05-05 flat-array shape).
+ *  - Snapshot of the adapter's normalized Alert[] (a stable, deterministic
+ *    contract — regenerate via `pnpm test -u` when the fixture is refreshed).
+ *  - Cardinality invariant (REQ-12): with the live fixture, adapter MUST
+ *    emit at least one alert (issue #12 guardrail). The dedicated
+ *    `tests/contract/cardinality.test.ts` re-asserts this in isolation.
  */
 
 import { readdir, readFile } from "node:fs/promises";
@@ -23,7 +22,6 @@ import { describe, it, expect, beforeAll } from "vitest";
 import {
   createInmetAdapter,
   INMET_CAP_LIST,
-  INMET_CAP_DETAIL,
   type InmetHttpClient,
 } from "@/lib/sources/inmet";
 import { isSourceError } from "@/lib/sources/errors";
@@ -34,41 +32,25 @@ import { isSourceError } from "@/lib/sources/errors";
 
 const FIXTURES_DIR = "tests/fixtures/sources";
 
-async function loadLatestFixturePair(): Promise<{ listJson: string; capXml: string }> {
+async function loadLatestListFixture(): Promise<string> {
   const entries = await readdir(FIXTURES_DIR);
+  const listFiles = entries
+    .filter((e) => /^inmet-\d{4}-\d{2}-\d{2}\.list\.json$/.test(e))
+    .sort();
 
-  const listFiles = entries.filter((e) => /^inmet-\d{4}-\d{2}-\d{2}\.list\.json$/.test(e)).sort();
-  const xmlFiles = entries.filter((e) => /^inmet-\d{4}-\d{2}-\d{2}\.xml$/.test(e)).sort();
-
-  if (listFiles.length === 0 || xmlFiles.length === 0) {
-    throw new Error(
-      "No INMET fixture files found. Run `pnpm fixtures:refresh:inmet --dry-run` first.",
-    );
+  if (listFiles.length === 0) {
+    throw new Error("No INMET list fixtures found. Run `pnpm fixtures:refresh:inmet` first.");
   }
-
-  const latestList = listFiles.at(-1)!;
-  const latestXml = xmlFiles.at(-1)!;
-
-  const listJson = await readFile(join(FIXTURES_DIR, latestList), "utf8");
-  const capXml = await readFile(join(FIXTURES_DIR, latestXml), "utf8");
-
-  return { listJson, capXml };
+  return await readFile(join(FIXTURES_DIR, listFiles.at(-1)!), "utf8");
 }
 
-function buildStubClient(listJson: string, capXml: string): InmetHttpClient {
+function buildStubClient(listJson: string): InmetHttpClient {
   return {
     async getJson<T = unknown>(url: string): Promise<T> {
       if (url === INMET_CAP_LIST) {
         return JSON.parse(listJson) as T;
       }
       throw new Error(`stub getJson: unexpected URL: ${url}`);
-    },
-    async getText(url: string): Promise<string> {
-      // Any CAP detail URL → return captured XML
-      if (url.startsWith("https://alertas2.inmet.gov.br/")) {
-        return capXml;
-      }
-      throw new Error(`stub getText: unexpected URL: ${url}`);
     },
   };
 }
@@ -78,10 +60,9 @@ function buildStubClient(listJson: string, capXml: string): InmetHttpClient {
 // ---------------------------------------------------------------------------
 
 let listJson: string;
-let capXml: string;
 
 beforeAll(async () => {
-  ({ listJson, capXml } = await loadLatestFixturePair());
+  listJson = await loadLatestListFixture();
 });
 
 // ---------------------------------------------------------------------------
@@ -89,7 +70,7 @@ beforeAll(async () => {
 // ---------------------------------------------------------------------------
 
 describe("INMET contract: real fixture round-trip", () => {
-  it("fixture matches `{hoje, futuro}` envelope contract (Plan 05-05)", () => {
+  it("fixture matches `{hoje, futuro}` envelope contract (Plan 05-05 + issue #12)", () => {
     // Lock the envelope shape at the fixture level so a future refresh that
     // accidentally captures the legacy flat-array shape fails this assertion
     // before adapter code is exercised (T-05-08).
@@ -98,11 +79,29 @@ describe("INMET contract: real fixture round-trip", () => {
     expect(Array.isArray(parsed.futuro)).toBe(true);
   });
 
+  it("every entry carries the inline-payload fields the post-#12 adapter requires", () => {
+    const parsed = JSON.parse(listJson) as {
+      hoje: Array<Record<string, unknown>>;
+      futuro: Array<Record<string, unknown>>;
+    };
+    const all = [...parsed.hoje, ...parsed.futuro];
+    expect(all.length).toBeGreaterThan(0);
+    for (const entry of all) {
+      // Bug A regression guard: if INMET ever reverts the schema, surface
+      // the required-field gap at fixture-load time.
+      expect(typeof entry.descricao).toBe("string");
+      expect(typeof entry.severidade).toBe("string");
+      expect(typeof entry.estados).toBe("string");
+      expect(typeof entry.inicio).toBe("string");
+      expect(typeof entry.fim).toBe("string");
+    }
+  });
+
   it("fetch() resolves to Alert[] matching committed snapshot", async () => {
-    const adapter = createInmetAdapter(buildStubClient(listJson, capXml));
+    const adapter = createInmetAdapter(buildStubClient(listJson));
     const alerts = await adapter.fetch();
 
-    // Normalize fetched_at so snapshot is deterministic
+    // Normalize `fetched_at` so snapshot is deterministic
     const normalized = alerts.map((a) => ({ ...a, fetched_at: "NORMALIZED" }));
     expect(normalized).toMatchSnapshot();
   });
@@ -112,13 +111,26 @@ describe("INMET contract: real fixture round-trip", () => {
       async getJson<T>(): Promise<T> {
         return { hoje: [], futuro: [] } as unknown as T;
       },
-      async getText(): Promise<string> {
-        return "";
-      },
     };
     const adapter = createInmetAdapter(emptyStub);
     const out = await adapter.fetch();
     expect(out).toEqual([]);
+  });
+
+  it("cardinality guardrail: non-empty fixture MUST produce ≥1 alert (issue #12)", async () => {
+    const adapter = createInmetAdapter(buildStubClient(listJson));
+    const out = await adapter.fetch();
+    const parsed = JSON.parse(listJson) as {
+      hoje: unknown[];
+      futuro: unknown[];
+    };
+    const upstreamCount = parsed.hoje.length + parsed.futuro.length;
+    if (upstreamCount > 0) {
+      expect(
+        out.length,
+        `Adapter produced ZERO alerts despite ${upstreamCount} upstream entries (under-warning).`,
+      ).toBeGreaterThan(0);
+    }
   });
 });
 
@@ -127,43 +139,53 @@ describe("INMET contract: real fixture round-trip", () => {
 // ---------------------------------------------------------------------------
 
 describe("INMET contract: mutation smokes", () => {
-  it("stripping pt-BR <info> → per-alert rejected, others (if any) still flow", async () => {
-    // Remove the pt-BR info block entirely
-    const noPtBrXml = capXml.replace(/<info xml:lang="pt-BR">[\s\S]*?<\/info>/g, "");
-    const stub = buildStubClient(listJson, noPtBrXml);
+  it("event 'Tornado' (not in HAZARD_PATTERNS) → fallback to 'enchente' (over-warning)", async () => {
+    // Replace every descricao with a non-mapped string. Adapter MUST still
+    // emit alerts (using the enchente fallback) — issue #12 lesson learned:
+    // silent drop is the failure mode we are guarding against.
+    const parsed = JSON.parse(listJson) as {
+      hoje: Array<Record<string, unknown>>;
+      futuro: Array<Record<string, unknown>>;
+    };
+    for (const e of [...parsed.hoje, ...parsed.futuro]) {
+      e.descricao = "Tornado";
+    }
+    const stub = buildStubClient(JSON.stringify(parsed));
     const adapter = createInmetAdapter(stub);
-
-    // fetch() collects allSettled — a per-alert rejection does not throw globally
-    // When all alerts fail, we get []
     const out = await adapter.fetch();
-    // All alerts failed (no pt-BR info) → empty array
-    expect(out).toEqual([]);
+    expect(out.length).toBeGreaterThan(0);
+    for (const a of out) expect(a.hazard_kind).toBe("enchente");
   });
 
-  it("unknown <severity> → output severity is 'moderate' (safe default, not an error)", async () => {
-    const unknownSevXml = capXml.replace(
-      /<severity>.*?<\/severity>/g,
-      "<severity>Unknown</severity>",
-    );
-    const stub = buildStubClient(listJson, unknownSevXml);
+  it("unknown severity → 'moderate' default (safe under-warning floor)", async () => {
+    const parsed = JSON.parse(listJson) as {
+      hoje: Array<Record<string, unknown>>;
+      futuro: Array<Record<string, unknown>>;
+    };
+    for (const e of [...parsed.hoje, ...parsed.futuro]) {
+      e.severidade = "Catastrófico";
+    }
+    const stub = buildStubClient(JSON.stringify(parsed));
     const adapter = createInmetAdapter(stub);
-
     const out = await adapter.fetch();
-    // If list is non-empty, first alert severity defaults to "moderate"
     if (out.length > 0) {
       expect(out[0]!.severity).toBe("moderate");
     }
   });
 
-  it("event 'Tornado' (not in HAZARD_PATTERNS) → per-alert schema_invalid, others still flow", async () => {
-    const tornadoXml = capXml.replace(/<event>.*?<\/event>/g, "<event>Tornado</event>");
-    const stub = buildStubClient(listJson, tornadoXml);
+  it("legacy flat-array shape is rejected as schema_invalid (T-05-08 guard)", async () => {
+    const flat = JSON.parse(listJson) as {
+      hoje: unknown[];
+      futuro: unknown[];
+    };
+    const stub: InmetHttpClient = {
+      async getJson<T>(): Promise<T> {
+        return [...flat.hoje, ...flat.futuro] as unknown as T;
+      },
+    };
     const adapter = createInmetAdapter(stub);
-
-    // Per-alert error is swallowed by allSettled; all alerts rejected → []
-    const out = await adapter.fetch();
-    expect(out).toEqual([]);
+    await expect(adapter.fetch()).rejects.toSatisfy(
+      (e) => isSourceError(e) && e.code === "schema_invalid",
+    );
   });
 });
-
-// Path C invariant removed — CEMADEN now legitimately present (Plan 05-03).

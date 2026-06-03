@@ -29,7 +29,11 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:check": "drizzle-kit check",
-    "geo:build": "tsx scripts/build-geo.ts"
+    "geo:build": "tsx scripts/build-geo.ts",
+    "probe:cemaden": "tsx scripts/probe-adapter.ts cemaden",
+    "probe:inmet": "tsx scripts/probe-adapter.ts inmet",
+    "drift:cemaden": "tsx scripts/snapshot-source-shape.ts compare https://painelalertas.cemaden.gov.br/wsAlertas2 tests/fixtures/sources/_shapes/cemaden.shape.json",
+    "drift:inmet": "tsx scripts/snapshot-source-shape.ts compare https://apiprevmet3.inmet.gov.br/avisos/ativos tests/fixtures/sources/_shapes/inmet-list.shape.json"
   },
   "dependencies": {
     "@date-fns/tz": "1.2.0",

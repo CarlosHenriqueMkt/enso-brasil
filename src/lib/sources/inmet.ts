@@ -1,76 +1,93 @@
 /**
- * INMET source adapter (Plan 04-03, REQ-S2.04 / ADAPT-02 / ADAPT-04).
+ * INMET source adapter (rebuilt 2026-06 for issue #12 — Bug A).
  *
- * Two-step fetch pipeline:
- *   1. GET INMET_CAP_LIST   → JSON array of `{ id, ... }`
- *   2. GET INMET_CAP_DETAIL(id) → CAP 1.2 XML, parsed via Wave 0 parseCapXml
+ * Wave 2 (pre-2026-06) flow: list `/avisos/ativos` → per-id GET on
+ * `alertas2.inmet.gov.br/{id}` → CAP 1.2 XML → parse → normalize.
  *
- * Endpoint constants are pinned per RESEARCH Q2 (2026-05-05). Path C ships
- * INMET only — CEMADEN deferred to Phase 5.
+ * Live flow (2026-06+): list `/avisos/ativos` IS the full payload. Each
+ * envelope entry carries `descricao`, `severidade`, `estados`, `geocodes`,
+ * `inicio`, `fim`, `riscos`, `instrucoes` — everything we used to pull from
+ * the CAP detail. The legacy CAP subdomain (`alertas2.inmet.gov.br`) is dead
+ * (ECONNRESET — see .planning/phases/06-hardening/06-under-warning-RC.md).
  *
- * All error throws flow through the canonical `sourceError(...)` factory
- * (W-1 invariant locked by 04-CONTEXT taxonomy — NO `class extends Error`).
+ * Public-safety invariants (CLAUDE.md):
+ *   - All errors via `sourceError()` factory (W-1).
+ *   - `Promise.allSettled` per-entry isolation (T-04-03-05) — one bad row
+ *     does NOT poison the tick. Unmappable hazards fall back to "enchente"
+ *     (over-warning, per CLAUDE.md), unmappable severity to "moderate" (RISK-04).
  */
 
-import { AlertArraySchema, HAZARD_KINDS, UF27_PROVISIONAL, type Alert } from "./schema";
+import { AlertArraySchema, UF27_PROVISIONAL, type Alert } from "./schema";
+import type { HAZARD_KINDS } from "./schema";
 import { computePayloadHash } from "./hash";
 import { sourceError } from "./errors";
-import { parseCapXml } from "./xml";
 import {
   assertActiveList,
-  assertCapDocument,
-  type InmetArea,
-  type InmetCapDocument,
-  type InmetInfo,
+  type InmetActiveListEntry,
 } from "./inmet.schema";
 import { mapSeverity } from "@/lib/risk/sources/inmet";
-import { httpGet, httpGetText } from "@/lib/http/fetcher";
+import { httpGet } from "@/lib/http/fetcher";
 
-// --- Endpoint constants (pinned per RESEARCH Q2) ----------------------------
+// --- Endpoint constants ------------------------------------------------------
 
 export const INMET_CAP_LIST = "https://apiprevmet3.inmet.gov.br/avisos/ativos";
-export const INMET_CAP_DETAIL = (id: string): string => `https://alertas2.inmet.gov.br/${id}`;
 
 // --- HTTP client contract ----------------------------------------------------
 
 export interface InmetHttpClient {
   getJson<T = unknown>(url: string): Promise<T>;
-  getText(url: string): Promise<string>;
 }
 
 const PROD_HTTP_CLIENT: InmetHttpClient = {
   getJson: <T>(url: string) => httpGet<T>(url),
-  getText: (url: string) => httpGetText(url),
 };
 
-// --- Hazard vocab table (CLAUDE.md: preserve CEMADEN/INMET distinctions) ----
+// --- Hazard vocab table ------------------------------------------------------
+//
+// INMET `descricao` values observed live 2026-06-02:
+//   "Chuvas Intensas", "Acumulado de Chuva", "Tempestade"
+// Historic CAP `<event>` values (pre-2026-06): "Inundação", "Incêndio Florestal",
+// "Queimada", "Enchente". Patterns below cover both.
+//
+// Unknown `descricao` → "enchente" (per CLAUDE.md over-warning rule). We
+// previously threw for unmapped events, which silently dropped every entry
+// inside Promise.allSettled — the precise failure mode that produced
+// issue #12. Defaulting to a real hazard tag means the alert STILL surfaces
+// to users with at-least-moderate severity rather than vanishing.
 
 type Hazard = (typeof HAZARD_KINDS)[number];
 
 const HAZARD_PATTERNS: ReadonlyArray<{ pattern: RegExp; hazard: Hazard }> = [
   // Specific compounds first — order matters.
   { pattern: /inc[eê]ndio\s+florestal/i, hazard: "incendio" },
+  { pattern: /movimento(?:s)?\s+de\s+massa/i, hazard: "deslizamento" },
+  { pattern: /deslizamento/i, hazard: "deslizamento" },
   { pattern: /inc[eê]ndio/i, hazard: "incendio" },
   { pattern: /queimada/i, hazard: "queimada" },
+  { pattern: /(?:seca|estiagem)/i, hazard: "estiagem" },
   { pattern: /inunda[çc][aã]o/i, hazard: "inundacao" },
-  { pattern: /enchente/i, hazard: "enchente" },
+  { pattern: /(?:enchente|alagamento)/i, hazard: "enchente" },
+  // Rain / storm family — all map to "enchente" (closest water-hazard tag in
+  // HAZARD_KINDS; CLAUDE.md locks "enchente" as the primary hydro term).
+  { pattern: /chuvas?|tempestades?|trov[oõ]ada/i, hazard: "enchente" },
 ];
 
-function mapHazard(event: string): Hazard {
+const HAZARD_FALLBACK: Hazard = "enchente";
+
+function mapHazard(descricao: string): Hazard {
   for (const { pattern, hazard } of HAZARD_PATTERNS) {
-    if (pattern.test(event)) return hazard;
+    if (pattern.test(descricao)) return hazard;
   }
-  throw sourceError("schema_invalid", `INMET event "${event}" does not map to any v1 hazard kind`);
+  return HAZARD_FALLBACK;
 }
 
-// --- UF resolution (areaDesc / geocode) -------------------------------------
+// --- UF resolution -----------------------------------------------------------
 
 type UF = (typeof UF27_PROVISIONAL)[number];
 
 const UF_SET: ReadonlySet<UF> = new Set(UF27_PROVISIONAL);
 
 // Unicode-aware letter boundary so "Pará" matches but "Paraná" / "Paraíba" do not.
-// JS \b is ASCII-only and breaks at accented letters; \p{L} fixes that under /u.
 const B_OPEN = String.raw`(?<![\p{L}])`;
 const B_CLOSE = String.raw`(?![\p{L}])`;
 const ufName = (body: string): RegExp => new RegExp(`${B_OPEN}${body}${B_CLOSE}`, "iu");
@@ -86,7 +103,7 @@ const UF_NAMES: ReadonlyArray<{ name: RegExp; uf: UF }> = [
   { name: ufName(String.raw`santa\s+catarina`), uf: "SC" },
   { name: ufName(String.raw`s[aã]o\s+paulo`), uf: "SP" },
   { name: ufName(String.raw`minas\s+gerais`), uf: "MG" },
-  { name: ufName(String.raw`mato\s+grosso`), uf: "MT" },
+  { name: ufName(String.raw`mato\s+grosso(?!\s+do\s+sul)`), uf: "MT" },
   { name: ufName(String.raw`pernambuco`), uf: "PE" },
   { name: ufName(String.raw`maranh[aã]o`), uf: "MA" },
   { name: ufName(String.raw`rond[oô]nia`), uf: "RO" },
@@ -106,65 +123,59 @@ const UF_NAMES: ReadonlyArray<{ name: RegExp; uf: UF }> = [
   { name: ufName(String.raw`acre`), uf: "AC" },
 ];
 
-const UF_CODE_RE = /\b([A-Z]{2})\b/g;
+// IBGE municipality code → UF (first 2 digits). Fallback for the case where
+// `estados` text is ambiguous or missing.
+const IBGE_PREFIX_TO_UF: Readonly<Record<string, UF>> = {
+  "11": "RO", "12": "AC", "13": "AM", "14": "RR", "15": "PA", "16": "AP", "17": "TO",
+  "21": "MA", "22": "PI", "23": "CE", "24": "RN", "25": "PB", "26": "PE", "27": "AL", "28": "SE", "29": "BA",
+  "31": "MG", "32": "ES", "33": "RJ", "35": "SP",
+  "41": "PR", "42": "SC", "43": "RS",
+  "50": "MS", "51": "MT", "52": "GO", "53": "DF",
+};
 
-function extractUFs(area: InmetInfo["area"]): Set<UF> {
+function extractUFs(entry: InmetActiveListEntry): Set<UF> {
   const ufs = new Set<UF>();
-  if (!area) return ufs;
-  const entries: InmetArea[] = Array.isArray(area) ? area : [area];
 
-  for (const entry of entries) {
-    // areaDesc is guaranteed-string by InmetAreaSchema (z.string(), non-optional).
-    const desc = entry.areaDesc;
+  // Pass 1: PT-BR state names (longest-first table).
+  for (const { name, uf } of UF_NAMES) {
+    if (name.test(entry.estados)) ufs.add(uf);
+  }
 
-    // Pass 1: full state names (longest-first table).
-    for (const { name, uf } of UF_NAMES) {
-      if (name.test(desc)) ufs.add(uf);
-    }
-
-    // Pass 2: 2-letter codes (e.g. "MG, SP").
-    let match: RegExpExecArray | null;
-    UF_CODE_RE.lastIndex = 0;
-    while ((match = UF_CODE_RE.exec(desc)) !== null) {
-      const code = match[1] as UF;
-      if (UF_SET.has(code)) ufs.add(code);
+  // Pass 2: IBGE 2-digit prefixes from `geocodes` (CSV of 7-digit codes).
+  if (ufs.size === 0 && entry.geocodes) {
+    const codes = entry.geocodes.split(",");
+    for (const raw of codes) {
+      const trimmed = raw.trim();
+      if (trimmed.length < 2) continue;
+      const prefix = trimmed.slice(0, 2);
+      const uf = IBGE_PREFIX_TO_UF[prefix];
+      if (uf !== undefined && UF_SET.has(uf)) ufs.add(uf);
     }
   }
 
   return ufs;
 }
 
-// --- Info-block selection (pt-BR mandatory) ---------------------------------
-
-function selectPtBrInfo(doc: InmetCapDocument, alertId: string): InmetInfo {
-  const infos = doc.alert.info;
-  const ptBr = infos.find((i) => i["@_xml:lang"] === "pt-BR");
-  if (!ptBr) {
-    throw sourceError(
-      "missing_pt_br",
-      `INMET alert ${alertId} has no <info xml:lang="pt-BR"> block`,
-    );
-  }
-  return ptBr;
-}
-
 // --- Timestamp normalization -------------------------------------------------
+//
+// INMET ships `inicio` / `fim` as "YYYY-MM-DD HH:MM" in BRT (UTC-3, no DST
+// in Brazil since 2019). We convert to ISO-Z by inserting the `-03:00`
+// offset and re-emitting via Date.toISOString().
 
-function toIsoZ(raw: string | undefined): string | undefined {
-  if (!raw) return undefined;
-  const d = new Date(raw);
-  if (Number.isNaN(d.getTime())) {
-    throw sourceError("schema_invalid", `INMET timestamp not parseable: ${raw}`);
-  }
-  return d.toISOString();
-}
+const INMET_DATETIME_RE = /^(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2})(?::(\d{2}))?$/;
 
-function requireIsoZ(raw: string, label: string): string {
-  const out = toIsoZ(raw);
-  if (!out) {
-    throw sourceError("schema_invalid", `INMET ${label} required but empty`);
+function parseInmetBrtToIsoZ(raw: string, label: string): string {
+  const m = INMET_DATETIME_RE.exec(raw);
+  if (!m) {
+    throw sourceError("schema_invalid", `INMET ${label} not parseable: ${raw}`);
   }
-  return out;
+  const [, y, mo, d, h, mi, s] = m;
+  const iso = `${y}-${mo}-${d}T${h}:${mi}:${s ?? "00"}-03:00`;
+  const t = new Date(iso);
+  if (Number.isNaN(t.getTime())) {
+    throw sourceError("schema_invalid", `INMET ${label} not parseable: ${raw}`);
+  }
+  return t.toISOString();
 }
 
 // --- HTTP error → sourceError mapping ---------------------------------------
@@ -196,26 +207,33 @@ function wrapHttpError(err: unknown, url: string): never {
   throw sourceError("http_5xx", `INMET fetch ${url} failed: ${e.message ?? "unknown"}`, err);
 }
 
-// --- CAP doc → Alert[] normalization ----------------------------------------
+// --- Entry → Alert[] normalization -------------------------------------------
 
-function normalizeCapDoc(doc: InmetCapDocument, capUrl: string, fetchedAt: string): Alert[] {
-  const id = doc.alert.identifier;
-  const info = selectPtBrInfo(doc, id);
-  const hazard = mapHazard(info.event);
-  const severity = mapSeverity(info.severity);
-  const ufs = extractUFs(info.area);
+function extractBody(entry: InmetActiveListEntry): string | undefined {
+  const riscos = (entry as { riscos?: unknown }).riscos;
+  if (Array.isArray(riscos) && riscos.length > 0 && typeof riscos[0] === "string") {
+    return riscos[0];
+  }
+  return undefined;
+}
+
+function normalizeEntry(entry: InmetActiveListEntry, fetchedAt: string): Alert[] {
+  const hazard = mapHazard(entry.descricao);
+  const severity = mapSeverity(entry.severidade);
+  const ufs = extractUFs(entry);
 
   if (ufs.size === 0) {
     throw sourceError(
       "schema_invalid",
-      `INMET alert ${id} resolves to no UF (area: ${JSON.stringify(info.area ?? null)})`,
+      `INMET alert ${entry.id} resolves to no UF (estados="${entry.estados}", geocodes prefix mismatch)`,
     );
   }
 
-  const validFrom = toIsoZ(info.effective);
-  const validUntil = toIsoZ(info.expires);
-  // Fail loud if `sent` is missing/unparseable — every CAP alert must carry it.
-  void requireIsoZ(doc.alert.sent, "alert.sent");
+  const validFrom = parseInmetBrtToIsoZ(entry.inicio, "inicio");
+  const validUntil = parseInmetBrtToIsoZ(entry.fim, "fim");
+  const body = extractBody(entry);
+
+  const headline = `${entry.descricao} — ${entry.estados}`;
 
   const alerts: Alert[] = [];
   for (const uf of ufs) {
@@ -224,13 +242,13 @@ function normalizeCapDoc(doc: InmetCapDocument, capUrl: string, fetchedAt: strin
       hazard_kind: hazard,
       state_uf: uf,
       severity,
-      headline: info.headline,
-      body: info.description,
-      source_url: capUrl,
+      headline,
+      body,
+      source_url: INMET_CAP_LIST,
       fetched_at: fetchedAt,
       valid_from: validFrom,
       valid_until: validUntil,
-      raw: doc,
+      raw: entry,
     } satisfies Omit<Alert, "payload_hash">;
 
     alerts.push({
@@ -246,11 +264,10 @@ function normalizeCapDoc(doc: InmetCapDocument, capUrl: string, fetchedAt: strin
 export function createInmetAdapter(http: InmetHttpClient = PROD_HTTP_CLIENT) {
   return {
     key: "inmet" as const,
-    displayName: "INMET — Alert-AS",
+    displayName: "INMET — Avisos Ativos",
     async fetch(): Promise<Alert[]> {
       const fetchedAt = new Date().toISOString();
 
-      // Step 1: list active alerts.
       let rawList: unknown;
       try {
         rawList = await http.getJson(INMET_CAP_LIST);
@@ -259,32 +276,19 @@ export function createInmetAdapter(http: InmetHttpClient = PROD_HTTP_CLIENT) {
       }
       const envelope = assertActiveList(rawList);
 
-      // Plan 05-05: live API moved from flat array to `{hoje, futuro}` envelope
-      // (see 04-05-SUMMARY schema-drift finding). Flatten and dedup by id;
-      // `futuro` wins on collision so an entry that has both active-today and
-      // scheduled-future metadata uses the forward-looking record (typically
-      // the longer effective window). Both arms semantically represent
-      // "active+upcoming" per the INMET portal convention.
-      const byId = new Map<string, (typeof envelope.hoje)[number]>();
+      // Flatten and dedup by id; `futuro` wins on collision so an entry that
+      // has both active-today and scheduled-future metadata uses the forward-
+      // looking record (typically the longer effective window). Both arms
+      // semantically represent "active+upcoming" per the INMET portal.
+      const byId = new Map<string, InmetActiveListEntry>();
       for (const entry of envelope.hoje) byId.set(entry.id, entry);
       for (const entry of envelope.futuro) byId.set(entry.id, entry); // futuro wins
       const list = Array.from(byId.values());
       if (list.length === 0) return [];
 
-      // Step 2: per-alert CAP fetch with isolation.
+      // Per-entry isolation — one malformed entry must not poison the tick.
       const settled = await Promise.allSettled(
-        list.map(async (entry) => {
-          const url = INMET_CAP_DETAIL(entry.id);
-          let xml: string;
-          try {
-            xml = await http.getText(url);
-          } catch (err) {
-            wrapHttpError(err, url);
-          }
-          const parsed = parseCapXml(xml);
-          const doc = assertCapDocument(parsed);
-          return normalizeCapDoc(doc, url, fetchedAt);
-        }),
+        list.map(async (entry) => normalizeEntry(entry, fetchedAt)),
       );
 
       const collected: Alert[] = [];
@@ -292,14 +296,13 @@ export function createInmetAdapter(http: InmetHttpClient = PROD_HTTP_CLIENT) {
         if (result.status === "fulfilled") {
           collected.push(...result.value);
         }
-        // Rejected per-alert results are intentionally dropped — CAP failures
-        // for one alert must not poison the rest of the INMET tick (T-04-03-05).
+        // Rejected per-entry results are intentionally dropped — a single
+        // bad entry must not poison the tick (T-04-03-05). The cardinality
+        // guardrail in tests/contract/cardinality.test.ts ensures a TOTAL
+        // wipeout (every entry dropped) is caught.
       }
 
-      // Defense-in-depth: parse the final array against AlertArraySchema. The
-      // throw arm is structurally unreachable — normalizeCapDoc only emits
-      // values that pass AlertSchema field-by-field — but is kept as a tripwire
-      // for future refactors. Coverage ignored on the unreachable arm only.
+      // Defense-in-depth: parse the final array against AlertArraySchema.
       const validated = AlertArraySchema.safeParse(collected);
       /* v8 ignore start */
       if (!validated.success) {

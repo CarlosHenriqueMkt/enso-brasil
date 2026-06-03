@@ -2,8 +2,8 @@
 
 **Project:** ENSO Brasil — public Brazilian climate hazard aggregator dashboard
 **Current milestone:** v1 — Per-state hazard dashboard
-**Status:** Phase 5 MERGED · ⚠️ **CRITICAL prod bug — issue #12 — adapters silently return 0 alerts despite live upstream having active alerts (under-warning failure mode)** · Next: Phase 6 (Hardening + 3rd Source) with #12 as P0 entry-point
-**Last updated:** 2026-05-19
+**Status:** Phase 5 MERGED · ✅ **issue #12 fixed in-flight (PR #12) — CEMADEN + INMET adapters repaired, cardinality guardrail + drift sentinel landed (closes #12/#11/#4)** · Next: Phase 6 formal kickoff
+**Last updated:** 2026-06-02
 
 ## Current Phase
 

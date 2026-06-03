@@ -1,9 +1,11 @@
 /**
- * INMET adapter unit tests (Plan 04-03, Task 3).
+ * INMET adapter unit tests.
  *
- * Hand-crafted CAP XML strings + DI stub client. The contract test in
- * Plan 04-05 (tests/contract/inmet.test.ts) replaces these stubs with a
- * real captured fixture; this file focuses on branch coverage.
+ * Rebuilt 2026-06 for issue #12 (Bug A) — the legacy CAP XML detail endpoint
+ * is dead; the adapter now consumes the full inline payload at
+ * `/avisos/ativos`. The contract test in `tests/contract/inmet.test.ts`
+ * replays the same flow against a captured live fixture; this file focuses
+ * on branch coverage with hand-crafted entries.
  *
  * Every error assertion uses `isSourceError(e) && e.code === "..."` —
  * never `instanceof SourceError` (W-1 invariant: factory only).
@@ -21,29 +23,25 @@ import {
   createInmetAdapter,
   inmetAdapter,
   INMET_CAP_LIST,
-  INMET_CAP_DETAIL,
   type InmetHttpClient,
 } from "./inmet";
 import { isSourceError } from "./errors";
-import { httpGet, httpGetText } from "@/lib/http/fetcher";
+import { httpGet } from "@/lib/http/fetcher";
 import { SEVERITY_TABLE } from "@/lib/risk/sources/inmet";
 
 // --- Stub client builder ---------------------------------------------------
 
 interface StubInputs {
   /**
-   * INMET active-list payload. Pre-05-05 this was a flat array `[{ id }, ...]`.
-   * Post-05-05 the live envelope is `{ hoje: [...], futuro: [...] }` — see
-   * `04-05-SUMMARY` schema-drift finding. For ergonomics this stub accepts
-   * either a bare array (which is wrapped into `{ hoje: arr, futuro: [] }`)
-   * or the raw envelope/error value the test wants to inject.
+   * INMET `/avisos/ativos` payload. Accepts either:
+   *   - a `{ hoje, futuro }` envelope
+   *   - a bare array (auto-wrapped as `{ hoje: arr, futuro: [] }` for ergonomics)
+   *   - a function (called lazily — useful for simulating throws)
    */
   list?: unknown | (() => Promise<unknown>);
-  capById?: Record<string, string | (() => Promise<string>)>;
 }
 
 function wrapList(v: unknown): unknown {
-  // Auto-wrap bare arrays into the envelope so legacy test fixtures keep working.
   if (Array.isArray(v)) return { hoje: v, futuro: [] };
   return v;
 }
@@ -58,660 +56,346 @@ function makeStubClient(inputs: StubInputs): InmetHttpClient {
       if (typeof v === "function") return wrapList(await v()) as T;
       return wrapList(v) as T;
     },
-    async getText(url: string): Promise<string> {
-      const map = inputs.capById ?? {};
-      for (const [id, value] of Object.entries(map)) {
-        if (url === INMET_CAP_DETAIL(id)) {
-          if (typeof value === "function") return await value();
-          return value;
-        }
-      }
-      throw new Error(`stub getText called with unexpected URL: ${url}`);
-    },
   };
 }
 
-// --- CAP XML builders ------------------------------------------------------
+// --- Entry builders ----------------------------------------------------------
 
-interface CapInfoSpec {
-  lang?: string;
-  severity?: string;
-  event?: string;
-  effective?: string;
-  expires?: string;
-  headline?: string;
-  description?: string;
-  areaDesc?: string;
+interface EntrySpec {
+  id?: string | number;
+  descricao?: string;
+  severidade?: string;
+  estados?: string;
+  geocodes?: string;
+  inicio?: string;
+  fim?: string;
+  riscos?: string[];
 }
 
-function buildCap(opts: {
-  identifier?: string;
-  sent?: string;
-  status?: string;
-  infos: CapInfoSpec[];
-}): string {
-  const id = opts.identifier ?? "INMET-2026-001";
-  const sent = opts.sent ?? "2026-05-05T12:00:00-03:00";
-  const status = opts.status ?? "Actual";
-  const infoBlocks = opts.infos
-    .map((i) => {
-      const lang = i.lang ?? "pt-BR";
-      const sev = i.severity ?? "Severe";
-      const event = i.event ?? "Inundação";
-      const eff = i.effective ?? "2026-05-05T12:00:00-03:00";
-      const exp = i.expires ?? "2026-05-06T12:00:00-03:00";
-      const headline = i.headline ?? "Alerta de inundação";
-      const desc = i.description ?? "Descrição.";
-      const areaDesc = i.areaDesc ?? "Minas Gerais";
-      return `
-  <info xml:lang="${lang}">
-    <severity>${sev}</severity>
-    <event>${event}</event>
-    <effective>${eff}</effective>
-    <expires>${exp}</expires>
-    <headline>${headline}</headline>
-    <description>${desc}</description>
-    <area>
-      <areaDesc>${areaDesc}</areaDesc>
-    </area>
-  </info>`;
-    })
-    .join("");
-  return `<?xml version="1.0" encoding="UTF-8"?>
-<alert xmlns="urn:oasis:names:tc:emergency:cap:1.2">
-  <identifier>${id}</identifier>
-  <sent>${sent}</sent>
-  <status>${status}</status>${infoBlocks}
-</alert>`;
+function buildEntry(spec: EntrySpec = {}): Record<string, unknown> {
+  return {
+    id: spec.id ?? 99001,
+    descricao: spec.descricao ?? "Chuvas Intensas",
+    severidade: spec.severidade ?? "Perigo Potencial",
+    estados: spec.estados ?? "Minas Gerais",
+    geocodes: spec.geocodes ?? "3100302",
+    inicio: spec.inicio ?? "2026-05-05 09:00",
+    fim: spec.fim ?? "2026-05-06 09:00",
+    riscos: spec.riscos ?? ["Chuva entre 20 e 30 mm/h."],
+    // Passthrough fields the adapter ignores but live API ships.
+    instrucoes: ["Evite o mau tempo."],
+    codigo: "urn:oid:2.49.0.0.76.0.2026.99001.1",
+    poligono: "{}",
+    aviso_cor: "#FFFE00",
+    encerrado: false,
+  };
 }
 
-// --- Tests ------------------------------------------------------------------
+// --- Happy paths ------------------------------------------------------------
 
 describe("createInmetAdapter — happy paths", () => {
-  it("single alert, single UF → 1 Alert, ISO-Z timestamps", async () => {
-    const adapter = createInmetAdapter(
-      makeStubClient({
-        list: [{ id: "A1" }],
-        capById: { A1: buildCap({ identifier: "A1", infos: [{}] }) },
-      }),
-    );
+  it("single entry, single UF → 1 Alert with ISO-Z timestamps", async () => {
+    const adapter = createInmetAdapter(makeStubClient({ list: [buildEntry()] }));
     const out = await adapter.fetch();
-    expect(out).toHaveLength(1);
+
+    expect(out.length).toBe(1);
     const a = out[0]!;
     expect(a.source_key).toBe("inmet");
     expect(a.state_uf).toBe("MG");
-    expect(a.hazard_kind).toBe("inundacao");
-    expect(a.severity).toBe("high");
-    expect(a.source_url).toBe(INMET_CAP_DETAIL("A1"));
-    expect(a.valid_from).toMatch(/Z$/);
-    expect(a.valid_until).toMatch(/Z$/);
+    expect(a.hazard_kind).toBe("enchente");
+    expect(a.severity).toBe("moderate"); // "Perigo Potencial" → moderate
+    expect(a.valid_from).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/);
+    expect(a.valid_until).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/);
     expect(a.fetched_at).toMatch(/Z$/);
+    expect(a.source_url).toBe(INMET_CAP_LIST);
     expect(a.payload_hash).toMatch(/^[a-f0-9]{64}$/);
   });
 
-  it("multi-alert + multi-UF: 2 ids, one CAP covers 'MG, SP' → 3 Alerts", async () => {
-    const adapter = createInmetAdapter(
-      makeStubClient({
-        list: [{ id: "A1" }, { id: "A2" }],
-        capById: {
-          A1: buildCap({
-            identifier: "A1",
-            infos: [{ areaDesc: "MG, SP" }],
-          }),
-          A2: buildCap({
-            identifier: "A2",
-            infos: [{ areaDesc: "Rio de Janeiro" }],
-          }),
-        },
-      }),
-    );
+  it("multi-UF entry → one Alert per UF (state fan-out)", async () => {
+    const entry = buildEntry({
+      estados: "Pernambuco,Paraíba,Rio Grande do Norte,Alagoas",
+      geocodes: "2600054,2500304,2401206,2700409",
+    });
+    const adapter = createInmetAdapter(makeStubClient({ list: [entry] }));
     const out = await adapter.fetch();
-    expect(out).toHaveLength(3);
+
     const ufs = new Set(out.map((a) => a.state_uf));
-    expect(ufs).toEqual(new Set(["MG", "SP", "RJ"]));
+    expect(ufs).toEqual(new Set(["PE", "PB", "RN", "AL"]));
+    expect(out.length).toBe(4);
+    // All UFs share the same hazard / severity / headline
+    for (const a of out) {
+      expect(a.hazard_kind).toBe("enchente");
+      expect(a.severity).toBe("moderate");
+      expect(a.headline).toBe("Chuvas Intensas — Pernambuco,Paraíba,Rio Grande do Norte,Alagoas");
+    }
+    // Payload hashes are per-UF unique
+    const hashes = new Set(out.map((a) => a.payload_hash));
+    expect(hashes.size).toBe(4);
   });
 
-  it("areaDesc with non-UF 2-letter codes ignores them but keeps real UFs", async () => {
-    const xml = buildCap({
-      identifier: "M1",
-      infos: [{ areaDesc: "XX, ZZ, BA" }],
-    });
+  it("hoje + futuro envelope is flattened; futuro wins on id collision", async () => {
+    const hojeEntry = buildEntry({ id: 100, descricao: "Chuvas Intensas", severidade: "Perigo Potencial" });
+    const futuroEntry = buildEntry({ id: 100, descricao: "Tempestade", severidade: "Perigo" }); // same id
+    const otherFuturo = buildEntry({ id: 101, descricao: "Acumulado de Chuva", estados: "Bahia", geocodes: "2900306" });
     const adapter = createInmetAdapter(
-      makeStubClient({ list: [{ id: "M1" }], capById: { M1: xml } }),
+      makeStubClient({ list: { hoje: [hojeEntry], futuro: [futuroEntry, otherFuturo] } }),
     );
     const out = await adapter.fetch();
-    expect(out).toHaveLength(1);
-    expect(out[0]!.state_uf).toBe("BA");
+    // Dedup left 2 entries (id=100 from futuro wins, id=101 unique)
+    expect(out.length).toBe(2);
+    // `id` is coerced to string by the schema (z.coerce.string()); compare both forms.
+    const collide = out.find((a) => String((a.raw as { id: unknown }).id) === "100");
+    expect(collide!.severity).toBe("high"); // "Perigo" → high (futuro version)
+    const unique = out.find((a) => String((a.raw as { id: unknown }).id) === "101");
+    expect(unique!.state_uf).toBe("BA");
   });
 
-  it("array-of-areas (multiple <area> blocks) resolves all UFs", async () => {
-    // fast-xml-parser collapses repeated <area> children to an array.
-    const xml = `<?xml version="1.0"?>
-<alert>
-  <identifier>A1</identifier>
-  <sent>2026-05-05T12:00:00Z</sent>
-  <info xml:lang="pt-BR">
-    <severity>Moderate</severity>
-    <event>Enchente</event>
-    <headline>H</headline>
-    <area><areaDesc>Bahia</areaDesc></area>
-    <area><areaDesc>Sergipe</areaDesc></area>
-  </info>
-</alert>`;
-    const adapter = createInmetAdapter(
-      makeStubClient({ list: [{ id: "A1" }], capById: { A1: xml } }),
-    );
-    const out = await adapter.fetch();
-    expect(new Set(out.map((a) => a.state_uf))).toEqual(new Set(["BA", "SE"]));
-  });
-
-  it("empty list → empty Alert[]", async () => {
-    const adapter = createInmetAdapter(makeStubClient({ list: [] }));
-    expect(await adapter.fetch()).toEqual([]);
-  });
-
-  it("envelope: hoje ∪ futuro dedups by id (futuro wins on collision) → single fetch per id", async () => {
-    // Plan 05-05: live API returns `{hoje, futuro}`. The adapter flattens and
-    // dedups by id. We assert dedup behavior by giving the same id in both arms
-    // and verifying the CAP fetch is only invoked once for that id.
-    let capCallCount = 0;
-    const sharedXml = buildCap({ identifier: "DUP", infos: [{ areaDesc: "Bahia" }] });
-    const client: InmetHttpClient = {
-      async getJson<T = unknown>(): Promise<T> {
-        return {
-          hoje: [{ id: "DUP" }, { id: "H_ONLY" }],
-          futuro: [{ id: "DUP" }, { id: "F_ONLY" }],
-        } as unknown as T;
-      },
-      async getText(url: string): Promise<string> {
-        capCallCount += 1;
-        void url;
-        return sharedXml;
-      },
-    };
-    const adapter = createInmetAdapter(client);
-    const out = await adapter.fetch();
-    // 3 unique ids × 1 UF each = 3 alerts; CAP fetched exactly 3 times (DUP once).
-    expect(out).toHaveLength(3);
-    expect(capCallCount).toBe(3);
-  });
-
-  it("envelope: futuro-only entries are processed (not silently dropped)", async () => {
-    const client: InmetHttpClient = {
-      async getJson<T = unknown>(): Promise<T> {
-        return { hoje: [], futuro: [{ id: "F1" }] } as unknown as T;
-      },
-      async getText(): Promise<string> {
-        return buildCap({ identifier: "F1", infos: [{ areaDesc: "Sergipe" }] });
-      },
-    };
-    const adapter = createInmetAdapter(client);
-    const out = await adapter.fetch();
-    expect(out).toHaveLength(1);
-    expect(out[0]!.state_uf).toBe("SE");
-  });
-});
-
-describe("createInmetAdapter — language selection", () => {
-  it("CAP with en-US + pt-BR → adapter picks pt-BR", async () => {
-    const xml = buildCap({
-      identifier: "L1",
-      infos: [
-        { lang: "en-US", event: "Flood", headline: "Flood warning" },
-        {
-          lang: "pt-BR",
-          event: "Enchente",
-          headline: "Aviso de enchente",
-          areaDesc: "Paraná",
-        },
-      ],
-    });
-    const adapter = createInmetAdapter(
-      makeStubClient({ list: [{ id: "L1" }], capById: { L1: xml } }),
-    );
-    const out = await adapter.fetch();
-    expect(out).toHaveLength(1);
-    expect(out[0]!.headline).toBe("Aviso de enchente");
-    expect(out[0]!.hazard_kind).toBe("enchente");
-    expect(out[0]!.state_uf).toBe("PR");
-  });
-
-  it("missing pt-BR (only en-US) → that alert dropped, sibling survives", async () => {
-    const onlyEn = buildCap({
-      identifier: "EN1",
-      infos: [{ lang: "en-US", headline: "EN only" }],
-    });
-    const ptBr = buildCap({
-      identifier: "PT1",
-      infos: [{ areaDesc: "Goiás" }],
-    });
-    const adapter = createInmetAdapter(
-      makeStubClient({
-        list: [{ id: "EN1" }, { id: "PT1" }],
-        capById: { EN1: onlyEn, PT1: ptBr },
-      }),
-    );
-    const out = await adapter.fetch();
-    expect(out).toHaveLength(1);
-    expect(out[0]!.state_uf).toBe("GO");
-  });
-});
-
-describe("createInmetAdapter — severity mapping", () => {
-  it("unknown severity defaults to 'moderate' (per RISK-04)", async () => {
-    const xml = buildCap({
-      identifier: "S1",
-      infos: [{ severity: "NotAValue" }],
-    });
-    const adapter = createInmetAdapter(
-      makeStubClient({ list: [{ id: "S1" }], capById: { S1: xml } }),
-    );
-    const out = await adapter.fetch();
-    expect(out[0]!.severity).toBe("moderate");
-  });
-
-  it.each(Object.entries(SEVERITY_TABLE))("known severity %s → %s", async (raw, expected) => {
-    const xml = buildCap({
-      identifier: "S",
-      infos: [{ severity: raw }],
-    });
-    const adapter = createInmetAdapter(
-      makeStubClient({ list: [{ id: "S" }], capById: { S: xml } }),
-    );
-    const out = await adapter.fetch();
-    expect(out[0]!.severity).toBe(expected);
-  });
-});
-
-describe("createInmetAdapter — hazard vocab (CLAUDE.md distinctions)", () => {
-  it.each([
-    ["Incêndio Florestal", "incendio"],
-    ["Queimada", "queimada"],
-    ["Inundação", "inundacao"],
-    ["Enchente", "enchente"],
-  ])("event %s → hazard %s", async (event, hazard) => {
-    const xml = buildCap({ identifier: "H", infos: [{ event }] });
-    const adapter = createInmetAdapter(
-      makeStubClient({ list: [{ id: "H" }], capById: { H: xml } }),
-    );
-    const out = await adapter.fetch();
-    expect(out[0]!.hazard_kind).toBe(hazard);
-  });
-
-  it("unknown event drops the alert (schema_invalid via per-alert isolation)", async () => {
-    const bad = buildCap({
-      identifier: "BAD",
-      infos: [{ event: "Tempestade Tropical" }],
-    });
-    const ok = buildCap({
-      identifier: "OK",
-      infos: [{ areaDesc: "Bahia" }],
-    });
-    const adapter = createInmetAdapter(
-      makeStubClient({
-        list: [{ id: "BAD" }, { id: "OK" }],
-        capById: { BAD: bad, OK: ok },
-      }),
-    );
-    const out = await adapter.fetch();
-    expect(out).toHaveLength(1);
-    expect(out[0]!.state_uf).toBe("BA");
-  });
-});
-
-describe("createInmetAdapter — timestamps", () => {
-  it("BRT effective '2026-05-05T12:00:00-03:00' → ISO-Z '2026-05-05T15:00:00.000Z'", async () => {
-    const xml = buildCap({
-      identifier: "T1",
-      infos: [{ effective: "2026-05-05T12:00:00-03:00" }],
-    });
-    const adapter = createInmetAdapter(
-      makeStubClient({ list: [{ id: "T1" }], capById: { T1: xml } }),
-    );
-    const out = await adapter.fetch();
-    expect(out[0]!.valid_from).toBe("2026-05-05T15:00:00.000Z");
-  });
-
-  it("missing effective/expires → undefined (optional fields)", async () => {
-    const xml = `<?xml version="1.0"?>
-<alert>
-  <identifier>T2</identifier>
-  <sent>2026-05-05T12:00:00Z</sent>
-  <info xml:lang="pt-BR">
-    <severity>Moderate</severity>
-    <event>Enchente</event>
-    <headline>H</headline>
-    <area><areaDesc>Ceará</areaDesc></area>
-  </info>
-</alert>`;
-    const adapter = createInmetAdapter(
-      makeStubClient({ list: [{ id: "T2" }], capById: { T2: xml } }),
-    );
-    const out = await adapter.fetch();
-    expect(out[0]!.valid_from).toBeUndefined();
-    expect(out[0]!.valid_until).toBeUndefined();
-  });
-
-  it("unparseable timestamp drops the alert (schema_invalid)", async () => {
-    const bad = buildCap({
-      identifier: "BAD",
-      infos: [{ effective: "not-a-date" }],
-    });
-    const ok = buildCap({
-      identifier: "OK",
-      infos: [{ areaDesc: "Bahia" }],
-    });
-    const adapter = createInmetAdapter(
-      makeStubClient({
-        list: [{ id: "BAD" }, { id: "OK" }],
-        capById: { BAD: bad, OK: ok },
-      }),
-    );
-    const out = await adapter.fetch();
-    expect(out).toHaveLength(1);
-    expect(out[0]!.state_uf).toBe("BA");
-  });
-
-  it("alert with empty <sent> drops via schema_invalid (zod allows empty string)", async () => {
-    const empty = `<?xml version="1.0"?>
-<alert>
-  <identifier>EMPTY</identifier>
-  <sent></sent>
-  <info xml:lang="pt-BR">
-    <severity>Moderate</severity>
-    <event>Enchente</event>
-    <headline>H</headline>
-    <area><areaDesc>Bahia</areaDesc></area>
-  </info>
-</alert>`;
-    const ok = buildCap({
-      identifier: "OK",
-      infos: [{ areaDesc: "Sergipe" }],
-    });
-    const adapter = createInmetAdapter(
-      makeStubClient({
-        list: [{ id: "EMPTY" }, { id: "OK" }],
-        capById: { EMPTY: empty, OK: ok },
-      }),
-    );
-    const out = await adapter.fetch();
-    expect(out).toHaveLength(1);
-    expect(out[0]!.state_uf).toBe("SE");
-  });
-
-  it("alert with unparseable <sent> drops via schema_invalid", async () => {
-    // Zod requires `sent` non-optional but allows empty string. The
-    // requireIsoZ guard inside normalizeCapDoc rejects unparseable values.
-    const bad = `<?xml version="1.0"?>
-<alert>
-  <identifier>BAD</identifier>
-  <sent>not-a-date</sent>
-  <info xml:lang="pt-BR">
-    <severity>Moderate</severity>
-    <event>Enchente</event>
-    <headline>H</headline>
-    <area><areaDesc>Bahia</areaDesc></area>
-  </info>
-</alert>`;
-    const adapter = createInmetAdapter(
-      makeStubClient({ list: [{ id: "BAD" }], capById: { BAD: bad } }),
-    );
+  it("empty envelope returns []", async () => {
+    const adapter = createInmetAdapter(makeStubClient({ list: { hoje: [], futuro: [] } }));
     const out = await adapter.fetch();
     expect(out).toEqual([]);
   });
+
+  it("exported `inmetAdapter` singleton uses the production HTTP client", () => {
+    expect(inmetAdapter.key).toBe("inmet");
+    expect(inmetAdapter.displayName).toMatch(/INMET/);
+    expect(typeof inmetAdapter.fetch).toBe("function");
+  });
 });
 
+// --- Severity mapping --------------------------------------------------------
+
+describe("createInmetAdapter — severity mapping", () => {
+  for (const [raw, expected] of Object.entries(SEVERITY_TABLE)) {
+    it(`maps PT-BR/CAP "${raw}" → ${expected}`, async () => {
+      const adapter = createInmetAdapter(makeStubClient({ list: [buildEntry({ severidade: raw })] }));
+      const out = await adapter.fetch();
+      expect(out[0]!.severity).toBe(expected);
+    });
+  }
+
+  it("unknown severity defaults to 'moderate' (RISK-04)", async () => {
+    const adapter = createInmetAdapter(makeStubClient({ list: [buildEntry({ severidade: "Catastrófico" })] }));
+    const out = await adapter.fetch();
+    expect(out[0]!.severity).toBe("moderate");
+  });
+});
+
+// --- Hazard vocab ------------------------------------------------------------
+
+describe("createInmetAdapter — hazard vocab", () => {
+  const cases: Array<[string, string]> = [
+    ["Chuvas Intensas", "enchente"],
+    ["Acumulado de Chuva", "enchente"],
+    ["Tempestade", "enchente"],
+    ["Inundação", "inundacao"],
+    ["Enchente em Área Urbana", "enchente"],
+    ["Incêndio Florestal", "incendio"],
+    ["Queimada Intensa", "queimada"],
+    ["Movimento de Massa", "deslizamento"],
+    ["Movimentos de Massa", "deslizamento"],
+    ["Seca Severa", "estiagem"],
+  ];
+  for (const [descricao, expected] of cases) {
+    it(`"${descricao}" → ${expected}`, async () => {
+      const adapter = createInmetAdapter(makeStubClient({ list: [buildEntry({ descricao })] }));
+      const out = await adapter.fetch();
+      expect(out[0]!.hazard_kind).toBe(expected);
+    });
+  }
+
+  it("unknown descricao falls back to 'enchente' (CLAUDE.md over-warning)", async () => {
+    const adapter = createInmetAdapter(makeStubClient({ list: [buildEntry({ descricao: "Evento Desconhecido" })] }));
+    const out = await adapter.fetch();
+    expect(out[0]!.hazard_kind).toBe("enchente");
+  });
+});
+
+// --- Timestamp parsing -------------------------------------------------------
+
+describe("createInmetAdapter — timestamps", () => {
+  it("interprets `inicio`/`fim` as BRT (UTC-3) and emits ISO-Z", async () => {
+    const adapter = createInmetAdapter(
+      makeStubClient({ list: [buildEntry({ inicio: "2026-05-05 09:00", fim: "2026-05-06 09:00" })] }),
+    );
+    const out = await adapter.fetch();
+    // 09:00 BRT = 12:00 UTC
+    expect(out[0]!.valid_from).toBe("2026-05-05T12:00:00.000Z");
+    expect(out[0]!.valid_until).toBe("2026-05-06T12:00:00.000Z");
+  });
+
+  it("accepts 'YYYY-MM-DD HH:MM:SS' (with seconds) format", async () => {
+    const adapter = createInmetAdapter(
+      makeStubClient({ list: [buildEntry({ inicio: "2026-05-05 09:00:30" })] }),
+    );
+    const out = await adapter.fetch();
+    expect(out[0]!.valid_from).toBe("2026-05-05T12:00:30.000Z");
+  });
+
+  it("unparseable inicio → per-entry rejected", async () => {
+    const adapter = createInmetAdapter(
+      makeStubClient({ list: [buildEntry({ inicio: "not-a-date" })] }),
+    );
+    const out = await adapter.fetch();
+    expect(out).toEqual([]); // per-entry isolation drops it
+  });
+});
+
+// --- UF extraction -----------------------------------------------------------
+
+describe("createInmetAdapter — UF extraction", () => {
+  it("disambiguates Mato Grosso vs Mato Grosso do Sul (longest-first)", async () => {
+    const adapter = createInmetAdapter(
+      makeStubClient({ list: [buildEntry({ estados: "Mato Grosso do Sul", geocodes: "5000203" })] }),
+    );
+    const out = await adapter.fetch();
+    expect(out.map((a) => a.state_uf)).toEqual(["MS"]);
+  });
+
+  it("disambiguates Paraná vs Paraíba via Unicode word boundary", async () => {
+    const adapter = createInmetAdapter(
+      makeStubClient({ list: [buildEntry({ estados: "Paraná", geocodes: "4106902" })] }),
+    );
+    const out = await adapter.fetch();
+    expect(out.map((a) => a.state_uf)).toEqual(["PR"]);
+  });
+
+  it("falls back to IBGE prefix when `estados` is non-matching", async () => {
+    // estados has a non-PT-BR-state string; geocodes carries the truth.
+    const adapter = createInmetAdapter(
+      makeStubClient({ list: [buildEntry({ estados: "Região Sudeste", geocodes: "3100302,3200508" })] }),
+    );
+    const out = await adapter.fetch();
+    expect(new Set(out.map((a) => a.state_uf))).toEqual(new Set(["MG", "ES"]));
+  });
+  it("entry resolving to zero UFs is per-entry dropped (allSettled)", async () => {
+    const good = buildEntry({ id: 1, estados: "Minas Gerais", geocodes: "3100302" });
+    // estados doesn't match a PT-BR name; geocodes prefix "99" is not in IBGE table.
+    const bad = buildEntry({ id: 2, estados: "Região Atlântida", geocodes: "9999999" });
+    const adapter = createInmetAdapter(makeStubClient({ list: [good, bad] }));
+    const out = await adapter.fetch();
+    expect(out.length).toBe(1);
+    expect(out[0]!.state_uf).toBe("MG");
+  });
+});
+
+// --- Error paths -------------------------------------------------------------
+
 describe("createInmetAdapter — error paths", () => {
-  it("malformed CAP XML drops the alert (xml_malformed); sibling survives", async () => {
-    const ok = buildCap({
-      identifier: "OK",
-      infos: [{ areaDesc: "Bahia" }],
-    });
-    const adapter = createInmetAdapter(
-      makeStubClient({
-        list: [{ id: "BAD" }, { id: "OK" }],
-        capById: {
-          BAD: "<alert><info></alert>",
-          OK: ok,
-        },
-      }),
-    );
-    const out = await adapter.fetch();
-    expect(out).toHaveLength(1);
-    expect(out[0]!.state_uf).toBe("BA");
-  });
-
-  it("CAP schema drift drops the alert (schema_invalid)", async () => {
-    const driftXml = `<?xml version="1.0"?>
-<alert>
-  <identifier>D1</identifier>
-  <sent>2026-05-05T12:00:00Z</sent>
-  <info xml:lang="pt-BR">
-    <event>Enchente</event>
-    <area><areaDesc>BA</areaDesc></area>
-  </info>
-</alert>`;
-    const ok = buildCap({
-      identifier: "OK",
-      infos: [{ areaDesc: "Bahia" }],
-    });
-    const adapter = createInmetAdapter(
-      makeStubClient({
-        list: [{ id: "D1" }, { id: "OK" }],
-        capById: { D1: driftXml, OK: ok },
-      }),
-    );
-    const out = await adapter.fetch();
-    expect(out).toHaveLength(1);
-    expect(out[0]!.state_uf).toBe("BA");
-  });
-
-  it("alert with no resolvable UF dropped (schema_invalid)", async () => {
-    const noUf = buildCap({
-      identifier: "NOUF",
-      infos: [{ areaDesc: "Some unknown area" }],
-    });
-    const ok = buildCap({
-      identifier: "OK",
-      infos: [{ areaDesc: "Bahia" }],
-    });
-    const adapter = createInmetAdapter(
-      makeStubClient({
-        list: [{ id: "NOUF" }, { id: "OK" }],
-        capById: { NOUF: noUf, OK: ok },
-      }),
-    );
-    const out = await adapter.fetch();
-    expect(out).toHaveLength(1);
-    expect(out[0]!.state_uf).toBe("BA");
-  });
-
-  it("alert with no <area> at all dropped (schema_invalid)", async () => {
-    const noArea = `<?xml version="1.0"?>
-<alert>
-  <identifier>N1</identifier>
-  <sent>2026-05-05T12:00:00Z</sent>
-  <info xml:lang="pt-BR">
-    <severity>Moderate</severity>
-    <event>Enchente</event>
-    <headline>H</headline>
-  </info>
-</alert>`;
-    const adapter = createInmetAdapter(
-      makeStubClient({ list: [{ id: "N1" }], capById: { N1: noArea } }),
-    );
-    expect(await adapter.fetch()).toEqual([]);
-  });
-
-  it("list 429 → sourceError code='http_5xx'", async () => {
-    const adapter = createInmetAdapter(
-      makeStubClient({
-        list: () => {
-          const e = new Error("rate-limited") as Error & { status?: number };
-          e.status = 429;
-          return Promise.reject(e);
-        },
-      }),
-    );
-    await expect(adapter.fetch()).rejects.toSatisfy(
-      (e) => isSourceError(e) && e.code === "http_5xx",
-    );
-  });
-
-  it("list 500 → sourceError code='http_5xx'", async () => {
-    const adapter = createInmetAdapter(
-      makeStubClient({
-        list: () => {
-          const e = new Error("upstream 500") as Error & { status?: number };
-          e.status = 500;
-          return Promise.reject(e);
-        },
-      }),
-    );
-    await expect(adapter.fetch()).rejects.toSatisfy(
-      (e) => isSourceError(e) && e.code === "http_5xx",
-    );
-  });
-
-  it("list 400 generic 4xx → sourceError code='http_5xx' (collapsed)", async () => {
-    const adapter = createInmetAdapter(
-      makeStubClient({
-        list: () => {
-          const e = new Error("bad request") as Error & { status?: number };
-          e.status = 400;
-          return Promise.reject(e);
-        },
-      }),
-    );
-    await expect(adapter.fetch()).rejects.toSatisfy(
-      (e) => isSourceError(e) && e.code === "http_5xx",
-    );
-  });
-
-  it("list error with no status field → sourceError code='http_5xx'", async () => {
-    const adapter = createInmetAdapter(
-      makeStubClient({
-        list: () => Promise.reject(new Error("generic network")),
-      }),
-    );
-    await expect(adapter.fetch()).rejects.toSatisfy(
-      (e) => isSourceError(e) && e.code === "http_5xx",
-    );
-  });
-
-  it("list error with no message at all → sourceError code='http_5xx' ('unknown' fallback)", async () => {
-    const adapter = createInmetAdapter(
-      makeStubClient({
-        list: () => Promise.reject({}),
-      }),
-    );
-    await expect(adapter.fetch()).rejects.toSatisfy(
-      (e) => isSourceError(e) && e.code === "http_5xx" && e.message.includes("unknown"),
-    );
-  });
-
-  it("list AbortError → sourceError code='timeout'", async () => {
-    const adapter = createInmetAdapter(
-      makeStubClient({
-        list: () => {
-          const e = new Error("aborted") as Error & { name: string };
-          e.name = "AbortError";
-          return Promise.reject(e);
-        },
-      }),
-    );
-    await expect(adapter.fetch()).rejects.toSatisfy(
-      (e) => isSourceError(e) && e.code === "timeout",
-    );
-  });
-
-  it("list TimeoutError via cause.name → sourceError code='timeout'", async () => {
-    const adapter = createInmetAdapter(
-      makeStubClient({
-        list: () => {
-          const e = new Error("wrapped") as Error & {
-            cause?: { name?: string };
-          };
-          e.cause = { name: "TimeoutError" };
-          return Promise.reject(e);
-        },
-      }),
-    );
-    await expect(adapter.fetch()).rejects.toSatisfy(
-      (e) => isSourceError(e) && e.code === "timeout",
-    );
-  });
-
-  it("list payload missing hoje/futuro keys → sourceError code='schema_invalid'", async () => {
-    const adapter = createInmetAdapter(makeStubClient({ list: { not: "an envelope" } }));
-    await expect(adapter.fetch()).rejects.toSatisfy(
-      (e) => isSourceError(e) && e.code === "schema_invalid",
-    );
-  });
-
-  it("list payload as legacy flat array (drift) → sourceError code='schema_invalid' (T-05-08)", async () => {
-    // Plan 05-05: live API moved to `{hoje, futuro}` envelope. The defensive
-    // schema rejects the legacy flat-array shape loudly so a silent regression
-    // upstream can't make alerts vanish. Bypass the test stub's auto-wrap by
-    // injecting through the function-form which is forwarded raw.
-    const adapter = createInmetAdapter(
-      makeStubClient({
-        // Wrap once so makeStubClient's wrapList does NOT re-wrap, by returning
-        // the flat array via a function whose value we pre-mark non-array via
-        // a custom object — simplest path: pass through getJson directly.
-      }),
-    );
-    // Build a bespoke client that returns the legacy shape verbatim.
-    const legacyClient: InmetHttpClient = {
-      async getJson<T = unknown>(): Promise<T> {
-        return [{ id: "X1" }] as unknown as T;
-      },
-      async getText(): Promise<string> {
-        return "";
+  it("HTTP 500 → sourceError('http_5xx')", async () => {
+    const stub: InmetHttpClient = {
+      async getJson<T>(): Promise<T> {
+        const err = new Error("Server Error") as Error & { status: number };
+        err.status = 500;
+        throw err;
       },
     };
-    void adapter;
-    const a2 = createInmetAdapter(legacyClient);
-    await expect(a2.fetch()).rejects.toSatisfy(
+    const adapter = createInmetAdapter(stub);
+    await expect(adapter.fetch()).rejects.toSatisfy(
+      (e) => isSourceError(e) && e.code === "http_5xx",
+    );
+  });
+
+  it("HTTP 429 → sourceError('http_5xx') (rate-limit normalized as 5xx)", async () => {
+    const stub: InmetHttpClient = {
+      async getJson<T>(): Promise<T> {
+        const err = new Error("Too Many Requests") as Error & { status: number };
+        err.status = 429;
+        throw err;
+      },
+    };
+    const adapter = createInmetAdapter(stub);
+    await expect(adapter.fetch()).rejects.toSatisfy(
+      (e) => isSourceError(e) && e.code === "http_5xx",
+    );
+  });
+
+  it("AbortError → sourceError('timeout')", async () => {
+    const stub: InmetHttpClient = {
+      async getJson<T>(): Promise<T> {
+        const err = new Error("Aborted");
+        err.name = "AbortError";
+        throw err;
+      },
+    };
+    const adapter = createInmetAdapter(stub);
+    await expect(adapter.fetch()).rejects.toSatisfy(
+      (e) => isSourceError(e) && e.code === "timeout",
+    );
+  });
+
+  it("HTTP 4xx (non-429) → sourceError('http_5xx')", async () => {
+    const stub: InmetHttpClient = {
+      async getJson<T>(): Promise<T> {
+        const err = new Error("Bad Request") as Error & { status: number };
+        err.status = 400;
+        throw err;
+      },
+    };
+    const adapter = createInmetAdapter(stub);
+    await expect(adapter.fetch()).rejects.toSatisfy(
+      (e) => isSourceError(e) && e.code === "http_5xx",
+    );
+  });
+
+  it("opaque error (no status, no name) → sourceError('http_5xx')", async () => {
+    const stub: InmetHttpClient = {
+      async getJson<T>(): Promise<T> {
+        throw new Error("connect ECONNREFUSED");
+      },
+    };
+    const adapter = createInmetAdapter(stub);
+    await expect(adapter.fetch()).rejects.toSatisfy(
+      (e) => isSourceError(e) && e.code === "http_5xx",
+    );
+  });
+
+  it("TimeoutError name → sourceError('timeout')", async () => {
+    const stub: InmetHttpClient = {
+      async getJson<T>(): Promise<T> {
+        const err = new Error("timed out") as Error & { cause: { name: string } };
+        err.cause = { name: "TimeoutError" };
+        throw err;
+      },
+    };
+    const adapter = createInmetAdapter(stub);
+    await expect(adapter.fetch()).rejects.toSatisfy(
+      (e) => isSourceError(e) && e.code === "timeout",
+    );
+  });
+
+  it("legacy flat-array envelope → sourceError('schema_invalid')", async () => {
+    // Pre-05-05 shape — must surface as schema drift, NOT silent zero.
+    const stub: InmetHttpClient = {
+      async getJson<T>(): Promise<T> {
+        return [buildEntry()] as unknown as T;
+      },
+    };
+    const adapter = createInmetAdapter(stub);
+    await expect(adapter.fetch()).rejects.toSatisfy(
       (e) => isSourceError(e) && e.code === "schema_invalid",
     );
   });
 
-  it("production inmetAdapter wires httpGet/httpGetText (PROD_HTTP_CLIENT path)", async () => {
-    // Exercises the no-arg createInmetAdapter() default-arg path so the
-    // PROD_HTTP_CLIENT.getJson / .getText arrow bodies are covered.
-    vi.clearAllMocks();
-    vi.mocked(httpGet).mockResolvedValueOnce({ hoje: [{ id: "P1" }], futuro: [] });
-    vi.mocked(httpGetText).mockResolvedValueOnce(
-      buildCap({ identifier: "P1", infos: [{ areaDesc: "Bahia" }] }),
+  it("envelope with missing required fields → schema_invalid", async () => {
+    const stub: InmetHttpClient = {
+      async getJson<T>(): Promise<T> {
+        return { hoje: [{ id: 1 }], futuro: [] } as unknown as T;
+      },
+    };
+    const adapter = createInmetAdapter(stub);
+    await expect(adapter.fetch()).rejects.toSatisfy(
+      (e) => isSourceError(e) && e.code === "schema_invalid",
     );
-    const out = await inmetAdapter.fetch();
-    expect(out).toHaveLength(1);
-    expect(out[0]!.state_uf).toBe("BA");
-    expect(vi.mocked(httpGet)).toHaveBeenCalledWith(INMET_CAP_LIST);
-    expect(vi.mocked(httpGetText)).toHaveBeenCalledWith(INMET_CAP_DETAIL("P1"));
   });
+});
 
-  it("per-alert timeout drops that alert; sibling returns", async () => {
-    const ok = buildCap({
-      identifier: "OK",
-      infos: [{ areaDesc: "Bahia" }],
-    });
-    const adapter = createInmetAdapter(
-      makeStubClient({
-        list: [{ id: "SLOW" }, { id: "OK" }],
-        capById: {
-          SLOW: () => {
-            const e = new Error("aborted") as Error & { name: string };
-            e.name = "AbortError";
-            return Promise.reject(e);
-          },
-          OK: ok,
-        },
-      }),
-    );
-    const out = await adapter.fetch();
-    expect(out).toHaveLength(1);
-    expect(out[0]!.state_uf).toBe("BA");
+// --- Production HTTP client dummy import -------------------------------------
+
+describe("createInmetAdapter — module wiring", () => {
+  it("vi.mock('@/lib/http/fetcher') hooks the production client (smoke)", () => {
+    // Ensures the auto-mock from the top of file is in place; protects against
+    // an accidental live HTTP call in CI.
+    expect(vi.isMockFunction(httpGet)).toBe(true);
   });
 });

@@ -111,9 +111,11 @@ describe("CEMADEN contract: schema membership", () => {
 // ---------------------------------------------------------------------------
 
 describe("CEMADEN contract: hazard taxonomy", () => {
-  it("every per-alert `evento` maps via CEMADEN hazard regexes", () => {
+  it("every per-alert `evento` maps via CEMADEN hazard regexes (accepts plural)", () => {
+    // Adapter regex accepts "Movimento(s) de Massa" — see cemaden.ts:51-52
+    // (issue #12 Bug B fix; the singular-only form silently dropped plural live data).
     const hidro = /^Risco Hidrol[óo]gico/i;
-    const massa = /^Movimento de Massa/i;
+    const massa = /^Movimentos?\s+de\s+Massa/i;
     for (const a of parsed.alertas) {
       const evento = a.evento as string;
       const ok = hidro.test(evento) || massa.test(evento);
@@ -133,7 +135,10 @@ describe("CEMADEN contract: UTC parsing", () => {
     expect(out.length).toBe(parsed.alertas.length);
     for (const alert of out) {
       expect(alert.valid_from).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z$/);
-      expect(alert.valid_until).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z$/);
+      // issue #12 Bug C fix: CEMADEN alerts no longer carry a synthetic
+      // 24h valid_until. Presence in the wsAlertas2 list IS the validity
+      // signal; the ingest active-rows query uses the fetched_at fallback.
+      expect(alert.valid_until).toBeUndefined();
       expect(alert.fetched_at).toMatch(/Z$/);
     }
   });

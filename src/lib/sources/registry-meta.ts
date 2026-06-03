@@ -18,7 +18,7 @@ export const sourceMetadata: ReadonlyArray<{
   readonly displayName: string;
   readonly stability: "stable" | "unstable";
 }> = Object.freeze([
-  { key: "inmet", displayName: "INMET — Alert-AS", stability: "stable" },
+  { key: "inmet", displayName: "INMET — Avisos Ativos", stability: "stable" },
   { key: "cemaden", displayName: "CEMADEN — Alertas vigentes", stability: "unstable" },
 ]);
 

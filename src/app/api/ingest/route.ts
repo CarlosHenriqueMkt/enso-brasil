@@ -37,10 +37,22 @@ import type { SourcesHealthRow } from "@/lib/risk/types";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
+/**
+ * Per-source report attached to the /api/ingest response (REQ-S2.07 + issue #12).
+ *
+ * - `alertCount`  = rows newly INSERTed this tick (post-dedup).
+ * - `outputCount` = total Alert[] returned by the adapter (post-allSettled
+ *   per-item isolation, pre-dedup). The differential `outputCount > 0 &&
+ *   alertCount === 0` is steady-state (no new data). `outputCount === 0
+ *   && upstream had entries` is the under-warning regression issue #12
+ *   guards against — observable here for `/api/health` and downstream
+ *   alerting to surface silently degraded sources.
+ */
 interface SourceReport {
   key: string;
   status: "ok" | "error" | "drift";
   alertCount: number;
+  outputCount: number;
   error?: string;
 }
 
@@ -94,7 +106,7 @@ export async function POST(req: Request) {
             consecutiveFailures: sql`${sourcesHealth.consecutiveFailures} + 1`,
           },
         });
-      reports.push({ key: src.key, status: "error", alertCount: 0, error: err.message });
+      reports.push({ key: src.key, status: "error", alertCount: 0, outputCount: 0, error: err.message });
       continue;
     }
 
@@ -125,6 +137,7 @@ export async function POST(req: Request) {
         key: src.key,
         status: "drift",
         alertCount: 0,
+        outputCount: 0,
         error: parsed.error.message,
       });
       continue;
@@ -156,7 +169,12 @@ export async function POST(req: Request) {
       arr.push(a);
       insertedAlertsByUF.set(a.state_uf, arr);
     }
-    reports.push({ key: src.key, status: "ok", alertCount: inserted.length });
+    reports.push({
+      key: src.key,
+      status: "ok",
+      alertCount: inserted.length,
+      outputCount: parsed.data.length,
+    });
 
     // Health: success path resets failure counters.
     await db

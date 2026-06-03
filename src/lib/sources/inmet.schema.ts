@@ -1,43 +1,61 @@
 /**
- * INMET source-specific zod schemas (Plan 04-03).
+ * INMET source-specific zod schemas.
  *
- * - `InmetActiveListSchema`: tolerant view of the JSON shape returned by
- *   `INMET_CAP_LIST` (https://apiprevmet3.inmet.gov.br/avisos/ativos).
- *   Strict on `id` only; everything else passes through.
- * - `InmetCapDocumentSchema`: post-`fast-xml-parser` shape for a CAP 1.2
- *   document fetched from `INMET_CAP_DETAIL(id)`. The Wave 0 parser config
- *   forces `alert.info` to an array (one entry per `xml:lang`).
+ * As of 2026-06 (issue #12 RC, see .planning/phases/06-hardening/06-under-warning-RC.md):
+ * the INMET API at `/avisos/ativos` returns the **full** alert payload inline.
+ * The legacy CAP XML detail endpoint at `alertas2.inmet.gov.br/{id}` is dead
+ * (ECONNRESET — confirmed 2026-06-02). The adapter no longer fetches CAP docs;
+ * everything we need is in the list response.
  *
- * Both helpers throw via the canonical `sourceError` factory only — never
- * via Error subclasses or direct constructor calls (W-1 invariant locked
- * by 04-CONTEXT taxonomy).
+ * `InmetActiveListEntrySchema` strictly validates the fields the adapter reads
+ * and `.passthrough()`-tolerates every other field (the upstream payload ships
+ * ~30 keys per entry that we do not consume).
+ *
+ * All errors flow through the canonical `sourceError` factory (W-1 invariant).
  */
 
 import { z } from "zod";
 import { sourceError } from "./errors";
 
+/**
+ * Per-entry alert record from `https://apiprevmet3.inmet.gov.br/avisos/ativos`.
+ *
+ * Required fields (we read them in `inmet.ts`):
+ *   - id          → string identifier; live API ships number, legacy fixture ships string
+ *   - descricao   → event type (e.g. "Chuvas Intensas", "Tempestade")
+ *   - severidade  → CAP-aligned PT-BR severity (e.g. "Perigo", "Perigo Potencial")
+ *   - estados     → comma-separated PT-BR UF names (e.g. "Pernambuco,Paraíba")
+ *   - geocodes    → comma-separated IBGE codes (UF fallback; first 2 digits → UF)
+ *   - inicio      → "YYYY-MM-DD HH:MM" in BRT (UTC-3)
+ *   - fim         → "YYYY-MM-DD HH:MM" in BRT (UTC-3)
+ *
+ * Everything else passes through. `.strict()` is intentionally NOT used —
+ * INMET ships marketing/UI fields (icone base64, aviso_cor, etc.) and the
+ * 2026-06 schema drift caught us out once; tolerate unknown additions.
+ */
 export const InmetActiveListEntrySchema = z
   .object({
-    // Plan 05-05: live INMET API returns `id` as a number (e.g. 54412), the
-    // pre-05-05 stub fixture used a string. Coerce so both shapes parse and
-    // downstream code always sees a non-empty string.
     id: z.coerce.string().min(1),
+    descricao: z.string().min(1),
+    severidade: z.string().min(1),
+    estados: z.string().min(1),
+    geocodes: z.string(),
+    inicio: z.string().min(1),
+    fim: z.string().min(1),
   })
   .passthrough();
 
 /**
- * INMET active-list envelope (Plan 05-05 — schema-drift fix).
+ * INMET active-list envelope.
  *
- * Live `/avisos/ativos` returns `{ hoje: [...], futuro: [...] }`, NOT a flat
- * array as originally documented in Plan 04-03. The legacy flat-array shape
- * is rejected by this schema deliberately (T-05-08): a silent regression
- * upstream must surface as `schema_invalid`, never as "zero alerts".
+ * `/avisos/ativos` returns `{ hoje, futuro }` — `hoje` = currently active,
+ * `futuro` = scheduled/upcoming within the active window. The adapter
+ * flattens `hoje ∪ futuro` and dedups by `id` (futuro wins on collision —
+ * see `inmet.ts`).
  *
- * Field semantics (per INMET portal convention):
- *   - `hoje`   = currently active alerts
- *   - `futuro` = scheduled / upcoming alerts within the active window
- *
- * The adapter flattens `hoje ∪ futuro` and dedups by id; see `inmet.ts`.
+ * Legacy flat-array shape is rejected by this schema deliberately
+ * (T-05-08): a silent regression upstream must surface as `schema_invalid`,
+ * never as "zero alerts".
  */
 export const InmetActiveListSchema = z
   .object({
@@ -49,62 +67,12 @@ export const InmetActiveListSchema = z
 export type InmetActiveListEntry = z.infer<typeof InmetActiveListEntrySchema>;
 export type InmetActiveList = z.infer<typeof InmetActiveListSchema>;
 
-const InmetAreaSchema = z
-  .object({
-    areaDesc: z.string(),
-    geocode: z.unknown().optional(),
-  })
-  .passthrough();
-
-const InmetInfoSchema = z
-  .object({
-    "@_xml:lang": z.string().optional(),
-    severity: z.string(),
-    event: z.string(),
-    effective: z.string().optional(),
-    expires: z.string().optional(),
-    headline: z.string(),
-    description: z.string().optional(),
-    web: z.string().url().optional(),
-    area: z.union([InmetAreaSchema, z.array(InmetAreaSchema)]).optional(),
-  })
-  .passthrough();
-
-export const InmetCapDocumentSchema = z
-  .object({
-    alert: z
-      .object({
-        identifier: z.string(),
-        sent: z.string(),
-        status: z.string().optional(),
-        info: z.array(InmetInfoSchema).min(1),
-      })
-      .passthrough(),
-  })
-  .passthrough();
-
-export type InmetCapDocument = z.infer<typeof InmetCapDocumentSchema>;
-export type InmetInfo = z.infer<typeof InmetInfoSchema>;
-export type InmetArea = z.infer<typeof InmetAreaSchema>;
-
 export function assertActiveList(raw: unknown): InmetActiveList {
   const result = InmetActiveListSchema.safeParse(raw);
   if (!result.success) {
     throw sourceError(
       "schema_invalid",
       `INMET active-list payload failed schema validation: ${result.error.message}`,
-      result.error,
-    );
-  }
-  return result.data;
-}
-
-export function assertCapDocument(raw: unknown): InmetCapDocument {
-  const result = InmetCapDocumentSchema.safeParse(raw);
-  if (!result.success) {
-    throw sourceError(
-      "schema_invalid",
-      `INMET CAP document failed schema validation: ${result.error.message}`,
       result.error,
     );
   }

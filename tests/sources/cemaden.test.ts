@@ -101,7 +101,10 @@ describe("createCemadenAdapter — happy paths", () => {
     for (const a of out) {
       expect(a.source_key).toBe("cemaden");
       expect(a.valid_from).toMatch(/Z$/);
-      expect(a.valid_until).toMatch(/Z$/);
+      // issue #12 Bug C fix: valid_until is no longer synthesized (24h window
+      // mis-filtered long-running alerts). Presence in the wsAlertas2 list
+      // IS the validity signal; ingest uses the fetched_at fallback.
+      expect(a.valid_until).toBeUndefined();
       expect(a.fetched_at).toMatch(/Z$/);
       expect(a.payload_hash).toMatch(/^[a-f0-9]{64}$/);
       expect(a.source_url).toBe(CEMADEN_WS_ALERTAS_URL);
@@ -118,8 +121,8 @@ describe("createCemadenAdapter — happy paths", () => {
     expect(a.headline).toBe("Risco Hidrológico - Moderado — MANACAPURU/AM");
     // datahoracriacao "2026-05-09 17:30:37.092" → ISO-Z
     expect(a.valid_from).toBe("2026-05-09T17:30:37.092Z");
-    // 24h validity window (RISK-05 default)
-    expect(a.valid_until).toBe("2026-05-10T17:30:37.092Z");
+    // issue #12 Bug C: synthetic 24h valid_until removed.
+    expect(a.valid_until).toBeUndefined();
   });
 
   it("body field is undefined (CEMADEN payload has no body)", async () => {
