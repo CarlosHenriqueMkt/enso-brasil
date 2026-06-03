@@ -51,8 +51,18 @@ jobs:
         with:
           filters: |
             ui:
+              # Pages, layouts, components, middleware — anything an E2E
+              # or Lighthouse run can observably touch.
               - 'src/app/**'
+              # API routes are exercised by Vitest integration tests, not
+              # by Playwright — exclude so backend-only PRs don't pay the
+              # E2E + Lighthouse tax.
+              - '!src/app/api/**'
+              # *.test.* alongside source files are unit tests, not E2E.
+              - '!src/app/**/*.test.*'
+              - '!src/app/**/*.snap'
               - 'src/components/**'
+              - '!src/components/**/*.test.*'
               - 'src/middleware.ts'
               - 'public/**'
               - 'next.config.ts'
